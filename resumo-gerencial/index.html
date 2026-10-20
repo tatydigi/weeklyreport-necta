@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Resumo Gerencial - NECTA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a2e; background: #fff; }
+
+.page-break { page-break-after: always; }
+/* Tamanho de página fixado em A3 sem margens — mesma configuração usada no
+   Ctrl+P (Destino: Salvar como PDF, Papel: A3, Margens: Nenhumas, Escala: 101).
+   Declarar aqui evita depender do que ficou selecionado da última vez no diálogo. */
+@page { size: A3; margin: 0; }
+@media print {
+  /* O relatório roda dentro do iframe sandbox do Apps Script
+     (*.googleusercontent.com), que por padrão trata o conteúdo como uma área
+     com rolagem própria. Sem isto, a impressão via Ctrl+P captura só o que
+     está "visível" nesse scroll em vez do documento inteiro, virando 1
+     página só com conteúdo cortado/duplicado. */
+  html, body {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  .page-break { page-break-after: always; }
+  /* A3 tem o dobro da área de uma A4 — mantém o mesmo tamanho de fonte da tela
+     em vez de reduzir, para aproveitar o espaço extra em vez de deixá-lo vazio. */
+  body { font-size: 13px; }
+  .section { padding: 40px 56px; }
+  a.jira-link { color: inherit; text-decoration: none; }
+  /* Sem isso, o Chrome aplica "economia de tinta" no PDF e escurece/dessatura
+     fundos e degradês mesmo com "Imagens em segundo plano" marcado — força as
+     cores exatas da tela na impressão. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+
+/* ── Capa ──
+   Marca Digiage: uma cor dominante por tela (Navy) + Pink só como detalhe
+   de canto — nunca atravessando o texto, seguindo o guia de marca.
+   Na TELA a capa fica compacta (não faz sentido ocupar 100vh num relatório
+   que rola); na IMPRESSÃO (@media print, mais abaixo) ela volta a ocupar a
+   página inteira, exatamente como antes. */
+.cover {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  background:
+    radial-gradient(circle at 100% 100%, rgba(248,0,106,0.35) 0%, transparent 25%),
+    #122454;
+  color: #fff; text-align: center; padding: 20px 40px;
+}
+.cover-logos {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+}
+.logo-digiage { height: 28px; object-fit: contain; }
+.logo-necta { height: 28px; object-fit: contain; }
+.cover-logos-divider {
+  width: 1px; height: 22px; background: rgba(255,255,255,0.4);
+}
+.cover h1 { font-size: 20px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 6px; }
+.cover h2 { font-size: 12px; font-weight: 400; opacity: 0.85; margin-bottom: 10px; }
+.cover .date-badge {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);
+  padding: 6px 18px; border-radius: 4px; font-size: 11px; letter-spacing: 0.5px;
+}
+.cover .last-updated {
+  font-size: 10px; opacity: 0.7; margin-top: 10px;
+}
+@media print {
+  /* Restaura o tamanho de capa de página inteira só na impressão/PDF - a
+     regra .cover acima (fora de @media) já roda também ao imprimir, então
+     este bloco precisa vir DEPOIS dela no arquivo para ganhar no empate de
+     especificidade (CSS decide por ordem quando a especificidade é igual). */
+  .cover { min-height: 100vh; padding: 40px; }
+  .cover-logos { gap: 28px; margin-bottom: 60px; }
+  .logo-digiage, .logo-necta { height: 56px; }
+  .cover-logos-divider { height: 48px; }
+  .cover h1 { font-size: 42px; letter-spacing: 2px; margin-bottom: 16px; }
+  .cover h2 { font-size: 18px; margin-bottom: 40px; }
+  .cover .date-badge { padding: 10px 28px; font-size: 14px; letter-spacing: 1px; }
+  .cover .last-updated { font-size: 11px; margin-top: 16px; }
+}
+
+/* ── Seções ── */
+.section { padding: 32px 40px; border-bottom: 2px solid #dbe3f0; }
+/* Nenhum título (de seção ou subseção) pode ficar "sozinho" no fim de uma
+   página com o conteúdo inteiro pulando pra próxima — isso deixava um vão em
+   branco embaixo do título (visto no Painel de Impedimentos: "Aguardando
+   Cliente" ficava numa página e os cards de NDAV-71/115/181 na seguinte). */
+.section-title {
+  font-size: 17px; font-weight: 700; color: #122454;
+  border-left: 5px solid #F8006A; padding-left: 12px;
+  margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+  break-after: avoid; page-break-after: avoid;
+}
+.subsection-title {
+  font-size: 13px; font-weight: 800; color: #fff;
+  margin: 20px 0 14px; padding: 10px 16px; border-radius: 4px;
+  text-transform: uppercase; letter-spacing: 1px;
+  background: #122454;
+  break-after: avoid; page-break-after: avoid;
+}
+
+/* ── Cores de fundo por seção ──
+   Off-white único da marca (#F6F9FF), alternado com branco puro só pra
+   separar visualmente uma seção da outra — em vez de um arco-íris pastel
+   fora da paleta oficial. */
+.section-status      { background: #fff; }
+.section-priority    { background: #F6F9FF; }
+.section-bignumbers  { background: #fff; }
+.section-areas       { background: #F6F9FF; }
+.section-changes     { background: #fff; }
+.section-impediments { background: #F6F9FF; }
+.section-monthly     { background: #fff; }
+
+/* ── Totalizador de status ── */
+.status-summary { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.status-card {
+  flex: 1; min-width: 110px;
+  background: #fff; border: 1px solid #dbe3f0; border-radius: 6px;
+  padding: 12px 16px; text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.status-card .count { font-size: 30px; font-weight: 800; }
+.status-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #5a6a7a; margin-top: 4px; }
+
+/* ── Lista de tarefas ── */
+.task-item { margin-bottom: 14px; border: 1px solid #dbe3f0; border-radius: 6px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+.task-header { background: #122454; color: #fff; padding: 8px 14px; font-weight: 600; font-size: 13px; }
+.task-header .jira-link { color: #F6926F; margin-right: 6px; font-family: monospace; }
+.subtask-list { padding: 4px 0; background: #fff; }
+/* Seção "Atividades da Semana" costuma ser curta — mantém a lista inteira
+   junta na impressão em vez de deixar o último item sozinho na página seguinte. */
+.section-priority .subtask-list { break-inside: avoid; page-break-inside: avoid; }
+/* O título nunca pode ficar "sozinho" no fim de uma página com a lista inteira
+   pulando pra próxima — isso deixava um vão em branco embaixo do título. */
+.section-priority .section-title { break-after: avoid; page-break-after: avoid; }
+/* Compacta as linhas desta seção especificamente, pra maximizar a chance de
+   título + lista caberem juntos na mesma página em vez de pular de página. */
+.section-priority .subtask-row { padding: 3px 14px 3px 28px; font-size: 12px; }
+.section-priority .badge { font-size: 9px; padding: 1px 7px; }
+.section-priority .section-title { margin-bottom: 10px; }
+.subtask-row {
+  display: flex; align-items: center; padding: 5px 14px 5px 28px;
+  border-bottom: 1px solid #eef2f7; gap: 10px; break-inside: avoid; page-break-inside: avoid;
+}
+.subtask-row:last-child { border-bottom: none; }
+.subtask-key { font-family: monospace; font-size: 12px; color: #F8006A; min-width: 80px; flex-shrink: 0; }
+.subtask-summary { flex: 1; }
+.subtask-parent { font-size: 11px; color: #5a6a7a; flex-shrink: 0; }
+
+/* ── Badge de status ── */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; white-space: nowrap; color: #fff;
+}
+
+/* ── Big Numbers ── */
+.bn-columns { display: flex; align-items: flex-start; gap: 16px; }
+.bn-subsection { break-inside: avoid; page-break-inside: avoid; flex: 1; min-width: 0; }
+.bn-subsection + .bn-subsection { border-left: 1px solid rgba(0,0,0,0.08); padding-left: 16px; }
+.bn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.bn-grid-compact { grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 0; }
+.bn-grid-compact .bn-card { padding: 6px 10px; }
+.bn-grid-compact .bn-value { font-size: 20px; }
+.bn-grid-compact .bn-card.secondary .bn-value { font-size: 17px; }
+.bn-grid-compact .bn-card.docs .bn-value { font-size: 15px; }
+.bn-grid-compact .bn-label { font-size: 7.5px; }
+.bn-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 999px; padding: 10px 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.bn-card.primary   { border-left: 4px solid #F8006A; }
+.bn-card.secondary { border-left: 4px solid #F6926F; }
+.bn-card.docs      { border-left: 4px solid #122454; }
+.bn-value { font-size: 26px; font-weight: 800; color: #122454; }
+.bn-card.secondary .bn-value { font-size: 21px; }
+.bn-card.docs .bn-value { font-size: 18px; }
+.bn-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: #5a6a7a; margin-top: 3px; line-height: 1.3; }
+
+/* ── Tabelas ── */
+table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
+th { background: #122454; color: #fff; padding: 7px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 6px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; }
+tr:nth-child(even) td { background: #f9fbfd; }
+
+/* ── Kanban ── */
+.kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: start; margin-top: 8px; }
+.kanban-col { border-radius: 6px; overflow: hidden; }
+@media print {
+  /* O Chrome nao pagina bem layouts CSS Grid na impressao - quando o board
+     nao cabe inteiro no espaco restante da pagina, ele empurra o grid
+     INTEIRO pra proxima pagina, deixando so o titulo da secao numa folha em
+     branco. Troca pra colunas inline-block so na impressao, que o motor de
+     paginacao do Chrome consegue quebrar entre paginas normalmente (igual
+     já funciona com <table>, mantendo a mesma aparencia lado a lado. */
+  .kanban-board { display: block; margin-top: 8px; font-size: 0; }
+  .kanban-col {
+    display: inline-block; vertical-align: top;
+    width: 19%; margin-right: 1%; font-size: 1rem;
+    /* overflow:hidden (usado na tela pra arredondar os cantos) impede o
+       navegador de dividir o elemento entre paginas na impressao - com
+       muitos itens (ex.: "Concluído" com 100+), isso forcava a coluna
+       INTEIRA pra uma pagina nova em vez de deixar o conteudo continuar
+       fluindo. "visible" so na impressao resolve, sem afetar a tela. */
+    overflow: visible;
+  }
+  /* 5 colunas de 19% + 4 margens de 1% entre elas = 99% (cabe). Sem isto,
+     19.2%+1% de margem x 5 colunas passava de 100% e a 5a coluna
+     ("Concluído", a com mais itens) quebrava pra uma linha nova ABAIXO das
+     outras 4 - desperdicando toda a altura que sobrava ao lado delas. */
+  .kanban-col:last-child { margin-right: 0; }
+  /* Colunas com muitos itens (ex.: "Concluído" com 100+) nao cabem numa
+     unica pagina com o tamanho de tela normal - encolhe bastante tudo
+     dentro do card so na impressao, e troca .kanban-cards de flex pra
+     block (flex tambem nao pagina bem no Chrome, mesmo problema do grid).
+     Forca 1 linha por card (chave+contagem+resumo juntos, resumo truncado
+     com reticencias) em vez de 2-3 linhas - precisa pra caber 100+ itens
+     numa unica pagina. */
+  .kanban-col-header { padding: 3px 5px; gap: 1px; }
+  .kanban-col-title { font-size: 7.5px; }
+  .kanban-col-count { font-size: 6.5px; }
+  .kanban-cards { display: block; padding: 2px; min-height: 0; }
+  /* .kanban-card vira flex, e seus 2 filhos diretos (.kanban-card-header e
+     .kanban-card-name) viram os 2 "itens" dessa linha unica - evita
+     "display:contents" (suporte inconsistente no motor de impressao do
+     Chrome, que em testes anteriores simplesmente ignorou a regra e manteve
+     o card em 2 linhas mesmo com fonte menor). */
+  .kanban-card {
+    display: flex; align-items: baseline; gap: 4px; flex-wrap: nowrap;
+    padding: 1px 3px; margin-bottom: 1px; border-radius: 2px;
+    white-space: nowrap; overflow: hidden;
+  }
+  .kanban-card .progress-key { font-size: 6px; margin-right: 0; flex-shrink: 0; }
+  .kanban-card-header { margin-bottom: 0; gap: 2px; flex-shrink: 0; white-space: nowrap; }
+  .kanban-card-count { font-size: 6px; flex-shrink: 0; }
+  .kanban-card-name {
+    font-size: 6px; line-height: 1.1; flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .kanban-empty { padding: 3px 0; font-size: 7px; }
+}
+.kanban-col-header { padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
+.kanban-col-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.kanban-col-count { font-size: 9px; opacity: 0.85; }
+.kanban-cards { background: #f7f7fb; padding: 6px; display: flex; flex-direction: column; gap: 5px; min-height: 40px; }
+.kanban-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 4px; padding: 5px 7px; break-inside: avoid; page-break-inside: avoid; }
+.kanban-card-header { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 2px; }
+.kanban-card-name { font-size: 9px; color: #1a1a2e; line-height: 1.3; }
+.kanban-card-count { font-size: 9px; color: #5a6a7a; font-weight: 600; white-space: nowrap; }
+.kanban-empty { color: #bbb; font-size: 11px; text-align: center; padding: 10px 0; }
+
+/* ── Blocos CR / Novas Demandas ── */
+.cr-block { border: 1px solid #dbe3f0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); break-inside: avoid; page-break-inside: avoid; }
+.cr-parent-header {
+  background: #fff; border-bottom: 1px solid #dbe3f0;
+  padding: 8px 14px; font-weight: 600; display: flex; gap: 16px; align-items: center;
+}
+.cr-parent-key { font-family: monospace; color: #F8006A; font-size: 13px; flex-shrink: 0; }
+.cr-parent-meta { font-size: 11px; color: #5a6a7a; margin-left: auto; white-space: nowrap; }
+.cr-subtask { padding: 10px 14px 10px 28px; border-bottom: 1px solid #eef2f7; }
+.cr-subtask:last-child { border-bottom: none; }
+.cr-subtask-title { font-weight: 600; margin-bottom: 6px; }
+.cr-description { color: #5a6a7a; font-size: 12px; margin: 4px 0 8px; white-space: pre-wrap; }
+.cr-comment { background: #fff0f8; border-left: 3px solid #F8006A; padding: 6px 10px; margin-bottom: 6px; border-radius: 0 4px 4px 0; }
+.cr-comment-meta { font-size: 11px; color: #5a6a7a; margin-bottom: 3px; }
+.cr-comment-body { white-space: pre-wrap; }
+.no-items { color: #5a6a7a; font-style: italic; padding: 8px 0; font-size: 12px; }
+.td-key { font-family: monospace; color: #F8006A; }
+.td-date { color: #5a6a7a; font-size: 11px; }
+
+/* ── Links Jira ── */
+a.jira-link { color: #122454; text-decoration: none; font-weight: 600; }
+a.jira-link:hover { text-decoration: underline; }
+
+/* ── Agrupamento por status ── */
+.status-group { margin-bottom: 14px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.10); }
+.status-group-header {
+  padding: 10px 16px; display: flex; align-items: center;
+  justify-content: space-between; font-weight: 700;
+}
+.status-label { text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+.status-count { opacity: 0.9; font-size: 12px; }
+.parent-group { border-bottom: 1px solid #eef2f7; }
+.parent-group:last-child { border-bottom: none; }
+.parent-group-header {
+  background: #f3f0f8; padding: 6px 14px;
+  font-weight: 600; color: #122454;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid #dbe3f0;
+}
+.parent-group .subtask-row { padding-left: 42px; }
+
+/* ── Botões de edição (ocultos na impressão) ── */
+.no-print { display: inline-block; }
+@media print { .no-print { display: none !important; } }
+.btn-remove {
+  background: none; border: none; cursor: pointer; color: #c0392b;
+  font-size: 11px; padding: 0 4px; margin-left: 8px; opacity: 0.6;
+  vertical-align: middle;
+}
+.btn-remove:hover { opacity: 1; }
+.btn-add-comment {
+  display: inline-block; margin-top: 8px; padding: 4px 10px;
+  background: none; border: 1px dashed #F8006A; border-radius: 4px;
+  color: #F8006A; font-size: 11px; cursor: pointer;
+}
+.btn-add-comment:hover { background: #fff0f8; }
+.add-comment-form { margin-top: 8px; }
+.add-comment-form .comment-input {
+  width: 100%; padding: 6px 8px; border: 1px solid #dbe3f0; border-radius: 4px;
+  font-family: inherit; font-size: 12px; resize: vertical;
+}
+.add-comment-form .form-actions { margin-top: 6px; display: flex; gap: 8px; }
+.btn-confirm {
+  padding: 4px 12px; background: #122454; color: #fff;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.btn-cancel {
+  padding: 4px 12px; background: #eee; color: #333;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.save-indicator {
+  font-size: 10px; color: #22c55e; margin-left: 8px; opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* ── Subsecções do Painel de Impedimentos ── */
+.subsection-aguardando { background: #d97706; }
+.subsection-validacao  { background: #122454; }
+.subsection-standby    { background: #ea580c; }
+.subsection-divider    { height: 1px; background: rgba(0,0,0,0.08); margin: 28px 0 0; }
+
+/* ── Cards de impedimento ── */
+.impediment-card {
+  margin-bottom: 16px; border-radius: 6px; overflow: hidden;
+  background: #fff; border: 1px solid #dbe3f0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  break-inside: avoid; page-break-inside: avoid;
+}
+.impediment-header {
+  background: #fff; border-bottom: 1px solid #edd8d8;
+  padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.impediment-summary { flex: 1; font-weight: 600; min-width: 150px; }
+.impediment-meta { font-size: 11px; color: #5a6a7a; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.impediment-days {
+  font-size: 10px; color: #b91c1c; font-style: italic; white-space: nowrap; flex-shrink: 0;
+  background: #fdecec; padding: 2px 8px; border-radius: 10px;
+}
+.impediment-comments { padding: 10px 16px; }
+.impediment-card[data-hidden="true"] { display: none; }
+.impediment-card.curation-hidden {
+  display: block; opacity: 0.55; border-style: dashed;
+}
+@media print {
+  /* Oculto nesta semana nunca aparece impresso, mesmo que esteja
+     visível na tela em modo de curadoria (--serve). */
+  .impediment-card[data-hidden="true"] { display: none !important; }
+}
+.impediment-hidden-tag {
+  display: inline-block; background: #6b7280; color: #fff; font-size: 10px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+}
+.btn-hide {
+  padding: 3px 10px; background: none; border: 1px solid #c0392b; border-radius: 4px;
+  color: #c0392b; font-size: 11px; cursor: pointer; margin-left: auto;
+}
+.btn-hide:hover { background: #fdf0f0; }
+.btn-restore {
+  padding: 3px 10px; background: #122454; border: none; border-radius: 4px;
+  color: #fff; font-size: 11px; cursor: pointer; margin-left: auto;
+}
+
+/* ── Seção de Progresso ── */
+.section-progress { background: #F6F9FF; }
+.progress-item { margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
+.progress-item:last-child { margin-bottom: 0; }
+.progress-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 6px;
+}
+.progress-key   { font-family: monospace; color: #F8006A; font-size: 12px; margin-right: 6px; }
+.progress-label { font-size: 13px; color: #1a1a2e; }
+.progress-meta  { font-size: 12px; white-space: nowrap; margin-left: 12px; flex-shrink: 0; }
+.progress-bar-track { height: 12px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+.progress-bar-fill  { height: 100%; border-radius: 999px; }
+.progress-total {
+  margin-top: 24px; padding-top: 18px;
+  border-top: 2px solid #6b7280;
+}
+.progress-total .progress-label { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.progress-total .progress-bar-track { height: 16px; margin-top: 8px; }
+.progress-total .progress-meta { font-size: 13px; font-weight: 700; }
+
+/* ── Produtividade Mensal (só na última semana do mês) ── */
+.monthly-legend { font-size: 11px; color: #5a6a7a; margin-bottom: 16px; }
+.monthly-chart { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+.monthly-bar-item { display: flex; align-items: center; gap: 12px; break-inside: avoid; page-break-inside: avoid; }
+.monthly-bar-label { width: 170px; flex-shrink: 0; font-size: 12px; color: #1a1a2e; }
+.monthly-chart .progress-bar-track { flex: 1; }
+.monthly-bar-count { width: 30px; text-align: right; font-weight: 700; color: #122454; flex-shrink: 0; }
+.monthly-bar-item.monthly-total {
+  margin-top: 10px; padding-top: 14px; border-top: 2px solid #6b7280;
+}
+.monthly-total .monthly-bar-label { font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.monthly-total .progress-bar-track { height: 16px; }
+.monthly-total .monthly-bar-count { font-size: 14px; }
+.owner-bar {
+  display: none; align-items: center; gap: 12px;
+  background: #122454; color: #fff; padding: 8px 16px; font-size: 12px;
+}
+.owner-bar button {
+  padding: 5px 14px; background: #F8006A; color: #fff; border: none;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.owner-bar button:disabled { opacity: 0.6; cursor: default; }
+.owner-bar .owner-bar-status { opacity: 0.85; }
+.print-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 8px 16px; background: #F6F9FF; border-bottom: 1px solid #dbe3f0;
+}
+.print-bar button {
+  padding: 5px 14px; background: #fff; color: #122454; border: 1px solid #122454;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.print-bar button:hover { background: #eef2fb; }
+
+/* ── Resumo Gerencial ──
+   Agora vive em pagina PROPRIA (RG_PAGE_TEMPLATE, servida em
+   "?view=resumo") - nao faz mais parte do HTML_TEMPLATE do relatorio
+   semanal. Continua reaproveitando o mesmo <style>/<script>. */
+.rg-section { padding: 32px 40px; background: #fff; }
+.rg-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.rg-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-top: 2px; flex-wrap: wrap; }
+.rg-no-print-flag {
+  font-size: 10.5px; color: #92400e; background: #FFF9E9; border: 1px solid #f3d98f;
+  padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+}
+.btn-rg-export {
+  padding: 8px 16px; background: #F8006A; color: #fff; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.btn-rg-refresh {
+  padding: 8px 16px; background: #fff; color: #122454; border: 1px solid #122454; border-radius: 6px;
+  font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.rg-refresh-status { font-size: 11px; color: #22c55e; white-space: nowrap; }
+.rg-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 4px; }
+/* Mesmo padrao "pilula" das .bn-card da secao Indicadores do Projeto
+   (border-radius: 999px), pra ficar visualmente consistente com o resto
+   do relatorio em vez de cantos so levemente arredondados. */
+.rg-kpi-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #F8006A;
+  border-radius: 999px; padding: 10px 14px; text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.rg-kpi-value { font-size: 26px; font-weight: 800; color: #122454; line-height: 1; }
+.rg-kpi-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: #5a6a7a; margin-top: 3px; line-height: 1.3; }
+
+.chart-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.chart-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 8px; padding: 16px 18px; flex: 1; min-width: 260px; }
+.chart-card-title { font-size: 11.5px; font-weight: 800; color: #122454; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+.chart-card-hint { font-size: 10px; color: #94a3b8; margin-bottom: 10px; }
+.chart-svg { width: 100%; height: auto; display: block; }
+.chart-axis-label { font-size: 9px; fill: #94a3b8; }
+.chart-gridline { stroke: #eef2f7; stroke-width: 1; }
+.chart-line { fill: none; stroke: #F8006A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.chart-dot { fill: #F8006A; stroke: #fff; stroke-width: 2; }
+.chart-end-label { font-size: 13px; font-weight: 800; fill: #122454; }
+.bar-chart-wrap { display: flex; align-items: flex-end; gap: 10px; height: 110px; padding: 0 2px; }
+.bar-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.bar-chart-value { font-size: 10.5px; font-weight: 800; color: #122454; }
+.bar-chart-bar { width: 100%; max-width: 22px; background: #F8006A; border-radius: 4px 4px 0 0; }
+.bar-chart-label { font-size: 9px; color: #94a3b8; margin-top: 4px; }
+.status-stack-wrap { margin-top: 4px; }
+.status-stack { display: flex; gap: 2px; height: 26px; border-radius: 6px; overflow: hidden; }
+.status-seg { display: flex; align-items: center; justify-content: center; }
+.status-seg-label { font-size: 10px; font-weight: 800; color: #fff; }
+.status-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
+.status-legend-item { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #334155; }
+.status-legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+
+.rg-subsection-title-row { display: flex; align-items: center; gap: 12px; margin: 28px 0 14px; }
+.rg-subsection-title-row .subsection-title { margin: 0; flex: 1; }
+.btn-copy-checklist {
+  flex-shrink: 0; padding: 7px 14px; background: #fff; color: #122454;
+  border: 1px solid #122454; border-radius: 4px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.rg-copy-status { font-size: 11px; color: #22c55e; margin-left: 8px; }
+
+/* Pilula do responsavel (assignee), totalmente arredondada (999px) igual
+   ao resto das pilulas/badges do relatorio. */
+.owner-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #eef2ff; color: #122454; border: 1px solid #c7d2f0;
+  font-size: 10.5px; font-weight: 700; padding: 2px 10px 2px 4px; border-radius: 999px;
+}
+.owner-avatar {
+  width: 16px; height: 16px; border-radius: 50%; background: #122454; color: #fff;
+  font-size: 8.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+/* Pilula do responsavel: editavel pelo dono (redireciona a demanda no
+   relatorio - ex.: para o cliente - sem alterar nada no Jira). */
+.owner-pill-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.owner-pill-empty { background: #f3f4f6; color: #9aa5b1; border-style: dashed; font-weight: 600; }
+.btn-edit-responsavel {
+  background: none; border: none; cursor: pointer; color: #122454;
+  font-size: 11px; padding: 0 2px; opacity: 0.55; vertical-align: middle;
+}
+.btn-edit-responsavel:hover { opacity: 1; }
+.resp-edit-form { display: inline-flex; align-items: center; gap: 6px; }
+.resp-input {
+  padding: 3px 8px; border: 1px solid #dbe3f0; border-radius: 4px;
+  font-family: inherit; font-size: 11.5px; min-width: 150px;
+}
+.btn-resp-confirm {
+  padding: 3px 10px; background: #122454; color: #fff;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 11px;
+}
+.btn-resp-cancel {
+  padding: 3px 10px; background: #eee; color: #333;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 11px;
+}
+.area-badge {
+  display: inline-block; background: #eef2f7; color: #334155; border: 1px solid #dbe3f0;
+  font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+}
+.deliv-check { color: #22c55e; font-weight: 800; font-size: 11px; }
+.manual-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #f3f0f8; color: #6b21a8; border: 1px solid #e2d5f5;
+  font-size: 9.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px;
+}
+.btn-add-manual {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+  padding: 7px 14px; background: none; border: 1px dashed #122454; border-radius: 6px;
+  color: #122454; font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.manual-add-form {
+  margin-top: 10px; padding: 14px 16px; border: 1px solid #dbe3f0; border-radius: 6px; background: #F6F9FF;
+}
+.manual-add-title { font-size: 11.5px; font-weight: 800; color: #122454; margin-bottom: 10px; }
+.manual-add-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.manual-input {
+  width: 100%; padding: 7px 10px; border: 1px solid #dbe3f0; border-radius: 4px;
+  font-family: inherit; font-size: 12px; background: #fff;
+}
+textarea.manual-input { resize: vertical; grid-column: 1 / -1; }
+.manual-add-actions { display: flex; gap: 8px; margin-top: 4px; }
+.btn-manual-confirm { padding: 6px 16px; background: #122454; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
+.btn-manual-cancel { padding: 6px 16px; background: #eee; color: #333; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
+/* Some so na impressao/exportacao PROPRIA do Resumo Gerencial (a aba
+   separada aberta pelo botao de exportar) - nunca aparece em nenhum PDF. */
+@media print { .rg-only-screen { display: none !important; } }
+
+/* Link "Ver Resumo Gerencial" no relatorio semanal - abre a pagina separada
+   numa aba nova. */
+.print-bar a.btn-view-rg {
+  padding: 5px 14px; background: #122454; color: #fff; border: none;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+  text-decoration: none; margin-right: auto;
+}
+.print-bar a.btn-view-rg:hover { background: #0d1b3f; }
+</style>
+</head>
+<body>
+
+<!-- Barra de atualizacao manual do Jira - so aparece para o dono (IS_OWNER),
+     nunca impressa. A checagem real de permissao e sempre no servidor. -->
+<div class="owner-bar no-print" id="owner-bar">
+  <button id="btn-refresh-jira">Atualizar dados do Jira</button>
+  <span class="owner-bar-status" id="owner-bar-status"></span>
+</div>
+
+<!-- RESUMO GERENCIAL — nao entra no PDF do relatorio semanal (a classe
+     no-print so importa quando esta pagina e aberta de dentro do botao de
+     exportar - aqui ela e o conteudo principal); tem seu proprio botao de
+     exportacao/impressao. -->
+<div class="rg-section no-print" id="resumo-gerencial-section">
+  <div class="rg-header-row">
+    <div>
+      <div class="section-title">Resumo Gerencial</div>
+      <div class="section-subtitle">Semana de referência: 12/10/2026 a 16/10/2026 &nbsp;·&nbsp; Dados do Jira atualizados em: 20/10/2026 às 14:56</div>
+    </div>
+    <div class="rg-actions rg-only-screen">
+      <button class="btn-rg-refresh no-print" id="btn-rg-refresh" style="display:none">🔄 Atualizar apenas o Resumo Gerencial</button>
+      <span class="rg-refresh-status no-print" id="rg-refresh-status"></span>
+      <button class="btn-rg-export" id="btn-rg-export">🖨️ Imprimir / Exportar PDF do Resumo Gerencial</button>
+    </div>
+  </div>
+
+  <div class="rg-kpi-row">
+    <div class="rg-kpi-card"><div class="rg-kpi-value">17</div><div class="rg-kpi-label">Pendências em aberto</div></div>
+    <div class="rg-kpi-card"><div class="rg-kpi-value">0</div><div class="rg-kpi-label">Entregas nesta semana</div></div>
+    <div class="rg-kpi-card"><div class="rg-kpi-value">14</div><div class="rg-kpi-label">Entregas acumuladas</div></div>
+    <div class="rg-kpi-card"><div class="rg-kpi-value">62%</div><div class="rg-kpi-label">Progresso geral do projeto</div></div>
+  </div>
+
+  <div class="subsection-title">Evolução do Projeto</div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">Progresso Geral — últimas semanas</div>
+      <div class="chart-card-hint">% de sub-tarefas concluídas</div>
+      <svg class="chart-svg" viewBox="0 0 400 165" role="img" aria-label="Evolução do progresso geral"><line class="chart-gridline" x1="20" y1="20" x2="380" y2="20"/><line class="chart-gridline" x1="20" y1="75" x2="380" y2="75"/><line class="chart-gridline" x1="20" y1="130" x2="380" y2="130"/><text class="chart-axis-label" x="4" y="23">100%</text><text class="chart-axis-label" x="8" y="78">50%</text><text class="chart-axis-label" x="12" y="133">0%</text><path class="chart-line" d="M20.0,70.6 L80.0,68.4 L140.0,68.4 L200.0,62.9 L260.0,61.8 L320.0,61.8 L380.0,61.8"/><circle class="chart-dot" cx="20.0" cy="70.6" r="4"><title>14/08: 54%</title></circle><circle class="chart-dot" cx="80.0" cy="68.4" r="4"><title>22/09: 56%</title></circle><circle class="chart-dot" cx="140.0" cy="68.4" r="4"><title>25/09: 56%</title></circle><circle class="chart-dot" cx="200.0" cy="62.9" r="4"><title>02/10: 61%</title></circle><circle class="chart-dot" cx="260.0" cy="61.8" r="4"><title>09/10: 62%</title></circle><circle class="chart-dot" cx="320.0" cy="61.8" r="4"><title>16/10: 62%</title></circle><circle class="chart-dot" cx="380.0" cy="61.8" r="5"><title>20/10: 62%</title></circle><text class="chart-end-label" x="345.0" y="51.8">62%</text><text class="chart-axis-label" x="2.0" y="148">14/08</text><text class="chart-axis-label" x="62.0" y="148">22/09</text><text class="chart-axis-label" x="122.0" y="148">25/09</text><text class="chart-axis-label" x="182.0" y="148">02/10</text><text class="chart-axis-label" x="242.0" y="148">09/10</text><text class="chart-axis-label" x="302.0" y="148">16/10</text><text class="chart-axis-label" x="362.0" y="148">20/10</text></svg>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Entregas por Semana</div>
+      <div class="chart-card-hint">Sub-tarefas concluídas por semana</div>
+      <div class="bar-chart-wrap"><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="14/08: 0 entrega(s)"></div><div class="bar-chart-label">14/08</div></div><div class="bar-chart-col"><div class="bar-chart-value">3</div><div class="bar-chart-bar" style="height:90px" title="22/09: 3 entrega(s)"></div><div class="bar-chart-label">22/09</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="25/09: 0 entrega(s)"></div><div class="bar-chart-label">25/09</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="02/10: 0 entrega(s)"></div><div class="bar-chart-label">02/10</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="09/10: 0 entrega(s)"></div><div class="bar-chart-label">09/10</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="16/10: 0 entrega(s)"></div><div class="bar-chart-label">16/10</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="20/10: 0 entrega(s)"></div><div class="bar-chart-label">20/10</div></div></div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card-title">Distribuição Atual por Status</div>
+    <div class="chart-card-hint">Todas as sub-tarefas do épico</div>
+    <div class="status-stack-wrap"><div class="status-stack"><div class="status-seg" style="background:#22c55e;flex:107" title="CONCLUÍDO: 107"><span class="status-seg-label">62%</span></div><div class="status-seg" style="background:#f59e0b;flex:32" title="EM PROGRESSO: 32"><span class="status-seg-label">19%</span></div><div class="status-seg" style="background:#f97316;flex:4" title="EM REVISÃO: 4"></div><div class="status-seg" style="background:#9e9e9e;flex:29" title="EM BACKLOG: 29"><span class="status-seg-label">17%</span></div></div><div class="status-legend"><div class="status-legend-item"><span class="status-legend-dot" style="background:#22c55e"></span>CONCLUÍDO — 107</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f59e0b"></span>EM PROGRESSO — 32</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f97316"></span>EM REVISÃO — 4</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#8b5cf6"></span>EM TESTES — 0</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#9e9e9e"></span>EM BACKLOG — 29</div></div></div>
+  </div>
+
+  <div class="rg-subsection-title-row">
+    <div class="subsection-title">Checklist de Pendências <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.85">(17 itens)</span></div>
+    <button class="btn-copy-checklist rg-only-screen" id="btn-copy-checklist">📋 Copiar Checklist</button>
+    <span class="rg-copy-status rg-only-screen" id="rg-copy-status"></span>
+  </div>
+  <div class="checklist" id="rg-checklist-list">
+<div class="impediment-card" data-key="NDAV-85" data-comments='[{"source":"manual","body":"Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa."},{"source":"manual","body":"Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno."}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="impediment-summary">[DASH] Projeto - Atendimento (PBI)</span><span class="badge" style="background:#d97706">Aguardando Cliente</span><span class="impediment-days">125 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-85" data-resp-name="Jeysson Armas"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-124" data-comments='[{"body":"Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="impediment-summary">CONECTIVIDADE GIS </span><span class="badge" style="background:#d97706">Aguardando Cliente</span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-124" data-resp-name="Gilson"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-125" data-comments='[{"source":"manual","body":"Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="impediment-summary">CONECTIVIDADE LAKE X XCONN</span><span class="badge" style="background:#d97706">Aguardando Cliente</span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-125" data-resp-name="Gilson"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-147" data-comments='[{"source":"manual","body":"Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="impediment-summary">Integração Salesforce + Metric Views</span><span class="badge" style="background:#d97706">Aguardando Cliente</span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-147" data-resp-name="Andre Yamada"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-54" data-comments='[{"body":"Pendente retorno do Time de Contratos para darmos sequencia a demanda","source":"manual"},{"body":"Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="impediment-summary">[DASH] Projeto - Gestão de Contratos | Frotas</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">74 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-54" data-resp-name="Andre Yamada"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Pendente retorno do Time de Contratos para darmos sequencia a demanda</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-71" data-comments='[{"body":"Para esta demanda, temos ainda as Pendencias listadas abaixo:","source":"manual"},{"body":"Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.","source":"manual"},{"body":"Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="impediment-summary">[DASH] Projeto - Painel ARSESP</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">46 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-71" data-resp-name="Alexandro Feltrin"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Para esta demanda, temos ainda as Pendencias listadas abaixo:</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)
+
+DETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.
+
+SISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN
+
+STATUS: PENDENTE
+
+RESPONSÁVEL | TIME: Josemir | Douglas
+
+OBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.
+
+------------------------------
+
+Indicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)
+
+DETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.
+
+SISTEMA DE ORIGEM: GIS* (Contador)
+
+STATUS: PENDENTE
+
+RESPONSÁVEL | TIME: Leandro Zei
+
+OBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado
+ 
+------------------------------
+Indicador: Mapa com visão da última medição de saída de gás de cada City Gate.
+
+DETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.
+
+SISTEMA DE ORIGEM: (Vazio)
+
+STATUS: EM ANÁLISE
+
+RESPONSÁVEL | TIME: Leando Zei e Douglas
+
+OBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE
+------------------------------
+
+Indicador: Tabela com visão da última medição de saída de gás de cada City Gate.
+
+DETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.
+
+SISTEMA DE ORIGEM: (Vazio)
+
+STATUS: EM ANÁLISE
+
+RESPONSÁVEL | TIME: Leando Zei e Douglas
+
+OBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-115" data-comments='[{"body":"1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.","source":"manual"},{"body":"Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash","source":"manual"},{"source":"manual","body":"Pendente Retorno por parte da equipe de Atendimento"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="impediment-summary">[DASH] Painel de SLAs de Atendimento e Encerramento</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">104 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-115" data-resp-name="Alexandro Feltrin"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">1. Reunião de Validação realizada em 24/09
+2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Pendente Retorno por parte da equipe de Atendimento</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-181" data-comments='[{"body":"Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="impediment-summary">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">67 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-181" data-resp-name="Alexandro Feltrin"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-232" data-comments='[{"source":"manual","body":"Aguardando validação e retorno do Walter/Alex"},{"source":"manual","body":"Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback"},{"source":"manual","body":"O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="impediment-summary">[DASH] Medição</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">18 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-232" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Aguardando validação e retorno do Walter/Alex</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-245" data-comments='[]' data-hidden="true">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="impediment-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">11 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-245" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-246" data-comments='[{"source":"manual","body":"A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-246" target="_blank">NDAV-246</a><span class="impediment-summary">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">6 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-246" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.
+Vamos apresentar tudo na reunião (Agendada 20/10 as 15hs)
+✕</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="MANUAL-0BA74CDA" data-comments='[{"body":"VALIDAÇÃO DOS DADOS","source":"manual"}]' data-hidden="true">
+  <div class="impediment-header"><span class="manual-tag">✏️ Manual</span><span class="impediment-summary">NDAV-200 PM RUN</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="owner-pill-wrap" data-resp-key="MANUAL-0BA74CDA" data-resp-name="NICE"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">VALIDAÇÃO DOS DADOS</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-67" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="impediment-summary">[DASH] Projeto - Manutenção</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">139 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-67" data-resp-name="Andre Yamada"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-105" data-comments='[{"body":"Aguardando Priorização | Definições","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="impediment-summary">Validaçao de Cadastro</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">60 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-105" data-resp-name="JEYSSON LEONCIO ZERPA ARMAS"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-176" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a><span class="impediment-summary">Comunicação Interna — Pílulas de Conhecimento</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">60 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-176" data-resp-name="TATIANA DE OLIVEIRA PRADO"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-187" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a><span class="impediment-summary">Criação de domínio &quot;C-Level&quot;</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">60 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-187" data-resp-name="Alexandro Feltrin"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-210" data-comments='[{"body":"Pendente: indicação do responsável pelas regras de negócio e definições da demanda.","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="impediment-summary">Programa de Descontos Necta (Atendimento/Marketing)</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">60 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-210" data-resp-name=""></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Pendente: indicação do responsável pelas regras de negócio e definições da demanda.</div>
+    </div>
+  </div>
+</div>
+  </div>
+  <button class="btn-add-manual rg-only-screen" data-section="checklist">➕ Adicionar item manual ao checklist</button>
+  <div class="manual-add-form rg-only-screen" data-section-form="checklist" style="display:none">
+    <div class="manual-add-title">✏️ Novo item manual — Checklist de Pendências</div>
+    <div class="manual-add-grid">
+      <select class="manual-input" data-field="categoria">
+        <option value="aguardando">Categoria: Aguardando Cliente</option>
+        <option value="validacao">Categoria: Em Validação pelo Cliente</option>
+        <option value="standby">Categoria: Stand-by</option>
+      </select>
+      <input class="manual-input" data-field="titulo" placeholder="Título / resumo">
+      <input class="manual-input" data-field="responsavel" placeholder="Responsável">
+    </div>
+    <textarea class="manual-input" data-field="comentario" rows="2" placeholder="Comentário (opcional)"></textarea>
+    <div class="manual-add-actions">
+      <button class="btn-manual-confirm">Adicionar</button>
+      <button class="btn-manual-cancel">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="subsection-title">Resumo de Entregáveis <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.85">(14 itens)</span></div>
+  <div class="checklist" id="rg-entregaveis-list">
+<div class="impediment-card" data-key="NDAV-26" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="impediment-summary">[DASH] Dashboard - Operações</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-26" data-resp-name="Andre Yamada"></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-29" data-comments='[{"body":"O ajustes solicitados foram feitos, porém está pendente a validação, vamos utilizar esta agenda para auxiliá-los na validção e tentar avançar com esta entrega.","source":"manual"},{"body":"reunião para 22/09 com Walter e Alex Lima foi realizada, para validação do Dash","source":"manual"},{"body":"O indicador DF, foi identificado, a Fernanda está atuando nos ajustes e pararelo a isso , Alex e Walter seguirão com as validações","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a><span class="impediment-summary">Pipeline de Medição e Volume - Medição</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-29" data-resp-name="Alexandro Feltrin"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">O ajustes solicitados foram feitos, porém está pendente a validação, vamos utilizar esta agenda para auxiliá-los na validção e tentar avançar com esta entrega.</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">reunião para 22/09 com Walter e Alex Lima foi realizada, para validação do Dash</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">O indicador DF, foi identificado, a Fernanda está atuando nos ajustes e pararelo a isso , Alex e Walter seguirão com as validações</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-30" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a><span class="impediment-summary">Projeto de Integração Fiscal</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-30" data-resp-name="Andre Yamada"></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-53" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a><span class="impediment-summary">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-53" data-resp-name="JEYSSON LEONCIO ZERPA ARMAS"></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-75" data-comments='[{"source":"manual","body":"Aguardando Validação"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a><span class="impediment-summary">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-75" data-resp-name="JEYSSON LEONCIO ZERPA ARMAS"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Aguardando Validação</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-108" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="impediment-summary">[Ingestão de tabelas] - SAP x Databricks</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-108" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-112" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a><span class="impediment-summary">Task - Subida do job XConn IICS para PRD</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-112" data-resp-name="Andre Yamada"></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-132" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a><span class="impediment-summary">Datalake Arquitetura</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-132" data-resp-name=""></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-138" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a><span class="impediment-summary">Refactor Jobs Informática Cloud</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-138" data-resp-name=""></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-156" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a><span class="impediment-summary">App Mobile Databricks</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-156" data-resp-name=""></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-170" data-comments='[{"body":"Ajustando os indicadores e regras de negócio conforme feedbacks da apresentação. Nova entrega em preparação.","source":"manual"}]' data-hidden="true">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a><span class="impediment-summary">Medição : Mapeamento de Cenários de Inconsistência</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-170" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Ajustando os indicadores e regras de negócio conforme feedbacks da apresentação. Nova entrega em preparação.</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-190" data-comments='[{"body":"Agaurdando retorno da Tatiana (Pessoas & Cultura) quanto as validações referentes as correções/ajustes aplicados pelo Jeysson","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a><span class="impediment-summary">Refactor Dashboard - Pessoas &amp; Cultura </span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-190" data-resp-name="JEYSSON LEONCIO ZERPA ARMAS"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Agaurdando retorno da Tatiana (Pessoas &amp; Cultura) quanto as validações referentes as correções/ajustes aplicados pelo Jeysson</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-195" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a><span class="impediment-summary">Dados Medição - XCONN</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-195" data-resp-name="Alexandro Feltrin"></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-214" data-comments='[]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a><span class="impediment-summary">Ingestão de Planilha de Dados - PM RUN</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-214" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
+  <div class="impediment-comments editable-comments">
+  </div>
+</div>
+  </div>
+  <button class="btn-add-manual rg-only-screen" data-section="entregaveis">➕ Adicionar item manual aos entregáveis</button>
+  <div class="manual-add-form rg-only-screen" data-section-form="entregaveis" style="display:none">
+    <div class="manual-add-title">✏️ Novo item manual — Resumo de Entregáveis</div>
+    <div class="manual-add-grid">
+      <input class="manual-input" data-field="titulo" placeholder="Título / entregável">
+      <input class="manual-input" data-field="area" placeholder="Área impactada">
+      <input class="manual-input" data-field="responsavel" placeholder="Responsável">
+    </div>
+    <textarea class="manual-input" data-field="comentario" rows="2" placeholder="Comentário (opcional)"></textarea>
+    <div class="manual-add-actions">
+      <button class="btn-manual-confirm">Adicionar</button>
+      <button class="btn-manual-cancel">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="subsection-title">Pontos de Atenção <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.85">(5 itens)</span></div>
+  <div class="checklist" id="rg-pontos-atencao-list">
+<div class="impediment-card" data-key="NDAV-67" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="impediment-summary">[DASH] Projeto - Manutenção</span><span class="impediment-days">139 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-67" data-resp-name="Andre Yamada"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-85" data-comments='[{"source":"manual","body":"Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa."},{"source":"manual","body":"Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno."}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="impediment-summary">[DASH] Projeto - Atendimento (PBI)</span><span class="impediment-days">125 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-85" data-resp-name="Jeysson Armas"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-115" data-comments='[{"body":"1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.","source":"manual"},{"body":"Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash","source":"manual"},{"source":"manual","body":"Pendente Retorno por parte da equipe de Atendimento"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="impediment-summary">[DASH] Painel de SLAs de Atendimento e Encerramento</span><span class="impediment-days">104 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-115" data-resp-name="Alexandro Feltrin"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">1. Reunião de Validação realizada em 24/09
+2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash</div>
+    </div>
+    <div class="cr-comment">
+      <div class="cr-comment-body">Pendente Retorno por parte da equipe de Atendimento</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-124" data-comments='[{"body":"Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve","source":"manual"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="impediment-summary">CONECTIVIDADE GIS </span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-124" data-resp-name="Gilson"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
+    </div>
+  </div>
+</div>
+<div class="impediment-card" data-key="NDAV-125" data-comments='[{"source":"manual","body":"Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve"}]' data-hidden="false">
+  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="impediment-summary">CONECTIVIDADE LAKE X XCONN</span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-125" data-resp-name="Gilson"></span></div>
+  <div class="impediment-comments editable-comments">
+    <div class="cr-comment">
+      <div class="cr-comment-body">Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
+    </div>
+  </div>
+</div>
+  </div>
+  <button class="btn-add-manual rg-only-screen" data-section="pontos_atencao">➕ Adicionar item manual aos pontos de atenção</button>
+  <div class="manual-add-form rg-only-screen" data-section-form="pontos_atencao" style="display:none">
+    <div class="manual-add-title">✏️ Novo item manual — Pontos de Atenção</div>
+    <div class="manual-add-grid">
+      <input class="manual-input" data-field="titulo" placeholder="Título / resumo" style="grid-column:1/3">
+      <input class="manual-input" data-field="responsavel" placeholder="Responsável">
+    </div>
+    <textarea class="manual-input" data-field="comentario" rows="2" placeholder="Comentário (opcional)"></textarea>
+    <div class="manual-add-actions">
+      <button class="btn-manual-confirm">Adicionar</button>
+      <button class="btn-manual-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var IS_OWNER = false;
+  var IS_RG_PAGE = true;
+  var RG_CHECKLIST_COPY_PLAIN = "CHECKLIST DE PENDÊNCIAS — Semana de 12/10/2026 a 16/10/2026 (15 itens)\n\n🟧 AGUARDANDO CLIENTE\n☐ NDAV-85 - [DASH] Projeto - Atendimento (PBI) | Resp.: Jeysson Armas | 125 dias neste status\n  › Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.\n  › Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.\n☐ NDAV-124 - CONECTIVIDADE GIS  | Resp.: Gilson | 81 dias neste status\n  › Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve\n☐ NDAV-125 - CONECTIVIDADE LAKE X XCONN | Resp.: Gilson | 81 dias neste status\n  › Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve\n☐ NDAV-147 - Integração Salesforce + Metric Views | Resp.: Andre Yamada | 81 dias neste status\n  › Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas\n\n🔷 EM VALIDAÇÃO PELO CLIENTE\n☐ NDAV-54 - [DASH] Projeto - Gestão de Contratos | Frotas | Resp.: Andre Yamada | 74 dias neste status\n  › Pendente retorno do Time de Contratos para darmos sequencia a demanda\n  › Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos\n☐ NDAV-71 - [DASH] Projeto - Painel ARSESP | Resp.: Alexandro Feltrin | 46 dias neste status\n  › Para esta demanda, temos ainda as Pendencias listadas abaixo:\n  › Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.\n  › Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.\n☐ NDAV-115 - [DASH] Painel de SLAs de Atendimento e Encerramento | Resp.: Alexandro Feltrin | 104 dias neste status\n  › 1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.\n  › Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash\n  › Pendente Retorno por parte da equipe de Atendimento\n☐ NDAV-181 - MVP - Dgitalização de Documentos Regulatórios - Busca Genie | Resp.: Alexandro Feltrin | 67 dias neste status\n  › Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter\n☐ NDAV-232 - [DASH] Medição | Resp.: Fernanda Carolina Ricci Milani | 18 dias neste status\n  › Aguardando validação e retorno do Walter/Alex\n  › Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback\n  › O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10\n☐ NDAV-246 - [DASH][Controles Internos (Riscos)] - Mudanças  | Resp.: Fernanda Carolina Ricci Milani | 6 dias neste status\n  › A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕\n\n🟠 STAND-BY\n☐ NDAV-67 - [DASH] Projeto - Manutenção | Resp.: Andre Yamada | 139 dias neste status\n  › Aguardando Priorização | Definições\n☐ NDAV-105 - Validaçao de Cadastro | Resp.: JEYSSON LEONCIO ZERPA ARMAS | 60 dias neste status\n  › Aguardando Priorização | Definições\n☐ NDAV-176 - Comunicação Interna — Pílulas de Conhecimento | Resp.: TATIANA DE OLIVEIRA PRADO | 60 dias neste status\n  › Aguardando Priorização | Definições\n☐ NDAV-187 - Criação de domínio \"C-Level\" | Resp.: Alexandro Feltrin | 60 dias neste status\n  › Aguardando Priorização | Definições\n☐ NDAV-210 - Programa de Descontos Necta (Atendimento/Marketing) | 60 dias neste status\n  › Pendente: indicação do responsável pelas regras de negócio e definições da demanda.";
+  var RG_CHECKLIST_COPY_HTML = "<div style=\"font-family:Arial,sans-serif;font-size:13px;line-height:1.7;color:#1a1a2e\"><div style=\"font-weight:800;color:#122454;margin-bottom:10px\">📋 Checklist de Pendências — Semana de 12/10/2026 a 16/10/2026 <span style=\"font-weight:400;color:#5a6a7a\">(15 itens)</span></div><div style=\"margin:14px 0 8px\"><span style=\"display:inline-block;color:#fff;font-weight:700;font-size:11px;letter-spacing:0.5px;padding:3px 10px;border-radius:3px;background:#d97706\">AGUARDANDO CLIENTE</span></div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-85</span> — [DASH] Projeto - Atendimento (PBI) <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Jeysson Armas</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">125 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-124</span> — CONECTIVIDADE GIS  <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Gilson</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">81 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-125</span> — CONECTIVIDADE LAKE X XCONN <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Gilson</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">81 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-147</span> — Integração Salesforce + Metric Views <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Andre Yamada</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">81 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas</div><div style=\"margin:14px 0 8px\"><span style=\"display:inline-block;color:#fff;font-weight:700;font-size:11px;letter-spacing:0.5px;padding:3px 10px;border-radius:3px;background:#122454\">EM VALIDAÇÃO PELO CLIENTE</span></div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-54</span> — [DASH] Projeto - Gestão de Contratos | Frotas <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Andre Yamada</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">74 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente retorno do Time de Contratos para darmos sequencia a demanda</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-71</span> — [DASH] Projeto - Painel ARSESP <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Alexandro Feltrin</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">46 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Para esta demanda, temos ainda as Pendencias listadas abaixo:</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-115</span> — [DASH] Painel de SLAs de Atendimento e Encerramento <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Alexandro Feltrin</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">104 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente Retorno por parte da equipe de Atendimento</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-181</span> — MVP - Dgitalização de Documentos Regulatórios - Busca Genie <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Alexandro Feltrin</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">67 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-232</span> — [DASH] Medição <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Fernanda Carolina Ricci Milani</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">18 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando validação e retorno do Walter/Alex</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-246</span> — [DASH][Controles Internos (Riscos)] - Mudanças  <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Fernanda Carolina Ricci Milani</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">6 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕</div><div style=\"margin:14px 0 8px\"><span style=\"display:inline-block;color:#fff;font-weight:700;font-size:11px;letter-spacing:0.5px;padding:3px 10px;border-radius:3px;background:#ea580c\">STAND-BY</span></div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-67</span> — [DASH] Projeto - Manutenção <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Andre Yamada</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">139 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando Priorização | Definições</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-105</span> — Validaçao de Cadastro <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 JEYSSON LEONCIO ZERPA ARMAS</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">60 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando Priorização | Definições</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-176</span> — Comunicação Interna — Pílulas de Conhecimento <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 TATIANA DE OLIVEIRA PRADO</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">60 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando Priorização | Definições</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-187</span> — Criação de domínio &quot;C-Level&quot; <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Alexandro Feltrin</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">60 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando Priorização | Definições</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-210</span> — Programa de Descontos Necta (Atendimento/Marketing) <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">60 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente: indicação do responsável pelas regras de negócio e definições da demanda.</div></div>";
+  var cardComments = {};
+  var hiddenKeys = {};
+  var responsavelByKey = {};
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtDate(d) {
+    if (!d) return '';
+    try { return d.substring(0,10).split('-').reverse().join('/'); } catch(e) { return d; }
+  }
+
+  function buildCommentEl(key, c, idx) {
+    var div = document.createElement('div');
+    div.className = 'cr-comment';
+    var inner = '';
+    if (c.author) {
+      inner += '<div class="cr-comment-meta">' + escHtml(c.author);
+      if (c.date) inner += ' &nbsp;&middot;&nbsp; ' + fmtDate(c.date);
+      inner += '</div>';
+    }
+    inner += '<div class="cr-comment-body">' + escHtml(c.body) + '</div>';
+    div.innerHTML = inner;
+    if (IS_OWNER) {
+      var btn = document.createElement('button');
+      btn.className = 'btn-remove no-print';
+      btn.title = 'Remover este comentário';
+      btn.innerHTML = '&#10005;';
+      btn.onclick = (function(k, i) { return function() { removeComment(k, i); }; })(key, idx);
+      div.appendChild(btn);
+    }
+    return div;
+  }
+
+  /** Uma mesma chave (Jira ou manual) pode aparecer em mais de um lugar na
+   * mesma pagina (ex.: dentro do Painel de Impedimentos) - atualiza todas as
+   * ocorrencias, nao so a primeira. */
+  function forEachCardWithKey(key, fn) {
+    document.querySelectorAll('[data-key="' + key + '"]').forEach(fn);
+  }
+
+  /** Mesma ideia de forEachCardWithKey, mas para o "slot" do responsavel
+   * (.owner-pill-wrap, identificado por data-resp-key) - NUNCA usar
+   * forEachCardWithKey aqui: ele seleciona o CARD inteiro (data-key), e
+   * passar o card inteiro pra renderResponsavelPill apaga todo o conteudo do
+   * card (renderResponsavelPill faz wrap.innerHTML = ''), sobrando so o
+   * placeholder de responsavel. */
+  function forEachRespWrapWithKey(key, fn) {
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key="' + key + '"]').forEach(fn);
+  }
+
+  function renderCard(card) {
+    var key = card.dataset.key;
+    var comments = cardComments[key] || [];
+    var container = card.querySelector('.editable-comments');
+    if (!container) return;
+    container.innerHTML = '';
+    comments.forEach(function(c, idx) {
+      container.appendChild(buildCommentEl(key, c, idx));
+    });
+    if (IS_OWNER) {
+      var addBtn = document.createElement('button');
+      addBtn.className = 'btn-add-comment no-print';
+      addBtn.textContent = '+ Adicionar comentario';
+      addBtn.onclick = function() { showAddForm(key, container, addBtn); };
+      container.appendChild(addBtn);
+    }
+  }
+
+  function showAddForm(key, container, addBtn) {
+    addBtn.style.display = 'none';
+    var form = document.createElement('div');
+    form.className = 'add-comment-form no-print';
+    form.innerHTML =
+      '<textarea class="comment-input" rows="3" placeholder="Digite o comentario..."></textarea>' +
+      '<div class="form-actions">' +
+        '<button class="btn-confirm">Confirmar</button>' +
+        '<button class="btn-cancel">Cancelar</button>' +
+        '<span class="save-indicator" id="si-' + escHtml(key) + '">Salvo!</span>' +
+      '</div>';
+    form.querySelector('.btn-confirm').onclick = function() {
+      var body = form.querySelector('.comment-input').value.trim();
+      if (!body) return;
+      if (!cardComments[key]) cardComments[key] = [];
+      cardComments[key].push({body: body, source: 'manual'});
+      saveCard(key, form.querySelector('#si-' + escHtml(key)));
+      forEachCardWithKey(key, renderCard);
+    };
+    form.querySelector('.btn-cancel').onclick = function() {
+      form.remove();
+      addBtn.style.display = '';
+    };
+    container.insertBefore(form, addBtn);
+    form.querySelector('.comment-input').focus();
+  }
+
+  function removeComment(key, idx) {
+    if (!cardComments[key]) return;
+    cardComments[key].splice(idx, 1);
+    saveCard(key, null);
+    forEachCardWithKey(key, renderCard);
+  }
+
+  /** Monta o conteudo do "slot" de responsavel (pilula/placeholder + botao de
+   * editar, so para o dono) a partir de responsavelByKey - mesma logica de
+   * data-driven usada nos comentarios. Editar aqui NUNCA altera o Jira - so
+   * muda quem o relatorio mostra como responsavel pela pendencia. */
+  function renderResponsavelPill(wrap) {
+    var key = wrap.dataset.respKey;
+    var name = responsavelByKey[key] || '';
+    wrap.innerHTML = '';
+    if (name) {
+      var pill = document.createElement('span');
+      pill.className = 'owner-pill';
+      pill.textContent = '👤 ' + name;
+      wrap.appendChild(pill);
+    } else if (IS_OWNER) {
+      var placeholder = document.createElement('span');
+      placeholder.className = 'owner-pill owner-pill-empty no-print';
+      placeholder.textContent = '+ Responsável';
+      wrap.appendChild(placeholder);
+    }
+    if (IS_OWNER) {
+      var editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit-responsavel no-print';
+      editBtn.type = 'button';
+      editBtn.title = 'Editar responsável exibido no relatório (não altera o Jira)';
+      editBtn.innerHTML = '&#9998;';
+      editBtn.onclick = function() { showResponsavelForm(key, wrap); };
+      wrap.appendChild(editBtn);
+    }
+  }
+
+  function showResponsavelForm(key, wrap) {
+    var form = document.createElement('span');
+    form.className = 'resp-edit-form no-print';
+    form.innerHTML =
+      '<input type="text" class="resp-input" placeholder="Nome do responsável (ex.: Cliente)" />' +
+      '<button class="btn-resp-confirm" type="button">OK</button>' +
+      '<button class="btn-resp-cancel" type="button">Cancelar</button>';
+    var input = form.querySelector('.resp-input');
+    input.value = responsavelByKey[key] || '';
+    wrap.innerHTML = '';
+    wrap.appendChild(form);
+    input.focus();
+    input.select();
+
+    form.querySelector('.btn-resp-cancel').onclick = function() {
+      forEachRespWrapWithKey(key, renderResponsavelPill);
+    };
+    form.querySelector('.btn-resp-confirm').onclick = function() {
+      persistResponsavel(key, input.value.trim());
+    };
+    input.onkeydown = function(e) {
+      if (e.key === 'Enter') form.querySelector('.btn-resp-confirm').click();
+      if (e.key === 'Escape') form.querySelector('.btn-resp-cancel').click();
+    };
+  }
+
+  function persistResponsavel(key, value) {
+    var previous = responsavelByKey[key];
+    responsavelByKey[key] = value; // atualizacao otimista
+    forEachRespWrapWithKey(key, renderResponsavelPill);
+    google.script.run
+      .withSuccessHandler(function() { forEachRespWrapWithKey(key, renderResponsavelPill); })
+      .withFailureHandler(function(e) {
+        console.error('Erro ao salvar responsável:', e);
+        responsavelByKey[key] = previous;
+        forEachRespWrapWithKey(key, renderResponsavelPill);
+        alert('Erro ao salvar responsável: ' + e);
+      })
+      .saveResponsavel(key, value);
+  }
+
+  function applyHiddenState(card) {
+    if (card.dataset.hidden === undefined) return; // não é um card de impedimento
+    var key = card.dataset.key;
+    var isHidden = !!hiddenKeys[key];
+    // O CSS base esconde o card via [data-hidden="true"] (display:none).
+    // Sem atualizar este atributo aqui, "Restaurar" so tirava a classe
+    // .curation-hidden mas o atributo continuava "true" - o card ficava
+    // preso invisivel em vez de voltar ao normal.
+    card.dataset.hidden = isHidden ? 'true' : 'false';
+    var header = card.querySelector('.impediment-header');
+    if (!header) return;
+    var oldBtn = header.querySelector('.btn-hide, .btn-restore');
+    if (oldBtn) oldBtn.remove();
+    var oldTag = header.querySelector('.impediment-hidden-tag');
+    if (oldTag) oldTag.remove();
+
+    if (isHidden && IS_OWNER) {
+      // So a dona ve o card oculto (esmaecido, com borda tracejada) com a
+      // opcao de restaurar - pra qualquer outra pessoa ele fica totalmente
+      // invisivel (display:none via [data-hidden="true"] no CSS base).
+      card.classList.add('curation-hidden');
+      var tag = document.createElement('span');
+      tag.className = 'impediment-hidden-tag no-print';
+      tag.textContent = 'Oculto nesta semana';
+      header.appendChild(tag);
+      var restoreBtn = document.createElement('button');
+      restoreBtn.className = 'btn-restore no-print';
+      restoreBtn.textContent = 'Restaurar';
+      restoreBtn.onclick = function() { setHidden(key, false, card); };
+      header.appendChild(restoreBtn);
+    } else if (!isHidden && IS_OWNER) {
+      card.classList.remove('curation-hidden');
+      var hideBtn = document.createElement('button');
+      hideBtn.className = 'btn-hide no-print';
+      hideBtn.textContent = 'Ocultar esta semana';
+      hideBtn.onclick = function() { setHidden(key, true, card); };
+      header.appendChild(hideBtn);
+    } else {
+      card.classList.remove('curation-hidden');
+    }
+  }
+
+  function setHidden(key, hidden /*, card - nao usado mais, ver forEachCardWithKey */) {
+    hiddenKeys[key] = hidden;
+    forEachCardWithKey(key, applyHiddenState); // atualizacao otimista - nao espera o servidor pra mudar o botao
+    google.script.run
+      .withSuccessHandler(function() { forEachCardWithKey(key, applyHiddenState); })
+      .withFailureHandler(function(e) {
+        console.error('Erro ao ocultar/restaurar:', e);
+        hiddenKeys[key] = !hidden; // desfaz a atualizacao otimista
+        forEachCardWithKey(key, applyHiddenState);
+      })
+      .saveHidden(key, hidden);
+  }
+
+  function saveCard(key, indicator) {
+    google.script.run
+      .withSuccessHandler(function() {
+        if (indicator) {
+          indicator.style.opacity = '1';
+          setTimeout(function() { indicator.style.opacity = '0'; }, 2000);
+        }
+      })
+      .withFailureHandler(function(e) { console.error('Erro ao salvar comentario:', e); })
+      .saveComment(key, cardComments[key] || []);
+  }
+
+  function replaceWholePage(html) {
+    // Evita location.reload(): o sandbox do HtmlService usa um subdominio
+    // *.googleusercontent.com diferente a cada carga, e reload() quebra a
+    // comunicacao por postMessage no meio do caminho, deixando a pagina em
+    // branco. document.write() substitui o documento sem navegar de verdade.
+    document.open();
+    document.write(html);
+    document.close();
+  }
+
+  /** Recarrega a pagina ATUAL (Weekly Report OU Resumo Gerencial - cada uma
+   * tem seu proprio HTML renderizado e guardado no Drive) depois de uma
+   * mutacao bem sucedida, sem misturar o conteudo de uma na outra. */
+  function reloadCurrentPage() {
+    var fn = IS_RG_PAGE ? 'getCurrentResumoGerencialHtml' : 'getCurrentReportHtml';
+    google.script.run.withSuccessHandler(replaceWholePage)[fn]();
+  }
+
+  function initPrintButton() {
+    var btn = document.getElementById('btn-print');
+    if (!btn) return;
+    btn.onclick = function() {
+      // Abre o documento inteiro (outerHTML atual) numa aba nova via Blob,
+      // fora do iframe sandbox do Apps Script - sem isso, window.print()
+      // direto so imprime o que cabe na altura fixa desse iframe.
+      var htmlContent = '<!DOCTYPE html>' + document.documentElement.outerHTML;
+      var blob = new Blob([htmlContent], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var printWin = window.open(url, '_blank');
+      if (!printWin) {
+        alert('O navegador bloqueou a nova aba. Habilite pop-ups para este site e tente de novo.');
+        URL.revokeObjectURL(url);
+        return;
+      }
+      printWin.addEventListener('load', function() {
+        printWin.print();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+      });
+    };
+  }
+
+  function initRgExportButton() {
+    var btn = document.getElementById('btn-rg-export');
+    if (!btn) return;
+    btn.onclick = function() {
+      var sectionEl = document.getElementById('resumo-gerencial-section');
+      var styleEl = document.querySelector('style');
+      // Forca o conteudo (que tem a classe no-print) a aparecer nesta aba
+      // separada, e some com os botoes de acao (que so fazem sentido na
+      // tela original) - a mesma classe .no-print do resto do documento
+      // continua escondendo tudo o mais, entao so o Resumo Gerencial sai.
+      var overrideCss = '<style>.no-print{display:block !important;} .rg-only-screen{display:none !important;} body{padding:0;background:#fff;}</style>';
+      var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+        (styleEl ? styleEl.outerHTML : '') + overrideCss +
+        '</head><body>' + sectionEl.outerHTML + '</body></html>';
+      var blob = new Blob([htmlContent], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var printWin = window.open(url, '_blank');
+      if (!printWin) {
+        alert('O navegador bloqueou a nova aba. Habilite pop-ups para este site e tente de novo.');
+        URL.revokeObjectURL(url);
+        return;
+      }
+      printWin.addEventListener('load', function() {
+        printWin.print();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+      });
+    };
+  }
+
+  /** Botao "Atualizar apenas o Resumo Gerencial" - reprocessa os dados JA
+   * buscados do Jira (snapshot atual) sem chamar o Jira de novo, so pra
+   * reaplicar curadoria/itens manuais/historico mais recentes. Bem mais
+   * rapido que "Atualizar dados do Jira" (que busca tudo de novo). */
+  function initRgRefreshButton() {
+    var btn = document.getElementById('btn-rg-refresh');
+    if (!IS_OWNER || !btn) return;
+    btn.style.display = '';
+    var status = document.getElementById('rg-refresh-status');
+    btn.onclick = function() {
+      btn.disabled = true;
+      if (status) status.textContent = 'Atualizando Resumo Gerencial...';
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          if (resp && resp.ok) {
+            if (status) status.textContent = 'Atualizado! Recarregando...';
+            reloadCurrentPage();
+          } else {
+            if (status) status.textContent = 'Erro: ' + ((resp && resp.error) || 'falha desconhecida.');
+            btn.disabled = false;
+          }
+        })
+        .withFailureHandler(function(e) {
+          if (status) status.textContent = 'Erro ao atualizar: ' + e;
+          btn.disabled = false;
+        })
+        .refreshResumoGerencialOnly();
+    };
+  }
+
+  function initCopyChecklistButton() {
+    var btn = document.getElementById('btn-copy-checklist');
+    if (!btn) return;
+    var status = document.getElementById('rg-copy-status');
+    btn.onclick = function() {
+      var showOk = function() {
+        if (status) {
+          status.textContent = 'Copiado!';
+          setTimeout(function() { status.textContent = ''; }, 2500);
+        }
+      };
+      var showErr = function(e) {
+        if (status) status.textContent = 'Erro ao copiar: ' + e;
+      };
+      if (navigator.clipboard && window.ClipboardItem) {
+        var item = new ClipboardItem({
+          'text/html': new Blob([RG_CHECKLIST_COPY_HTML], { type: 'text/html' }),
+          'text/plain': new Blob([RG_CHECKLIST_COPY_PLAIN], { type: 'text/plain' })
+        });
+        navigator.clipboard.write([item]).then(showOk).catch(function() {
+          // Fallback: alguns navegadores nao aceitam multi-formato via write() -
+          // copia so o texto simples, que funciona em qualquer lugar.
+          navigator.clipboard.writeText(RG_CHECKLIST_COPY_PLAIN).then(showOk).catch(showErr);
+        });
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(RG_CHECKLIST_COPY_PLAIN).then(showOk).catch(showErr);
+      } else {
+        showErr('Clipboard API indisponível neste navegador.');
+      }
+    };
+  }
+
+  function initManualAddForms() {
+    if (!IS_OWNER) return; // adicionar item manual e edicao - so a dona ve os botoes/formularios
+    document.querySelectorAll('.btn-add-manual').forEach(function(addBtn) {
+      var section = addBtn.dataset.section;
+      var form = document.querySelector('.manual-add-form[data-section-form="' + section + '"]');
+      if (!form) return;
+      addBtn.onclick = function() {
+        addBtn.style.display = 'none';
+        form.style.display = 'block';
+      };
+      var cancelBtn = form.querySelector('.btn-manual-cancel');
+      cancelBtn.onclick = function() {
+        form.style.display = 'none';
+        addBtn.style.display = '';
+      };
+      var confirmBtn = form.querySelector('.btn-manual-confirm');
+      confirmBtn.onclick = function() {
+        var fields = {};
+        form.querySelectorAll('[data-field]').forEach(function(input) {
+          fields[input.dataset.field] = input.value;
+        });
+        if (!fields.titulo || !fields.titulo.trim()) {
+          alert('Preencha o título / resumo.');
+          return;
+        }
+        confirmBtn.disabled = true;
+        google.script.run
+          .withSuccessHandler(function() { reloadCurrentPage(); })
+          .withFailureHandler(function(e) {
+            alert('Erro ao adicionar item manual: ' + e);
+            confirmBtn.disabled = false;
+          })
+          .addManualItemAndRender(section, fields);
+      };
+    });
+  }
+
+  function initOwnerBar() {
+    var bar = document.getElementById('owner-bar');
+    if (!IS_OWNER || !bar) return;
+    bar.style.display = 'flex';
+    var btn = document.getElementById('btn-refresh-jira');
+    var status = document.getElementById('owner-bar-status');
+    btn.onclick = function() {
+      btn.disabled = true;
+      status.textContent = 'Atualizando dados do Jira...';
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          if (resp && resp.ok) {
+            status.textContent = 'Atualizado! Recarregando...';
+            reloadCurrentPage();
+          } else {
+            status.textContent = 'Erro: ' + ((resp && resp.error) || 'falha desconhecida.');
+            btn.disabled = false;
+          }
+        })
+        .withFailureHandler(function(e) {
+          status.textContent = 'Erro ao atualizar: ' + e;
+          btn.disabled = false;
+        })
+        .triggerRefreshJira();
+    };
+  }
+
+  function init() {
+    // Carrega estado inicial dos data-comments e data-hidden embutidos no HTML
+    document.querySelectorAll('[data-key]').forEach(function(card) {
+      var key = card.dataset.key;
+      try {
+        cardComments[key] = JSON.parse(card.dataset.comments || '[]');
+      } catch(e) { cardComments[key] = []; }
+      if (card.dataset.hidden === 'true') {
+        hiddenKeys[key] = true;
+      }
+    });
+
+    document.querySelectorAll('[data-key]').forEach(function(card) {
+      renderCard(card);
+      applyHiddenState(card);
+    });
+
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key]').forEach(function(wrap) {
+      var key = wrap.dataset.respKey;
+      if (!(key in responsavelByKey)) responsavelByKey[key] = wrap.dataset.respName || '';
+    });
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key]').forEach(renderResponsavelPill);
+
+    initOwnerBar();
+    initPrintButton();
+    initRgExportButton();
+    initRgRefreshButton();
+    initCopyChecklistButton();
+    initManualAddForms();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
