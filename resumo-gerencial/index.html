@@ -449,33 +449,11 @@ a.jira-link:hover { text-decoration: underline; }
   font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
 }
 .rg-refresh-status { font-size: 11px; color: #22c55e; white-space: nowrap; }
-.rg-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 4px; }
-/* Mesmo padrao "pilula" das .bn-card da secao Indicadores do Projeto
-   (border-radius: 999px), pra ficar visualmente consistente com o resto
-   do relatorio em vez de cantos so levemente arredondados. */
-.rg-kpi-card {
-  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #F8006A;
-  border-radius: 999px; padding: 10px 14px; text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-.rg-kpi-value { font-size: 26px; font-weight: 800; color: #122454; line-height: 1; }
-.rg-kpi-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: #5a6a7a; margin-top: 3px; line-height: 1.3; }
 
 .chart-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
 .chart-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 8px; padding: 16px 18px; flex: 1; min-width: 260px; }
 .chart-card-title { font-size: 11.5px; font-weight: 800; color: #122454; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
 .chart-card-hint { font-size: 10px; color: #94a3b8; margin-bottom: 10px; }
-.chart-svg { width: 100%; height: auto; display: block; }
-.chart-axis-label { font-size: 9px; fill: #94a3b8; }
-.chart-gridline { stroke: #eef2f7; stroke-width: 1; }
-.chart-line { fill: none; stroke: #F8006A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.chart-dot { fill: #F8006A; stroke: #fff; stroke-width: 2; }
-.chart-end-label { font-size: 13px; font-weight: 800; fill: #122454; }
-.bar-chart-wrap { display: flex; align-items: flex-end; gap: 10px; height: 110px; padding: 0 2px; }
-.bar-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
-.bar-chart-value { font-size: 10.5px; font-weight: 800; color: #122454; }
-.bar-chart-bar { width: 100%; max-width: 22px; background: #F8006A; border-radius: 4px 4px 0 0; }
-.bar-chart-label { font-size: 9px; color: #94a3b8; margin-top: 4px; }
 .status-stack-wrap { margin-top: 4px; }
 .status-stack { display: flex; gap: 2px; height: 26px; border-radius: 6px; overflow: hidden; }
 .status-seg { display: flex; align-items: center; justify-content: center; }
@@ -483,14 +461,92 @@ a.jira-link:hover { text-decoration: underline; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
 .status-legend-item { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #334155; }
 .status-legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.status-panel-pct { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+.status-panel-pct span { font-size: 11px; font-weight: 700; color: #5a6a7a; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px; }
 
-.rg-subsection-title-row { display: flex; align-items: center; gap: 12px; margin: 28px 0 14px; }
-.rg-subsection-title-row .subsection-title { margin: 0; flex: 1; }
-.btn-copy-checklist {
-  flex-shrink: 0; padding: 7px 14px; background: #fff; color: #122454;
-  border: 1px solid #122454; border-radius: 4px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+/* ── Resumo Gerencial: blocos executivos (KPIs com borda colorida +
+   tooltip de detalhe ao passar o mouse) - paleta oficial Digiage (Navy/
+   Pink/Salmao), com Verde reservado pro significado de "Concluido" (ja
+   usado em todo o resto do relatorio) e Vermelho so pro alerta de risco. ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 18px 0; }
+.kpi-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
+  min-width: 0; position: relative;
 }
-.rg-copy-status { font-size: 11px; color: #22c55e; margin-left: 8px; }
+.kpi-card.pink { border-left-color: #F8006A; }
+.kpi-card.navy { border-left-color: #122454; }
+.kpi-card.salmon { border-left-color: #c2552e; }
+.kpi-card.green { border-left-color: #16a34a; }
+.kpi-card.critical { border-left-color: #dc2626; }
+.kpi-card .kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kpi-title { font-size: 12px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; }
+.kpi-card.pink .kpi-title { color: #F8006A; }
+.kpi-card.navy .kpi-title { color: #122454; }
+.kpi-card.salmon .kpi-title { color: #c2552e; }
+.kpi-card.green .kpi-title { color: #16a34a; }
+.kpi-card.critical .kpi-title { color: #dc2626; }
+.kpi-pill { font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.kpi-card.pink .kpi-pill { background: #fff0f8; color: #F8006A; border: 1px solid #fbc9e0; }
+.kpi-card.navy .kpi-pill { background: #f6f9ff; color: #122454; border: 1px solid #dbe3f0; }
+.kpi-card.salmon .kpi-pill { background: #fdf1ec; color: #c2552e; border: 1px solid #f3cdb9; }
+.kpi-card.green .kpi-pill { background: #eefbf3; color: #16a34a; border: 1px solid #bdebd1; }
+.kpi-card.critical .kpi-pill { background: #fef2f2; color: #dc2626; border: 1px solid #fac9c9; }
+.kpi-number { font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -0.02em; color: #15192b; }
+.kpi-unit { font-size: 13px; font-weight: 600; color: #5a6a7a; margin-left: 6px; }
+.kpi-stats { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5a6a7a; }
+.kpi-stats strong { color: #15192b; font-weight: 700; }
+.kpi-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.kpi-chip {
+  font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+  background: #eefbf3; color: #16a34a; border: 1px solid #bdebd1;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.kpi-info {
+  position: absolute; top: 16px; right: 18px; width: 18px; height: 18px;
+  border-radius: 50%; border: 1px solid #dbe3f0; background: #F6F9FF;
+  color: #8893a8; font-size: 10.5px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; cursor: help;
+}
+.kpi-tooltip {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 20;
+  background: #15192b; color: #f3f5fa; border-radius: 10px; padding: 12px 14px;
+  font-size: 12px; line-height: 1.55; box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease; pointer-events: none;
+}
+.kpi-card:hover .kpi-tooltip, .kpi-card:focus-within .kpi-tooltip,
+.analyst-row:hover .kpi-tooltip, .analyst-row:focus-within .kpi-tooltip {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.kpi-tooltip-title { font-weight: 800; margin-bottom: 7px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.75; }
+.kpi-tooltip ul { margin: 0; padding-left: 16px; }
+.kpi-tooltip li { margin-bottom: 4px; }
+.kpi-tooltip li:last-child { margin-bottom: 0; }
+@media print { .kpi-tooltip, .kpi-info { display: none !important; } }
+
+.analyst-list { display: flex; flex-direction: column; gap: 10px; }
+.analyst-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; border: 1px solid #dbe3f0; border-radius: 8px; background: #F6F9FF;
+  position: relative;
+}
+.analyst-row .kpi-info { position: static; flex-shrink: 0; }
+.analyst-row .kpi-tooltip { left: auto; right: 0; width: 280px; }
+.analyst-name { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; }
+.analyst-avatar {
+  width: 26px; height: 26px; border-radius: 50%; background: #122454; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;
+  flex-shrink: 0;
+}
+.analyst-stats { font-size: 12px; color: #5a6a7a; text-align: right; }
+.analyst-stats strong { color: #15192b; }
+
+.blocklist { display: flex; flex-direction: column; gap: 10px; }
+.blocklist-item { padding: 10px 12px; border-left: 3px solid #dc2626; border-radius: 0 8px 8px 0; background: #fef2f2; }
+.blocklist-item .blocklist-key { font-family: monospace; font-size: 11.5px; font-weight: 800; color: #dc2626; margin-right: 6px; }
+.blocklist-item .blocklist-reason { font-size: 12.5px; color: #15192b; }
 
 /* Pilula do responsavel (assignee), totalmente arredondada (999px) igual
    ao resto das pilulas/badges do relatorio. */
@@ -525,34 +581,6 @@ a.jira-link:hover { text-decoration: underline; }
   padding: 3px 10px; background: #eee; color: #333;
   border: none; border-radius: 4px; cursor: pointer; font-size: 11px;
 }
-.area-badge {
-  display: inline-block; background: #eef2f7; color: #334155; border: 1px solid #dbe3f0;
-  font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
-}
-.deliv-check { color: #22c55e; font-weight: 800; font-size: 11px; }
-.manual-tag {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: #f3f0f8; color: #6b21a8; border: 1px solid #e2d5f5;
-  font-size: 9.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px;
-}
-.btn-add-manual {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
-  padding: 7px 14px; background: none; border: 1px dashed #122454; border-radius: 6px;
-  color: #122454; font-size: 11.5px; font-weight: 600; cursor: pointer;
-}
-.manual-add-form {
-  margin-top: 10px; padding: 14px 16px; border: 1px solid #dbe3f0; border-radius: 6px; background: #F6F9FF;
-}
-.manual-add-title { font-size: 11.5px; font-weight: 800; color: #122454; margin-bottom: 10px; }
-.manual-add-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-.manual-input {
-  width: 100%; padding: 7px 10px; border: 1px solid #dbe3f0; border-radius: 4px;
-  font-family: inherit; font-size: 12px; background: #fff;
-}
-textarea.manual-input { resize: vertical; grid-column: 1 / -1; }
-.manual-add-actions { display: flex; gap: 8px; margin-top: 4px; }
-.btn-manual-confirm { padding: 6px 16px; background: #122454; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
-.btn-manual-cancel { padding: 6px 16px; background: #eee; color: #333; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; }
 /* Some so na impressao/exportacao PROPRIA do Resumo Gerencial (a aba
    separada aberta pelo botao de exportar) - nunca aparece em nenhum PDF. */
 @media print { .rg-only-screen { display: none !important; } }
@@ -593,448 +621,41 @@ textarea.manual-input { resize: vertical; grid-column: 1 / -1; }
     </div>
   </div>
 
-  <div class="rg-kpi-row">
-    <div class="rg-kpi-card"><div class="rg-kpi-value">17</div><div class="rg-kpi-label">Pendências em aberto</div></div>
-    <div class="rg-kpi-card"><div class="rg-kpi-value">0</div><div class="rg-kpi-label">Entregas nesta semana</div></div>
-    <div class="rg-kpi-card"><div class="rg-kpi-value">14</div><div class="rg-kpi-label">Entregas acumuladas</div></div>
-    <div class="rg-kpi-card"><div class="rg-kpi-value">62%</div><div class="rg-kpi-label">Progresso geral do projeto</div></div>
+  <div class="kpi-grid">
+<div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 125 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 81 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 81 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 81 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">4</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>92 dias</strong> (pico de <strong>125 dias</strong>)</div><div>Afeta <strong>4 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card navy"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-115 — [DASH] Painel de SLAs de Atendimento e Encerramento · 104 dias</li><li>NDAV-54 — [DASH] Projeto - Gestão de Contratos | Frotas · 74 dias</li><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 67 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 46 dias</li><li>NDAV-232 — [DASH] Medição · 18 dias</li><li>NDAV-245 — [DASH][Controles Internos (Riscos)] - Criação do Dashboard · 11 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">7</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>47 dias</strong> (pico de <strong>104 dias</strong>)</div><div>Afeta <strong>7 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card green"><div class="kpi-top"><div class="kpi-title">Entregas da Semana</div><div class="kpi-pill">Concluído</div></div><div><span class="kpi-number">0</span><span class="kpi-unit">entregas</span></div><div class="kpi-stats"><div><strong>14</strong> entregas acumuladas no projeto</div></div></div>
   </div>
 
-  <div class="subsection-title">Evolução do Projeto</div>
-  <div class="chart-row">
-    <div class="chart-card">
-      <div class="chart-card-title">Progresso Geral — últimas semanas</div>
-      <div class="chart-card-hint">% de sub-tarefas concluídas</div>
-      <svg class="chart-svg" viewBox="0 0 400 165" role="img" aria-label="Evolução do progresso geral"><line class="chart-gridline" x1="20" y1="20" x2="380" y2="20"/><line class="chart-gridline" x1="20" y1="75" x2="380" y2="75"/><line class="chart-gridline" x1="20" y1="130" x2="380" y2="130"/><text class="chart-axis-label" x="4" y="23">100%</text><text class="chart-axis-label" x="8" y="78">50%</text><text class="chart-axis-label" x="12" y="133">0%</text><path class="chart-line" d="M20.0,70.6 L80.0,68.4 L140.0,68.4 L200.0,62.9 L260.0,61.8 L320.0,61.8 L380.0,61.8"/><circle class="chart-dot" cx="20.0" cy="70.6" r="4"><title>14/08: 54%</title></circle><circle class="chart-dot" cx="80.0" cy="68.4" r="4"><title>22/09: 56%</title></circle><circle class="chart-dot" cx="140.0" cy="68.4" r="4"><title>25/09: 56%</title></circle><circle class="chart-dot" cx="200.0" cy="62.9" r="4"><title>02/10: 61%</title></circle><circle class="chart-dot" cx="260.0" cy="61.8" r="4"><title>09/10: 62%</title></circle><circle class="chart-dot" cx="320.0" cy="61.8" r="4"><title>16/10: 62%</title></circle><circle class="chart-dot" cx="380.0" cy="61.8" r="5"><title>20/10: 62%</title></circle><text class="chart-end-label" x="345.0" y="51.8">62%</text><text class="chart-axis-label" x="2.0" y="148">14/08</text><text class="chart-axis-label" x="62.0" y="148">22/09</text><text class="chart-axis-label" x="122.0" y="148">25/09</text><text class="chart-axis-label" x="182.0" y="148">02/10</text><text class="chart-axis-label" x="242.0" y="148">09/10</text><text class="chart-axis-label" x="302.0" y="148">16/10</text><text class="chart-axis-label" x="362.0" y="148">20/10</text></svg>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">Entregas por Semana</div>
-      <div class="chart-card-hint">Sub-tarefas concluídas por semana</div>
-      <div class="bar-chart-wrap"><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="14/08: 0 entrega(s)"></div><div class="bar-chart-label">14/08</div></div><div class="bar-chart-col"><div class="bar-chart-value">3</div><div class="bar-chart-bar" style="height:90px" title="22/09: 3 entrega(s)"></div><div class="bar-chart-label">22/09</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="25/09: 0 entrega(s)"></div><div class="bar-chart-label">25/09</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="02/10: 0 entrega(s)"></div><div class="bar-chart-label">02/10</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="09/10: 0 entrega(s)"></div><div class="bar-chart-label">09/10</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="16/10: 0 entrega(s)"></div><div class="bar-chart-label">16/10</div></div><div class="bar-chart-col"><div class="bar-chart-value">0</div><div class="bar-chart-bar" style="height:0px" title="20/10: 0 entrega(s)"></div><div class="bar-chart-label">20/10</div></div></div>
-    </div>
-  </div>
   <div class="chart-card">
-    <div class="chart-card-title">Distribuição Atual por Status</div>
-    <div class="chart-card-hint">Todas as sub-tarefas do épico</div>
+    <div class="rg-header-row" style="margin-bottom:0">
+      <div>
+        <div class="chart-card-title">Distribuição Atual por Status</div>
+        <div class="chart-card-hint">Todas as sub-tarefas do épico — 172 no total</div>
+      </div>
+      <div class="status-panel-pct">62%<span>concluído</span></div>
+    </div>
     <div class="status-stack-wrap"><div class="status-stack"><div class="status-seg" style="background:#22c55e;flex:107" title="CONCLUÍDO: 107"><span class="status-seg-label">62%</span></div><div class="status-seg" style="background:#f59e0b;flex:32" title="EM PROGRESSO: 32"><span class="status-seg-label">19%</span></div><div class="status-seg" style="background:#f97316;flex:4" title="EM REVISÃO: 4"></div><div class="status-seg" style="background:#9e9e9e;flex:29" title="EM BACKLOG: 29"><span class="status-seg-label">17%</span></div></div><div class="status-legend"><div class="status-legend-item"><span class="status-legend-dot" style="background:#22c55e"></span>CONCLUÍDO — 107</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f59e0b"></span>EM PROGRESSO — 32</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f97316"></span>EM REVISÃO — 4</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#8b5cf6"></span>EM TESTES — 0</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#9e9e9e"></span>EM BACKLOG — 29</div></div></div>
   </div>
 
-  <div class="rg-subsection-title-row">
-    <div class="subsection-title">Checklist de Pendências <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.85">(17 itens)</span></div>
-    <button class="btn-copy-checklist rg-only-screen" id="btn-copy-checklist">📋 Copiar Checklist</button>
-    <span class="rg-copy-status rg-only-screen" id="rg-copy-status"></span>
-  </div>
-  <div class="checklist" id="rg-checklist-list">
-<div class="impediment-card" data-key="NDAV-85" data-comments='[{"source":"manual","body":"Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa."},{"source":"manual","body":"Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno."}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="impediment-summary">[DASH] Projeto - Atendimento (PBI)</span><span class="badge" style="background:#d97706">Aguardando Cliente</span><span class="impediment-days">125 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-85" data-resp-name="Jeysson Armas"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-124" data-comments='[{"body":"Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="impediment-summary">CONECTIVIDADE GIS </span><span class="badge" style="background:#d97706">Aguardando Cliente</span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-124" data-resp-name="Gilson"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-125" data-comments='[{"source":"manual","body":"Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="impediment-summary">CONECTIVIDADE LAKE X XCONN</span><span class="badge" style="background:#d97706">Aguardando Cliente</span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-125" data-resp-name="Gilson"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-147" data-comments='[{"source":"manual","body":"Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="impediment-summary">Integração Salesforce + Metric Views</span><span class="badge" style="background:#d97706">Aguardando Cliente</span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-147" data-resp-name="Andre Yamada"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-54" data-comments='[{"body":"Pendente retorno do Time de Contratos para darmos sequencia a demanda","source":"manual"},{"body":"Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="impediment-summary">[DASH] Projeto - Gestão de Contratos | Frotas</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">74 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-54" data-resp-name="Andre Yamada"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Pendente retorno do Time de Contratos para darmos sequencia a demanda</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-71" data-comments='[{"body":"Para esta demanda, temos ainda as Pendencias listadas abaixo:","source":"manual"},{"body":"Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.","source":"manual"},{"body":"Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="impediment-summary">[DASH] Projeto - Painel ARSESP</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">46 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-71" data-resp-name="Alexandro Feltrin"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Para esta demanda, temos ainda as Pendencias listadas abaixo:</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)
-
-DETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.
-
-SISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN
-
-STATUS: PENDENTE
-
-RESPONSÁVEL | TIME: Josemir | Douglas
-
-OBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.
-
-------------------------------
-
-Indicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)
-
-DETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.
-
-SISTEMA DE ORIGEM: GIS* (Contador)
-
-STATUS: PENDENTE
-
-RESPONSÁVEL | TIME: Leandro Zei
-
-OBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado
- 
-------------------------------
-Indicador: Mapa com visão da última medição de saída de gás de cada City Gate.
-
-DETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.
-
-SISTEMA DE ORIGEM: (Vazio)
-
-STATUS: EM ANÁLISE
-
-RESPONSÁVEL | TIME: Leando Zei e Douglas
-
-OBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE
-------------------------------
-
-Indicador: Tabela com visão da última medição de saída de gás de cada City Gate.
-
-DETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.
-
-SISTEMA DE ORIGEM: (Vazio)
-
-STATUS: EM ANÁLISE
-
-RESPONSÁVEL | TIME: Leando Zei e Douglas
-
-OBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-115" data-comments='[{"body":"1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.","source":"manual"},{"body":"Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash","source":"manual"},{"source":"manual","body":"Pendente Retorno por parte da equipe de Atendimento"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="impediment-summary">[DASH] Painel de SLAs de Atendimento e Encerramento</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">104 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-115" data-resp-name="Alexandro Feltrin"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">1. Reunião de Validação realizada em 24/09
-2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Pendente Retorno por parte da equipe de Atendimento</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-181" data-comments='[{"body":"Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="impediment-summary">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">67 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-181" data-resp-name="Alexandro Feltrin"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-232" data-comments='[{"source":"manual","body":"Aguardando validação e retorno do Walter/Alex"},{"source":"manual","body":"Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback"},{"source":"manual","body":"O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="impediment-summary">[DASH] Medição</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">18 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-232" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Aguardando validação e retorno do Walter/Alex</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-245" data-comments='[]' data-hidden="true">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="impediment-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">11 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-245" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-246" data-comments='[{"source":"manual","body":"A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-246" target="_blank">NDAV-246</a><span class="impediment-summary">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="impediment-days">6 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-246" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.
-Vamos apresentar tudo na reunião (Agendada 20/10 as 15hs)
-✕</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="MANUAL-0BA74CDA" data-comments='[{"body":"VALIDAÇÃO DOS DADOS","source":"manual"}]' data-hidden="true">
-  <div class="impediment-header"><span class="manual-tag">✏️ Manual</span><span class="impediment-summary">NDAV-200 PM RUN</span><span class="badge" style="background:#122454">Em Validação pelo Cliente</span><span class="owner-pill-wrap" data-resp-key="MANUAL-0BA74CDA" data-resp-name="NICE"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">VALIDAÇÃO DOS DADOS</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-67" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="impediment-summary">[DASH] Projeto - Manutenção</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">139 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-67" data-resp-name="Andre Yamada"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-105" data-comments='[{"body":"Aguardando Priorização | Definições","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="impediment-summary">Validaçao de Cadastro</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">60 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-105" data-resp-name="JEYSSON LEONCIO ZERPA ARMAS"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-176" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a><span class="impediment-summary">Comunicação Interna — Pílulas de Conhecimento</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">60 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-176" data-resp-name="TATIANA DE OLIVEIRA PRADO"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-187" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a><span class="impediment-summary">Criação de domínio &quot;C-Level&quot;</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">60 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-187" data-resp-name="Alexandro Feltrin"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-210" data-comments='[{"body":"Pendente: indicação do responsável pelas regras de negócio e definições da demanda.","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="impediment-summary">Programa de Descontos Necta (Atendimento/Marketing)</span><span class="badge" style="background:#ea580c">Stand-by</span><span class="impediment-days">60 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-210" data-resp-name=""></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Pendente: indicação do responsável pelas regras de negócio e definições da demanda.</div>
-    </div>
-  </div>
-</div>
-  </div>
-  <button class="btn-add-manual rg-only-screen" data-section="checklist">➕ Adicionar item manual ao checklist</button>
-  <div class="manual-add-form rg-only-screen" data-section-form="checklist" style="display:none">
-    <div class="manual-add-title">✏️ Novo item manual — Checklist de Pendências</div>
-    <div class="manual-add-grid">
-      <select class="manual-input" data-field="categoria">
-        <option value="aguardando">Categoria: Aguardando Cliente</option>
-        <option value="validacao">Categoria: Em Validação pelo Cliente</option>
-        <option value="standby">Categoria: Stand-by</option>
-      </select>
-      <input class="manual-input" data-field="titulo" placeholder="Título / resumo">
-      <input class="manual-input" data-field="responsavel" placeholder="Responsável">
-    </div>
-    <textarea class="manual-input" data-field="comentario" rows="2" placeholder="Comentário (opcional)"></textarea>
-    <div class="manual-add-actions">
-      <button class="btn-manual-confirm">Adicionar</button>
-      <button class="btn-manual-cancel">Cancelar</button>
-    </div>
-  </div>
-
-  <div class="subsection-title">Resumo de Entregáveis <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.85">(14 itens)</span></div>
-  <div class="checklist" id="rg-entregaveis-list">
-<div class="impediment-card" data-key="NDAV-26" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="impediment-summary">[DASH] Dashboard - Operações</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-26" data-resp-name="Andre Yamada"></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-29" data-comments='[{"body":"O ajustes solicitados foram feitos, porém está pendente a validação, vamos utilizar esta agenda para auxiliá-los na validção e tentar avançar com esta entrega.","source":"manual"},{"body":"reunião para 22/09 com Walter e Alex Lima foi realizada, para validação do Dash","source":"manual"},{"body":"O indicador DF, foi identificado, a Fernanda está atuando nos ajustes e pararelo a isso , Alex e Walter seguirão com as validações","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a><span class="impediment-summary">Pipeline de Medição e Volume - Medição</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-29" data-resp-name="Alexandro Feltrin"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">O ajustes solicitados foram feitos, porém está pendente a validação, vamos utilizar esta agenda para auxiliá-los na validção e tentar avançar com esta entrega.</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">reunião para 22/09 com Walter e Alex Lima foi realizada, para validação do Dash</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">O indicador DF, foi identificado, a Fernanda está atuando nos ajustes e pararelo a isso , Alex e Walter seguirão com as validações</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-30" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a><span class="impediment-summary">Projeto de Integração Fiscal</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-30" data-resp-name="Andre Yamada"></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-53" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a><span class="impediment-summary">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-53" data-resp-name="JEYSSON LEONCIO ZERPA ARMAS"></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-75" data-comments='[{"source":"manual","body":"Aguardando Validação"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a><span class="impediment-summary">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-75" data-resp-name="JEYSSON LEONCIO ZERPA ARMAS"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Aguardando Validação</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-108" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="impediment-summary">[Ingestão de tabelas] - SAP x Databricks</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-108" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-112" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a><span class="impediment-summary">Task - Subida do job XConn IICS para PRD</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-112" data-resp-name="Andre Yamada"></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-132" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a><span class="impediment-summary">Datalake Arquitetura</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-132" data-resp-name=""></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-138" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a><span class="impediment-summary">Refactor Jobs Informática Cloud</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-138" data-resp-name=""></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-156" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a><span class="impediment-summary">App Mobile Databricks</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-156" data-resp-name=""></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-170" data-comments='[{"body":"Ajustando os indicadores e regras de negócio conforme feedbacks da apresentação. Nova entrega em preparação.","source":"manual"}]' data-hidden="true">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a><span class="impediment-summary">Medição : Mapeamento de Cenários de Inconsistência</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-170" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Ajustando os indicadores e regras de negócio conforme feedbacks da apresentação. Nova entrega em preparação.</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-190" data-comments='[{"body":"Agaurdando retorno da Tatiana (Pessoas & Cultura) quanto as validações referentes as correções/ajustes aplicados pelo Jeysson","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a><span class="impediment-summary">Refactor Dashboard - Pessoas &amp; Cultura </span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-190" data-resp-name="JEYSSON LEONCIO ZERPA ARMAS"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Agaurdando retorno da Tatiana (Pessoas &amp; Cultura) quanto as validações referentes as correções/ajustes aplicados pelo Jeysson</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-195" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a><span class="impediment-summary">Dados Medição - XCONN</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-195" data-resp-name="Alexandro Feltrin"></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-214" data-comments='[]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a><span class="impediment-summary">Ingestão de Planilha de Dados - PM RUN</span><span class="deliv-check">✓ Concluído</span><span class="owner-pill-wrap" data-resp-key="NDAV-214" data-resp-name="Fernanda Carolina Ricci Milani"></span></div>
-  <div class="impediment-comments editable-comments">
-  </div>
-</div>
-  </div>
-  <button class="btn-add-manual rg-only-screen" data-section="entregaveis">➕ Adicionar item manual aos entregáveis</button>
-  <div class="manual-add-form rg-only-screen" data-section-form="entregaveis" style="display:none">
-    <div class="manual-add-title">✏️ Novo item manual — Resumo de Entregáveis</div>
-    <div class="manual-add-grid">
-      <input class="manual-input" data-field="titulo" placeholder="Título / entregável">
-      <input class="manual-input" data-field="area" placeholder="Área impactada">
-      <input class="manual-input" data-field="responsavel" placeholder="Responsável">
-    </div>
-    <textarea class="manual-input" data-field="comentario" rows="2" placeholder="Comentário (opcional)"></textarea>
-    <div class="manual-add-actions">
-      <button class="btn-manual-confirm">Adicionar</button>
-      <button class="btn-manual-cancel">Cancelar</button>
-    </div>
-  </div>
-
-  <div class="subsection-title">Pontos de Atenção <span style="font-weight:400;text-transform:none;letter-spacing:0;opacity:.85">(5 itens)</span></div>
-  <div class="checklist" id="rg-pontos-atencao-list">
-<div class="impediment-card" data-key="NDAV-67" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="impediment-summary">[DASH] Projeto - Manutenção</span><span class="impediment-days">139 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-67" data-resp-name="Andre Yamada"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-85" data-comments='[{"source":"manual","body":"Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa."},{"source":"manual","body":"Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno."}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="impediment-summary">[DASH] Projeto - Atendimento (PBI)</span><span class="impediment-days">125 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-85" data-resp-name="Jeysson Armas"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-115" data-comments='[{"body":"1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.","source":"manual"},{"body":"Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash","source":"manual"},{"source":"manual","body":"Pendente Retorno por parte da equipe de Atendimento"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="impediment-summary">[DASH] Painel de SLAs de Atendimento e Encerramento</span><span class="impediment-days">104 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-115" data-resp-name="Alexandro Feltrin"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">1. Reunião de Validação realizada em 24/09
-2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash</div>
-    </div>
-    <div class="cr-comment">
-      <div class="cr-comment-body">Pendente Retorno por parte da equipe de Atendimento</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-124" data-comments='[{"body":"Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve","source":"manual"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="impediment-summary">CONECTIVIDADE GIS </span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-124" data-resp-name="Gilson"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
-    </div>
-  </div>
-</div>
-<div class="impediment-card" data-key="NDAV-125" data-comments='[{"source":"manual","body":"Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve"}]' data-hidden="false">
-  <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="impediment-summary">CONECTIVIDADE LAKE X XCONN</span><span class="impediment-days">81 dias neste status</span><span class="owner-pill-wrap" data-resp-key="NDAV-125" data-resp-name="Gilson"></span></div>
-  <div class="impediment-comments editable-comments">
-    <div class="cr-comment">
-      <div class="cr-comment-body">Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
-    </div>
-  </div>
-</div>
-  </div>
-  <button class="btn-add-manual rg-only-screen" data-section="pontos_atencao">➕ Adicionar item manual aos pontos de atenção</button>
-  <div class="manual-add-form rg-only-screen" data-section-form="pontos_atencao" style="display:none">
-    <div class="manual-add-title">✏️ Novo item manual — Pontos de Atenção</div>
-    <div class="manual-add-grid">
-      <input class="manual-input" data-field="titulo" placeholder="Título / resumo" style="grid-column:1/3">
-      <input class="manual-input" data-field="responsavel" placeholder="Responsável">
-    </div>
-    <textarea class="manual-input" data-field="comentario" rows="2" placeholder="Comentário (opcional)"></textarea>
-    <div class="manual-add-actions">
-      <button class="btn-manual-confirm">Adicionar</button>
-      <button class="btn-manual-cancel">Cancelar</button>
-    </div>
-  </div>
+<div class="subsection-title">Controle de Demandas — Capacidade e Prazos</div><div class="kpi-grid"><div class="kpi-card critical"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens atrasados</div><ul><li>Dashboard Controles Internos - Mudanças · Fernanda</li></ul></div><div class="kpi-top"><div class="kpi-title">Itens Atrasados</div><div class="kpi-pill">Risco</div></div><div><span class="kpi-number">1</span><span class="kpi-unit">item</span></div><div class="kpi-stats"><div>Passaram da data prevista de entrega sem conclusão</div></div></div><div class="kpi-card salmon"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Horas por item</div><ul><li>Change Request - Indicadores Dashboard de Operações (procedente/improcedente) — 8h (Fernanda)</li><li>Dashboard Controles Internos - Mudanças — 18h (Fernanda)</li></ul></div><div class="kpi-top"><div class="kpi-title">Horas Estimadas em Aberto</div><div class="kpi-pill">Capacidade</div></div><div><span class="kpi-number">26</span><span class="kpi-unit">horas</span></div><div class="kpi-stats"><div>Em itens ainda não concluídos, com estimativa preenchida</div></div></div></div><div class="chart-row"><div class="chart-card"><div class="chart-card-title">Por Analista</div><div class="analyst-list"><div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">F</span>Fernanda</div><div class="analyst-stats">7 itens em aberto · 26h estimadas</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Fernanda</div><ul><li>Dashboard Time de Estratégia - (Demais indicadores) · sem estimativa</li><li>Change Request - Indicadores Dashboard de Operações (procedente/improcedente) · bloqueada</li><li>Dashboard de Medição · bloqueada</li><li>Dashboard ARSESP · bloqueada</li><li>Dashboard Atendimento · bloqueada</li><li>Dashboard Gestão de Contratos · bloqueada</li><li>Dashboard Controles Internos - Mudanças · atrasada</li></ul></div></div>
+<div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">S</span>Sem responsável</div><div class="analyst-stats">3 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Sem responsável</div><ul><li>Levantamento de tabelas para demanda do Jeysson · bloqueada</li><li>Criação de Views para demanda do Jeysson · bloqueada</li><li>Dashboard Estratégia Diretoria - Mudanças 2.0 · bloqueada</li></ul></div></div>
+<div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">J</span>Jeysson</div><div class="analyst-stats">2 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Jeysson</div><ul><li>Dashboard - Refact PBI · sem estimativa</li><li>Dashboard - P&amp;C · sem estimativa</li></ul></div></div></div></div><div class="chart-card"><div class="chart-card-title">Motivos de Bloqueio</div><div class="blocklist"><div class="blocklist-item"><span class="blocklist-key">NDAV-242</span><span class="blocklist-reason">Bloqueada por solicitação do Douglas</span></div>
+<div class="blocklist-item"><span class="blocklist-key">NDAV-232</span><span class="blocklist-reason">Aguardando retorno do Walter a partir de 15/10</span></div>
+<div class="blocklist-item"><span class="blocklist-key">NDAV-71</span><span class="blocklist-reason">Aguardando acesso GLPI</span></div>
+<div class="blocklist-item"><span class="blocklist-key">NDAV-115</span><span class="blocklist-reason">Aguardando retorno Renata/Marina</span></div>
+<div class="blocklist-item"><span class="blocklist-key">NDAV-54</span><span class="blocklist-reason">Aguardando retorno Leonardo Caffeu</span></div>
+<div class="blocklist-item"><span class="blocklist-key">✏️</span><span class="blocklist-reason">Aguardando retorno Lucas</span></div>
+<div class="blocklist-item"><span class="blocklist-key">✏️</span><span class="blocklist-reason">Bloqueada pela fase anterior</span></div>
+<div class="blocklist-item"><span class="blocklist-key">✏️</span><span class="blocklist-reason">Aguardando retorno do Igarashi</span></div></div></div></div>
 </div>
 
 <script>
 (function() {
   var IS_OWNER = false;
   var IS_RG_PAGE = true;
-  var RG_CHECKLIST_COPY_PLAIN = "CHECKLIST DE PENDÊNCIAS — Semana de 12/10/2026 a 16/10/2026 (15 itens)\n\n🟧 AGUARDANDO CLIENTE\n☐ NDAV-85 - [DASH] Projeto - Atendimento (PBI) | Resp.: Jeysson Armas | 125 dias neste status\n  › Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.\n  › Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.\n☐ NDAV-124 - CONECTIVIDADE GIS  | Resp.: Gilson | 81 dias neste status\n  › Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve\n☐ NDAV-125 - CONECTIVIDADE LAKE X XCONN | Resp.: Gilson | 81 dias neste status\n  › Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve\n☐ NDAV-147 - Integração Salesforce + Metric Views | Resp.: Andre Yamada | 81 dias neste status\n  › Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas\n\n🔷 EM VALIDAÇÃO PELO CLIENTE\n☐ NDAV-54 - [DASH] Projeto - Gestão de Contratos | Frotas | Resp.: Andre Yamada | 74 dias neste status\n  › Pendente retorno do Time de Contratos para darmos sequencia a demanda\n  › Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos\n☐ NDAV-71 - [DASH] Projeto - Painel ARSESP | Resp.: Alexandro Feltrin | 46 dias neste status\n  › Para esta demanda, temos ainda as Pendencias listadas abaixo:\n  › Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.\n  › Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.\n☐ NDAV-115 - [DASH] Painel de SLAs de Atendimento e Encerramento | Resp.: Alexandro Feltrin | 104 dias neste status\n  › 1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.\n  › Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash\n  › Pendente Retorno por parte da equipe de Atendimento\n☐ NDAV-181 - MVP - Dgitalização de Documentos Regulatórios - Busca Genie | Resp.: Alexandro Feltrin | 67 dias neste status\n  › Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter\n☐ NDAV-232 - [DASH] Medição | Resp.: Fernanda Carolina Ricci Milani | 18 dias neste status\n  › Aguardando validação e retorno do Walter/Alex\n  › Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback\n  › O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10\n☐ NDAV-246 - [DASH][Controles Internos (Riscos)] - Mudanças  | Resp.: Fernanda Carolina Ricci Milani | 6 dias neste status\n  › A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕\n\n🟠 STAND-BY\n☐ NDAV-67 - [DASH] Projeto - Manutenção | Resp.: Andre Yamada | 139 dias neste status\n  › Aguardando Priorização | Definições\n☐ NDAV-105 - Validaçao de Cadastro | Resp.: JEYSSON LEONCIO ZERPA ARMAS | 60 dias neste status\n  › Aguardando Priorização | Definições\n☐ NDAV-176 - Comunicação Interna — Pílulas de Conhecimento | Resp.: TATIANA DE OLIVEIRA PRADO | 60 dias neste status\n  › Aguardando Priorização | Definições\n☐ NDAV-187 - Criação de domínio \"C-Level\" | Resp.: Alexandro Feltrin | 60 dias neste status\n  › Aguardando Priorização | Definições\n☐ NDAV-210 - Programa de Descontos Necta (Atendimento/Marketing) | 60 dias neste status\n  › Pendente: indicação do responsável pelas regras de negócio e definições da demanda.";
-  var RG_CHECKLIST_COPY_HTML = "<div style=\"font-family:Arial,sans-serif;font-size:13px;line-height:1.7;color:#1a1a2e\"><div style=\"font-weight:800;color:#122454;margin-bottom:10px\">📋 Checklist de Pendências — Semana de 12/10/2026 a 16/10/2026 <span style=\"font-weight:400;color:#5a6a7a\">(15 itens)</span></div><div style=\"margin:14px 0 8px\"><span style=\"display:inline-block;color:#fff;font-weight:700;font-size:11px;letter-spacing:0.5px;padding:3px 10px;border-radius:3px;background:#d97706\">AGUARDANDO CLIENTE</span></div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-85</span> — [DASH] Projeto - Atendimento (PBI) <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Jeysson Armas</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">125 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-124</span> — CONECTIVIDADE GIS  <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Gilson</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">81 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-125</span> — CONECTIVIDADE LAKE X XCONN <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Gilson</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">81 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-147</span> — Integração Salesforce + Metric Views <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Andre Yamada</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">81 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas</div><div style=\"margin:14px 0 8px\"><span style=\"display:inline-block;color:#fff;font-weight:700;font-size:11px;letter-spacing:0.5px;padding:3px 10px;border-radius:3px;background:#122454\">EM VALIDAÇÃO PELO CLIENTE</span></div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-54</span> — [DASH] Projeto - Gestão de Contratos | Frotas <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Andre Yamada</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">74 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente retorno do Time de Contratos para darmos sequencia a demanda</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-71</span> — [DASH] Projeto - Painel ARSESP <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Alexandro Feltrin</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">46 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Para esta demanda, temos ainda as Pendencias listadas abaixo:</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-115</span> — [DASH] Painel de SLAs de Atendimento e Encerramento <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Alexandro Feltrin</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">104 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente Retorno por parte da equipe de Atendimento</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-181</span> — MVP - Dgitalização de Documentos Regulatórios - Busca Genie <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Alexandro Feltrin</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">67 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-232</span> — [DASH] Medição <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Fernanda Carolina Ricci Milani</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">18 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando validação e retorno do Walter/Alex</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback</div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-246</span> — [DASH][Controles Internos (Riscos)] - Mudanças  <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Fernanda Carolina Ricci Milani</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">6 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕</div><div style=\"margin:14px 0 8px\"><span style=\"display:inline-block;color:#fff;font-weight:700;font-size:11px;letter-spacing:0.5px;padding:3px 10px;border-radius:3px;background:#ea580c\">STAND-BY</span></div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-67</span> — [DASH] Projeto - Manutenção <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Andre Yamada</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">139 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando Priorização | Definições</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-105</span> — Validaçao de Cadastro <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 JEYSSON LEONCIO ZERPA ARMAS</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">60 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando Priorização | Definições</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-176</span> — Comunicação Interna — Pílulas de Conhecimento <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 TATIANA DE OLIVEIRA PRADO</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">60 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando Priorização | Definições</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-187</span> — Criação de domínio &quot;C-Level&quot; <span style=\"margin-left:10px;font-weight:700;color:#122454\">👤 Alexandro Feltrin</span> <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">60 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Aguardando Priorização | Definições</div><div style=\"padding:5px 0 5px 4px;border-left:3px solid #eef2f7;margin-bottom:2px\"><span style=\"font-weight:800;color:#F8006A\">NDAV-210</span> — Programa de Descontos Necta (Atendimento/Marketing) <span style=\"margin-left:8px;color:#b91c1c;font-style:italic;font-size:11px\">60 dias neste status</span></div><div style=\"color:#5a6a7a;font-style:italic;margin-top:2px;padding-left:4px\">💬 Pendente: indicação do responsável pelas regras de negócio e definições da demanda.</div></div>";
+  var RG_CHECKLIST_COPY_PLAIN = "";
+  var RG_CHECKLIST_COPY_HTML = "";
   var cardComments = {};
   var hiddenKeys = {};
   var responsavelByKey = {};
