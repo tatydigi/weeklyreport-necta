@@ -249,7 +249,6 @@ tr:nth-child(even) td { background: #f9fbfd; }
   color: #8893a8; font-size: 9px; font-weight: 800;
   display: flex; align-items: center; justify-content: center; cursor: help;
 }
-.bar-row .info-dot { top: 10px; right: 14px; }
 .info-tooltip {
   position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; width: 220px;
   background: #1a1a2e; color: #f3f5fa; border-radius: 8px; padding: 9px 11px;
@@ -257,9 +256,7 @@ tr:nth-child(even) td { background: #f9fbfd; }
   opacity: 0; visibility: hidden; transform: translateY(-4px);
   transition: opacity .15s ease, transform .15s ease; pointer-events: none;
 }
-.bar-row .info-tooltip { width: 230px; }
-.kanban-card:hover .info-tooltip, .kanban-card:focus-within .info-tooltip,
-.bar-row:hover .info-tooltip, .bar-row:focus-within .info-tooltip {
+.kanban-card:hover .info-tooltip, .kanban-card:focus-within .info-tooltip {
   opacity: 1; visibility: visible; transform: translateY(0);
 }
 .info-tooltip ul { margin: 0; padding-left: 14px; }
@@ -293,22 +290,45 @@ tr:nth-child(even) td { background: #f9fbfd; }
 .activity-row.st-testes .activity-badge { background: #7c3aed; }
 .activity-row.st-concluido .activity-badge { background: #16a34a; }
 
-/* ── Areas Beneficiadas - lista ranqueada de barras (troca a tabela) ── */
-.bar-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-.bar-row {
-  background: #fff; border: 1px solid #dbe3f0; border-radius: 8px;
-  padding: 10px 14px; position: relative; break-inside: avoid; page-break-inside: avoid;
+/* ── Areas Beneficiadas - resumo em 2 cards com anel (pessoas / areas) +
+   tabela ranqueada por area. ── */
+.reach-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 4px; }
+.reach-card {
+  background: #fff; border: 1px solid #dbe3f0; border-radius: 12px; padding: 16px 18px;
+  display: flex; align-items: center; gap: 18px; break-inside: avoid; page-break-inside: avoid;
 }
-.bar-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-.bar-row-area { font-weight: 700; font-size: 13px; color: #1a1a2e; }
-.bar-row-dash { font-size: 11px; color: #5a6a7a; }
-.bar-row-value { font-weight: 800; font-size: 14px; color: #122454; flex-shrink: 0; }
-.bar-track { height: 10px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
-.bar-fill { height: 100%; background: #F8006A; border-radius: 999px; }
-.kpi-grid-small { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
-/* Linha-resumo "Colaboradores da empresa (X) já beneficiados..." no fim da
-   secao - generica, reaproveitada so aqui (nao faz parte do redesign dos
-   cards .progress-card acima, que e so pra "Progresso Geral das Tarefas"). */
+.ring { width: 96px; height: 96px; flex-shrink: 0; }
+.ring circle { fill: none; stroke-width: 10; }
+.ring .ring-track { stroke: #e6eaf2; }
+.ring .ring-value { stroke: #16a34a; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.ring text { fill: #15192b; font-family: inherit; font-weight: 900; font-size: 20px; text-anchor: middle; dominant-baseline: central; }
+.reach-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #5a6a7a; }
+.reach-headline { font-size: 14px; font-weight: 700; margin: 4px 0 10px; line-height: 1.35; color: #15192b; }
+.reach-headline strong { font-size: 22px; font-weight: 900; }
+.reach-split { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #5a6a7a; }
+.reach-split span { display: inline-flex; align-items: center; gap: 6px; }
+.reach-split strong { color: #15192b; }
+.swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.swatch-yes { background: #16a34a; }
+.swatch-no { background: #e6eaf2; }
+.area-table-wrap { background: #fff; border: 1px solid #dbe3f0; border-radius: 12px; overflow-x: auto; }
+.area-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 620px; }
+.area-table th {
+  text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+  color: #5a6a7a; padding: 10px 14px; border-bottom: 1px solid #dbe3f0;
+}
+.area-table td { padding: 10px 14px; border-bottom: 1px solid #dbe3f0; vertical-align: middle; color: #15192b; }
+.area-table tr { break-inside: avoid; page-break-inside: avoid; }
+.area-table tr:last-child td { border-bottom: none; }
+.area-table .num { text-align: right; white-space: nowrap; }
+.area-name { font-weight: 700; }
+.area-dash { font-size: 11px; color: #5a6a7a; margin-top: 2px; }
+.colab-cell { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+.colab-value { font-weight: 800; width: 28px; text-align: right; flex-shrink: 0; }
+.colab-track { flex: 1; height: 8px; background: #e6eaf2; border-radius: 999px; overflow: hidden; }
+.colab-fill { height: 100%; background: #F8006A; border-radius: 999px; }
+/* Linha-resumo generica (.progress-item/.progress-header/.progress-label) -
+   hoje usada pela Produtividade Mensal. */
 .progress-item { break-inside: avoid; page-break-inside: avoid; }
 .progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
 .progress-label { font-size: 13px; color: #1a1a2e; }
@@ -481,35 +501,47 @@ a.jira-link:hover { text-decoration: underline; }
   color: #fff; font-size: 11px; cursor: pointer; margin-left: auto;
 }
 
-/* ── Seção de Progresso - cards com borda colorida por faixa de avanço
-   (3 niveis) + card "Total Geral" destacado, no lugar das barras antigas. ── */
+/* ── Seção de Progresso - Total Geral no topo + tarefas em 3 colunas pelas
+   faixas de progressTier_ (mesmas cores de antes). ── */
 .section-progress { background: #F6F9FF; }
-.progress-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-.progress-card {
-  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
-  border-radius: 8px; padding: 12px 16px; break-inside: avoid; page-break-inside: avoid;
+.progress-total {
+  background: #122454; color: #fff; border-radius: 12px; padding: 16px 20px; margin-bottom: 14px;
+  break-inside: avoid; page-break-inside: avoid;
 }
-.progress-card.tier-high { border-left-color: #16a34a; }
-.progress-card.tier-mid { border-left-color: #c2552e; }
-.progress-card.tier-low { border-left-color: #F8006A; }
-.progress-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-.progress-card-name { font-size: 13px; font-weight: 600; }
-.progress-card-name .pkey { font-family: monospace; color: #F8006A; font-weight: 700; margin-right: 6px; }
-.progress-card-meta { font-size: 12px; font-weight: 700; color: #5a6a7a; white-space: nowrap; }
-.progress-track { height: 11px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-total-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.progress-total-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.progress-total-value { font-size: 26px; font-weight: 900; }
+.progress-total-value small { font-size: 13px; font-weight: 600; opacity: 0.8; margin-left: 6px; }
+.progress-total-track { height: 14px; background: rgba(255,255,255,0.2); border-radius: 999px; overflow: hidden; }
+.progress-total-fill { height: 100%; background: #F8006A; border-radius: 999px; }
+.progress-total-tiers { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; opacity: 0.9; }
+.progress-total-tiers span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch.tier-high { background: #16a34a; }
+.swatch.tier-mid { background: #c2552e; }
+.swatch.tier-low { background: #F8006A; }
+.tier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; align-items: start; }
+.tier-col { background: #fff; border: 1px solid #dbe3f0; border-top: 4px solid #dbe3f0; border-radius: 10px; }
+.tier-col.tier-high { border-top-color: #16a34a; }
+.tier-col.tier-mid { border-top-color: #c2552e; }
+.tier-col.tier-low { border-top-color: #F8006A; }
+.tier-head { padding: 10px 14px; border-bottom: 1px solid #dbe3f0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.tier-name { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
+.tier-col.tier-high .tier-name { color: #16a34a; }
+.tier-col.tier-mid .tier-name { color: #c2552e; }
+.tier-col.tier-low .tier-name { color: #F8006A; }
+.tier-count { font-size: 11px; color: #5a6a7a; white-space: nowrap; }
+.tier-empty { padding: 10px 14px; }
+.task-row { padding: 10px 14px; border-bottom: 1px solid #dbe3f0; break-inside: avoid; page-break-inside: avoid; }
+.task-row:last-child { border-bottom: none; }
+.task-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 6px; }
+.task-name { font-size: 12.5px; font-weight: 600; line-height: 1.35; }
+.task-name .pkey { font-family: monospace; color: #F8006A; font-weight: 700; margin-right: 6px; font-size: 11.5px; }
+.task-meta { font-size: 11.5px; font-weight: 700; color: #5a6a7a; white-space: nowrap; }
+.progress-track { height: 7px; background: #e6eaf2; border-radius: 999px; overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 999px; }
 .tier-high .progress-fill { background: #16a34a; }
 .tier-mid .progress-fill { background: #c2552e; }
 .tier-low .progress-fill { background: #F8006A; }
-.progress-total {
-  background: #122454; color: #fff; border-radius: 10px; padding: 16px 20px;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  break-inside: avoid; page-break-inside: avoid;
-}
-.progress-total-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-.progress-total-value { font-size: 24px; font-weight: 900; }
-.progress-total-track { flex: 1; min-width: 160px; height: 14px; background: rgba(255,255,255,0.2); border-radius: 999px; overflow: hidden; }
-.progress-total-fill { height: 100%; background: #F8006A; border-radius: 999px; }
 
 /* ── Produtividade Mensal (só na última semana do mês) - reaproveita
    .progress-bar-track/.progress-bar-fill (NAO sao as mesmas classes do
@@ -548,10 +580,7 @@ a.jira-link:hover { text-decoration: underline; }
 }
 .print-bar button:hover { background: #eef2fb; }
 
-/* ── Resumo Gerencial ──
-   Agora vive em pagina PROPRIA (RG_PAGE_TEMPLATE, servida em
-   "?view=resumo") - nao faz mais parte do HTML_TEMPLATE do relatorio
-   semanal. Continua reaproveitando o mesmo <style>/<script>. */
+/* ── Resumo Gerencial ── (aba "resumo" do HTML_TEMPLATE) */
 .rg-section { padding: 32px 40px; background: #fff; }
 .rg-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .section-subtitle { font-size: 11.5px; color: #5a6a7a; margin-top: 4px; }
@@ -723,14 +752,22 @@ a.jira-link:hover { text-decoration: underline; }
    separada aberta pelo botao de exportar) - nunca aparece em nenhum PDF. */
 @media print { .rg-only-screen { display: none !important; } }
 
-/* Link "Ver Resumo Gerencial" no relatorio semanal - abre a pagina separada
-   numa aba nova. */
-.print-bar a.btn-view-rg {
-  padding: 5px 14px; background: #122454; color: #fff; border: none;
-  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
-  text-decoration: none; margin-right: auto;
+/* Abas Resumo Gerencial / Weekly Report (na print-bar). */
+.report-tabs { display: flex; gap: 4px; margin-right: auto; align-self: stretch; }
+.print-bar .report-tab {
+  background: none; border: none; border-bottom: 3px solid transparent; border-radius: 0;
+  padding: 6px 14px; margin-bottom: -8px; font-size: 13px; font-weight: 700; color: #5a6a7a;
+  cursor: pointer; font-family: inherit;
 }
-.print-bar a.btn-view-rg:hover { background: #0d1b3f; }
+.print-bar .report-tab:hover { background: none; color: #122454; }
+.print-bar .report-tab[aria-selected="true"] { color: #F8006A; border-bottom-color: #F8006A; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+/* O PDF do Weekly Report sai sempre, qualquer que seja a aba aberta. */
+@media print {
+  .tab-pane[data-tab-pane="report"] { display: block !important; }
+  .tab-pane[data-tab-pane="resumo"] { display: none !important; }
+}
 
 /* Seletor de semana (arquivo semanal) - escondido ate initWeekNav() achar
    alguma semana. */
@@ -750,8 +787,14 @@ a.jira-link:hover { text-decoration: underline; }
 .week-nav a.week-nav-latest { color: #F8006A; font-weight: 700; text-decoration: none; }
 .week-nav a.week-nav-latest:hover { text-decoration: underline; }
 
-/* Comparativo com a semana anterior */
-.week-compare-card { margin-bottom: 16px; }
+/* Comparativo com a semana anterior: faixa enxuta no Weekly Report
+   (.wc-grid) e variacao embutida nos cards do Resumo (.wc-delta-row). */
+.wc-delta-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; color: #8893a8; }
+.status-panel-pct .wc-delta-row { justify-content: flex-end; margin-top: 4px; }
+.status-panel-pct .wc-delta-row span { text-transform: none; letter-spacing: 0; margin-left: 0; }
+.wc-extra { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid #dbe3f0; }
+.wc-extra-stat { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5a6a7a; background: #f6f9ff; border-radius: 8px; padding: 6px 10px; }
+.wc-extra-stat strong { color: #15192b; font-size: 14px; }
 .wc-ref { font-size: 11.5px; color: #5a6a7a; margin: 4px 0 12px; }
 .wc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .wc-tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #122454; border-radius: 8px; padding: 10px 12px; }
@@ -766,15 +809,18 @@ a.jira-link:hover { text-decoration: underline; }
 </head>
 <body>
 
-<!-- Botao de impressao visivel pra todo mundo, e o link pra abrir o Resumo
-     Gerencial (pagina separada) numa aba nova. O relatorio roda dentro do
+<!-- Abas (Resumo Gerencial / Weekly Report) - as duas visoes vivem nesta
+     mesma pagina; initReportTabs() alterna entre elas. O botao de impressao
+     (so na aba do Weekly Report - o Resumo tem o proprio botao de exportar)
+     abre o HTML inteiro numa aba nova via Blob: o relatorio roda dentro do
      iframe sandbox do Apps Script (*.googleusercontent.com), que tem altura
-     fixa igual a da tela visivel - window.print() direto so imprime o que
-     coube dentro dessa caixa fixa, cortando o resto do documento. A solucao
-     e abrir o HTML inteiro numa aba nova via Blob (fora do iframe do Google,
-     sem limite de altura nenhum) e imprimir a partir de la. -->
+     fixa igual a da tela visivel - window.print() direto so imprimiria o que
+     coube nessa caixa fixa. -->
 <div class="print-bar no-print">
-  <a class="btn-view-rg" href="https://weeklyreport-necta.digiage-reports.workers.dev/resumo-gerencial/" target="_blank" rel="noopener">📊 Ver Resumo Gerencial</a>
+  <div class="report-tabs" role="tablist">
+    <button class="report-tab" role="tab" data-tab="resumo">📊 Resumo Gerencial</button>
+    <button class="report-tab" role="tab" data-tab="report">📄 Weekly Report</button>
+  </div>
   <button id="btn-print">Imprimir / Exportar PDF</button>
 </div>
 
@@ -787,6 +833,9 @@ a.jira-link:hover { text-decoration: underline; }
   <button id="btn-refresh-jira">Atualizar dados do Jira</button>
   <span class="owner-bar-status" id="owner-bar-status"></span>
 </div>
+
+<!-- ═══ ABA: WEEKLY REPORT ═══ -->
+<div class="tab-pane" data-tab-pane="report">
 
 <!-- CAPA -->
 <div class="cover page-break">
@@ -801,9 +850,9 @@ a.jira-link:hover { text-decoration: underline; }
   <div class="last-updated">Dados do Jira atualizados em: 21/10/2026 às 16:36</div>
 </div>
 
-<!-- COMPARATIVO COM A SEMANA ANTERIOR (ver WeeklyArchive.gs) -->
+<!-- COMO FOI A SEMANA: comparativo enxuto com a semana anterior (ver WeeklyArchive.gs) -->
 <div class="section section-week-compare">
-  <div class="section-title">Comparativo com a Semana Anterior</div>
+  <div class="section-title">Como foi a semana</div>
 <p class="no-items">Ainda não há semana anterior arquivada — o comparativo aparece a partir da próxima semana.</p>
 </div>
 
@@ -973,18 +1022,20 @@ a.jira-link:hover { text-decoration: underline; }
 <!-- SEÇÃO 5: ÁREAS BENEFICIADAS PELAS ENTREGAS -->
 <div class="section section-areas">
   <div class="section-title">Áreas Beneficiadas pelas Entregas</div>
-<div class="bar-list">  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">OPERAÇÕES</span> · <span class="bar-row-dash">Dash de Operações</span></div><div class="bar-row-value">18</div></div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 46.2% do total impactado · 14.5% da empresa</div></div>
-  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">SUPRIMENTOS E FACILITIES</span> · <span class="bar-row-dash">Gestão de Contratos</span></div><div class="bar-row-value">9</div></div><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">1 painéis · 23.1% do total impactado · 7.3% da empresa</div></div>
-  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIRETORIA-PRESIDÊNCIA</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">7</div></div><div class="bar-track"><div class="bar-fill" style="width:39%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
-  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">PESSOAS E CULTURA</span> · <span class="bar-row-dash">Pessoas &amp; Cultura (Partes 1 e 2)</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">7 painéis · 12.8% do total impactado · 4.0% da empresa</div></div>
-  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIR-FINANCEIRA</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
-  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">ESTRATÉGIA</span> · <span class="bar-row-dash">Painel Estratégia
-</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">10 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
-  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">MARKETING</span> · <span class="bar-row-dash">Painel Atendimento</span></div><div class="bar-row-value">4</div></div><div class="bar-track"><div class="bar-fill" style="width:22%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
-  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">REGULATÓRIO</span> · <span class="bar-row-dash">Painel ARSESP</span></div><div class="bar-row-value">3</div></div><div class="bar-track"><div class="bar-fill" style="width:17%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
-  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIRETORIA DE ASSUNTOS REGULATÓRIOS</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">1</div></div><div class="bar-track"><div class="bar-fill" style="width:6%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div></div>
-<div class="kpi-grid-small"><div class="tile green"><div class="tile-value">57</div><div class="tile-label">Colaboradores Beneficiados</div></div><div class="tile salmon"><div class="tile-value">67</div><div class="tile-label">Ainda Não Beneficiados</div></div><div class="tile green"><div class="tile-value">9</div><div class="tile-label">Áreas Beneficiadas</div></div><div class="tile salmon"><div class="tile-value">17</div><div class="tile-label">Áreas Ainda Não Beneficiadas</div></div></div>
-<div class="progress-item" style="max-width:620px;margin-top:16px"><div class="progress-header"><div class="progress-label">Colaboradores da empresa (124) já beneficiados por alguma entrega</div><div class="progress-meta" style="color:#22c55e"><strong>46%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:46%;background:#22c55e"></div></div></div>
+<div class="reach-grid"><div class="reach-card"><svg class="ring" viewBox="0 0 100 100" role="img" aria-label="46% - Colaboradores"><circle class="ring-track" cx="50" cy="50" r="42"/><circle class="ring-value" cx="50" cy="50" r="42" stroke-dasharray="121.4 263.9"/><text x="50" y="50">46%</text></svg><div><div class="reach-title">Colaboradores</div><div class="reach-headline"><strong>57</strong> de 124 colaboradores já beneficiados por alguma entrega</div><div class="reach-split"><span><i class="swatch swatch-yes"></i>Beneficiados <strong>57</strong></span><span><i class="swatch swatch-no"></i>Ainda não <strong>67</strong></span></div></div></div><div class="reach-card"><svg class="ring" viewBox="0 0 100 100" role="img" aria-label="35% - Áreas"><circle class="ring-track" cx="50" cy="50" r="42"/><circle class="ring-value" cx="50" cy="50" r="42" stroke-dasharray="92.4 263.9"/><text x="50" y="50">35%</text></svg><div><div class="reach-title">Áreas</div><div class="reach-headline"><strong>9</strong> de 26 áreas da empresa já beneficiadas</div><div class="reach-split"><span><i class="swatch swatch-yes"></i>Beneficiadas <strong>9</strong></span><span><i class="swatch swatch-no"></i>Ainda não <strong>17</strong></span></div></div></div></div>
+<div class="subsection-title">Por área (ordenado por colaboradores beneficiados)</div>
+<div class="area-table-wrap"><table class="area-table"><thead><tr><th>Área · Dashboards</th><th>Colaboradores</th><th class="num">Painéis</th><th class="num">% do impactado</th><th class="num">% da empresa</th></tr></thead><tbody>
+  <tr><td><div class="area-name">OPERAÇÕES</div><div class="area-dash">Dash de Operações</div></td><td><div class="colab-cell"><span class="colab-value">18</span><div class="colab-track"><div class="colab-fill" style="width:100%"></div></div></div></td><td class="num">5</td><td class="num">46,2%</td><td class="num">14,5%</td></tr>
+  <tr><td><div class="area-name">SUPRIMENTOS E FACILITIES</div><div class="area-dash">Gestão de Contratos</div></td><td><div class="colab-cell"><span class="colab-value">9</span><div class="colab-track"><div class="colab-fill" style="width:50%"></div></div></div></td><td class="num">1</td><td class="num">23,1%</td><td class="num">7,3%</td></tr>
+  <tr><td><div class="area-name">DIRETORIA-PRESIDÊNCIA</div><div class="area-dash">Painel Estratégia Diretoria</div></td><td><div class="colab-cell"><span class="colab-value">7</span><div class="colab-track"><div class="colab-fill" style="width:39%"></div></div></div></td><td class="num">3</td><td class="num">10,3%</td><td class="num">3,2%</td></tr>
+  <tr><td><div class="area-name">PESSOAS E CULTURA</div><div class="area-dash">Pessoas &amp; Cultura (Partes 1 e 2)</div></td><td><div class="colab-cell"><span class="colab-value">5</span><div class="colab-track"><div class="colab-fill" style="width:28%"></div></div></div></td><td class="num">7</td><td class="num">12,8%</td><td class="num">4,0%</td></tr>
+  <tr><td><div class="area-name">DIR-FINANCEIRA</div><div class="area-dash">Painel Estratégia Diretoria</div></td><td><div class="colab-cell"><span class="colab-value">5</span><div class="colab-track"><div class="colab-fill" style="width:28%"></div></div></div></td><td class="num">3</td><td class="num">10,3%</td><td class="num">3,2%</td></tr>
+  <tr><td><div class="area-name">ESTRATÉGIA</div><div class="area-dash">Painel Estratégia
+</div></td><td><div class="colab-cell"><span class="colab-value">5</span><div class="colab-track"><div class="colab-fill" style="width:28%"></div></div></div></td><td class="num">10</td><td class="num">10,3%</td><td class="num">3,2%</td></tr>
+  <tr><td><div class="area-name">MARKETING</div><div class="area-dash">Painel Atendimento</div></td><td><div class="colab-cell"><span class="colab-value">4</span><div class="colab-track"><div class="colab-fill" style="width:22%"></div></div></div></td><td class="num">5</td><td class="num">10,3%</td><td class="num">3,2%</td></tr>
+  <tr><td><div class="area-name">REGULATÓRIO</div><div class="area-dash">Painel ARSESP</div></td><td><div class="colab-cell"><span class="colab-value">3</span><div class="colab-track"><div class="colab-fill" style="width:17%"></div></div></div></td><td class="num">5</td><td class="num">10,3%</td><td class="num">3,2%</td></tr>
+  <tr><td><div class="area-name">DIRETORIA DE ASSUNTOS REGULATÓRIOS</div><div class="area-dash">Painel Estratégia Diretoria</div></td><td><div class="colab-cell"><span class="colab-value">1</span><div class="colab-track"><div class="colab-fill" style="width:6%"></div></div></div></td><td class="num">3</td><td class="num">10,3%</td><td class="num">3,2%</td></tr>
+</tbody></table></div>
 </div>
 
 <!-- SEÇÃO 6: ALTERAÇÃO DE ESCOPO E NOVAS DEMANDAS -->
@@ -1134,58 +1185,70 @@ a.jira-link:hover { text-decoration: underline; }
 <!-- SEÇÃO 8: PROGRESSO POR TAREFA -->
 <div class="section section-progress">
   <div class="section-title">Progresso Geral das Tarefas</div>
-<div class="progress-list">
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a>Pipeline de Medição e Volume - Medição</div><div class="progress-card-meta">5&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a>Projeto de Integração Fiscal</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-31" target="_blank">NDAV-31</a>Projeto RH – Desligamentos</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a>[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</div><div class="progress-card-meta">11&thinsp;/&thinsp;11 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a>[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</div><div class="progress-card-meta">8&thinsp;/&thinsp;8 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a>Task - Subida do job XConn IICS para PRD</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a>Datalake Arquitetura</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a>Refactor Jobs Informática Cloud</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a>App Mobile Databricks</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a>Medição : Mapeamento de Cenários de Inconsistência</div><div class="progress-card-meta">4&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a>Refactor Dashboard - Pessoas &amp; Cultura </div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a>Dados Medição - XCONN</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a>Ingestão de Planilha de Dados - PM RUN</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a>[DASH] Medição</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a>[DASH][Controles Internos (Riscos)] - Criação do Dashboard</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
-  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a>[DASH] Dashboard - Operações</div><div class="progress-card-meta">16&thinsp;/&thinsp;18 conclu&iacute;das &nbsp;&middot;&nbsp; 89%</div></div><div class="progress-track"><div class="progress-fill" style="width:89%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a>Federação com Base XCONN</div><div class="progress-card-meta">5&thinsp;/&thinsp;7 conclu&iacute;das &nbsp;&middot;&nbsp; 71%</div></div><div class="progress-track"><div class="progress-fill" style="width:71%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a>MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><div class="progress-card-meta">3&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 60%</div></div><div class="progress-track"><div class="progress-fill" style="width:60%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a>[DASH] Projeto - Atendimento (PBI)</div><div class="progress-card-meta">4&thinsp;/&thinsp;7 conclu&iacute;das &nbsp;&middot;&nbsp; 57%</div></div><div class="progress-track"><div class="progress-fill" style="width:57%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a>[DASH] Projeto - Painel ARSESP</div><div class="progress-card-meta">10&thinsp;/&thinsp;18 conclu&iacute;das &nbsp;&middot;&nbsp; 56%</div></div><div class="progress-track"><div class="progress-fill" style="width:56%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a>[Ingestão de tabelas] - SAP x Databricks</div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a>CONECTIVIDADE GIS </div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a>CONECTIVIDADE LAKE X XCONN</div><div class="progress-card-meta">2&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a>CONECTIVIDADE GLPI </div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-244" target="_blank">NDAV-244</a>[DASH][Estratégia][Diretoria] - Criação do Dashboard de Estratégia para a Diretoria</div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
-  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a>Dados - Estratégia</div><div class="progress-card-meta">5&thinsp;/&thinsp;12 conclu&iacute;das &nbsp;&middot;&nbsp; 42%</div></div><div class="progress-track"><div class="progress-fill" style="width:42%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a>Integração Salesforce + Metric Views</div><div class="progress-card-meta">3&thinsp;/&thinsp;8 conclu&iacute;das &nbsp;&middot;&nbsp; 38%</div></div><div class="progress-track"><div class="progress-fill" style="width:38%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a>[DASH] Projeto - Manutenção</div><div class="progress-card-meta">1&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 33%</div></div><div class="progress-track"><div class="progress-fill" style="width:33%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a>Validaçao de Cadastro</div><div class="progress-card-meta">1&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 25%</div></div><div class="progress-track"><div class="progress-fill" style="width:25%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a>[DASH] Projeto - Gestão de Contratos | Frotas</div><div class="progress-card-meta">1&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 20%</div></div><div class="progress-track"><div class="progress-fill" style="width:20%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a>[DASH] Painel de SLAs de Atendimento e Encerramento</div><div class="progress-card-meta">2&thinsp;/&thinsp;12 conclu&iacute;das &nbsp;&middot;&nbsp; 17%</div></div><div class="progress-track"><div class="progress-fill" style="width:17%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-127" target="_blank">NDAV-127</a>Task - Atividades IICS</div><div class="progress-card-meta">0&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a>Vinculaçao de Fontes de Dados - Modelo BI</div><div class="progress-card-meta">0&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a>Comunicação Interna — Pílulas de Conhecimento</div><div class="progress-card-meta">0&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a>Criação de domínio &quot;C-Level&quot;</div><div class="progress-card-meta">0&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
-  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a>Programa de Descontos Necta (Atendimento/Marketing)</div><div class="progress-card-meta">0&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
-</div>
-<div class="progress-total"><div class="progress-total-label">Total Geral</div><div class="progress-total-track"><div class="progress-total-fill" style="width:62%"></div></div><div class="progress-total-value">108 / 174 concluídas &nbsp;·&nbsp; 62%</div></div>
+<div class="progress-total"><div class="progress-total-top"><div class="progress-total-label">Total Geral</div><div class="progress-total-value">62%<small>108 / 174 subtarefas concluídas</small></div></div><div class="progress-total-track"><div class="progress-total-fill" style="width:62%"></div></div><div class="progress-total-tiers"><span><i class="swatch tier-high"></i>16 quase concluídas</span><span><i class="swatch tier-mid"></i>10 em andamento</span><span><i class="swatch tier-low"></i>10 no início</span></div></div>
+<div class="tier-grid"><div class="tier-col tier-high"><div class="tier-head"><span class="tier-name">Quase concluídas · ≥ 80%</span><span class="tier-count">16 tarefas</span></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a>Pipeline de Medição e Volume - Medição</div><div class="task-meta">5/5 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a>Projeto de Integração Fiscal</div><div class="task-meta">2/2 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-31" target="_blank">NDAV-31</a>Projeto RH – Desligamentos</div><div class="task-meta">3/3 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a>[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</div><div class="task-meta">11/11 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a>[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</div><div class="task-meta">8/8 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a>Task - Subida do job XConn IICS para PRD</div><div class="task-meta">1/1 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a>Datalake Arquitetura</div><div class="task-meta">3/3 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a>Refactor Jobs Informática Cloud</div><div class="task-meta">1/1 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a>App Mobile Databricks</div><div class="task-meta">2/2 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a>Medição : Mapeamento de Cenários de Inconsistência</div><div class="task-meta">4/4 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a>Refactor Dashboard - Pessoas &amp; Cultura </div><div class="task-meta">3/3 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a>Dados Medição - XCONN</div><div class="task-meta">2/2 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a>Ingestão de Planilha de Dados - PM RUN</div><div class="task-meta">2/2 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a>[DASH] Medição</div><div class="task-meta">3/3 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a>[DASH][Controles Internos (Riscos)] - Criação do Dashboard</div><div class="task-meta">1/1 · 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a>[DASH] Dashboard - Operações</div><div class="task-meta">16/18 · 89%</div></div><div class="progress-track"><div class="progress-fill" style="width:89%"></div></div></div></div><div class="tier-col tier-mid"><div class="tier-head"><span class="tier-name">Em andamento · 40–79%</span><span class="tier-count">10 tarefas</span></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a>Federação com Base XCONN</div><div class="task-meta">5/7 · 71%</div></div><div class="progress-track"><div class="progress-fill" style="width:71%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a>MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><div class="task-meta">3/5 · 60%</div></div><div class="progress-track"><div class="progress-fill" style="width:60%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a>[DASH] Projeto - Atendimento (PBI)</div><div class="task-meta">4/7 · 57%</div></div><div class="progress-track"><div class="progress-fill" style="width:57%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a>[DASH] Projeto - Painel ARSESP</div><div class="task-meta">10/18 · 56%</div></div><div class="progress-track"><div class="progress-fill" style="width:56%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a>[Ingestão de tabelas] - SAP x Databricks</div><div class="task-meta">1/2 · 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a>CONECTIVIDADE GIS </div><div class="task-meta">1/2 · 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a>CONECTIVIDADE LAKE X XCONN</div><div class="task-meta">2/4 · 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a>CONECTIVIDADE GLPI </div><div class="task-meta">1/2 · 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-244" target="_blank">NDAV-244</a>[DASH][Estratégia][Diretoria] - Criação do Dashboard de Estratégia para a Diretoria</div><div class="task-meta">1/2 · 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a>Dados - Estratégia</div><div class="task-meta">5/12 · 42%</div></div><div class="progress-track"><div class="progress-fill" style="width:42%"></div></div></div></div><div class="tier-col tier-low"><div class="tier-head"><span class="tier-name">Início · &lt; 40%</span><span class="tier-count">10 tarefas</span></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a>Integração Salesforce + Metric Views</div><div class="task-meta">3/8 · 38%</div></div><div class="progress-track"><div class="progress-fill" style="width:38%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a>[DASH] Projeto - Manutenção</div><div class="task-meta">1/3 · 33%</div></div><div class="progress-track"><div class="progress-fill" style="width:33%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a>Validaçao de Cadastro</div><div class="task-meta">1/4 · 25%</div></div><div class="progress-track"><div class="progress-fill" style="width:25%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a>[DASH] Projeto - Gestão de Contratos | Frotas</div><div class="task-meta">1/5 · 20%</div></div><div class="progress-track"><div class="progress-fill" style="width:20%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a>[DASH] Painel de SLAs de Atendimento e Encerramento</div><div class="task-meta">2/12 · 17%</div></div><div class="progress-track"><div class="progress-fill" style="width:17%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-127" target="_blank">NDAV-127</a>Task - Atividades IICS</div><div class="task-meta">0/1 · 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a>Vinculaçao de Fontes de Dados - Modelo BI</div><div class="task-meta">0/3 · 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a>Comunicação Interna — Pílulas de Conhecimento</div><div class="task-meta">0/4 · 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a>Criação de domínio &quot;C-Level&quot;</div><div class="task-meta">0/2 · 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div><div class="task-row"><div class="task-top"><div class="task-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a>Programa de Descontos Necta (Atendimento/Marketing)</div><div class="task-meta">0/2 · 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div></div></div>
 </div>
 
 <!-- SEÇÃO 9: PRODUTIVIDADE MENSAL (gerada apenas na última semana do mês; vazia nas demais) -->
 
 
+</div>
+
+<!-- ═══ ABA: RESUMO GERENCIAL ═══ -->
+<div class="tab-pane" data-tab-pane="resumo">
+<!-- no-print: o PDF do botao "Imprimir / Exportar PDF" e so o Weekly Report;
+     o Resumo tem seu proprio botao de exportacao (initRgExportButton). -->
+<div class="rg-section no-print" id="resumo-gerencial-section">
+  <div class="rg-header-row">
+    <div>
+      <div class="section-title">Resumo Gerencial</div>
+      <div class="section-subtitle">Semana de referência: 12/10/2026 a 16/10/2026 &nbsp;·&nbsp; Dados do Jira atualizados em: 21/10/2026 às 16:36</div>
+    </div>
+    <div class="rg-actions rg-only-screen">
+      <button class="btn-rg-refresh no-print" id="btn-rg-refresh" style="display:none">🔄 Atualizar apenas o Resumo Gerencial</button>
+      <span class="rg-refresh-status no-print" id="rg-refresh-status"></span>
+      <button class="btn-rg-export" id="btn-rg-export">🖨️ Imprimir / Exportar PDF do Resumo Gerencial</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+<div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 126 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 82 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 82 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 82 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">4</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>93 dias</strong> (pico de <strong>126 dias</strong>)</div><div>Afeta <strong>4 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card navy"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-115 — [DASH] Painel de SLAs de Atendimento e Encerramento · 105 dias</li><li>NDAV-54 — [DASH] Projeto - Gestão de Contratos | Frotas · 75 dias</li><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 68 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 47 dias</li><li>NDAV-232 — [DASH] Medição · 19 dias</li><li>NDAV-245 — [DASH][Controles Internos (Riscos)] - Criação do Dashboard · 12 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">7</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>48 dias</strong> (pico de <strong>105 dias</strong>)</div><div>Afeta <strong>7 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card green"><div class="kpi-top"><div class="kpi-title">Entregas da Semana</div><div class="kpi-pill">Concluído</div></div><div><span class="kpi-number">0</span><span class="kpi-unit">entregas</span></div><div class="kpi-stats"><div><strong>14</strong> entregas acumuladas no projeto</div></div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="rg-header-row" style="margin-bottom:0">
+      <div>
+        <div class="chart-card-title">Distribuição Atual por Status</div>
+        <div class="chart-card-hint">Todas as sub-tarefas do épico — 174 no total</div>
+      </div>
+      <div class="status-panel-pct">62%<span>concluído</span></div>
+    </div>
+    <div class="status-stack-wrap"><div class="status-stack"><div class="status-seg" style="background:#22c55e;flex:108" title="CONCLUÍDO: 108"><span class="status-seg-label">62%</span></div><div class="status-seg" style="background:#f59e0b;flex:32" title="EM PROGRESSO: 32"><span class="status-seg-label">18%</span></div><div class="status-seg" style="background:#f97316;flex:4" title="EM REVISÃO: 4"></div><div class="status-seg" style="background:#9e9e9e;flex:30" title="EM BACKLOG: 30"><span class="status-seg-label">17%</span></div></div><div class="status-legend"><div class="status-legend-item"><span class="status-legend-dot" style="background:#22c55e"></span>CONCLUÍDO — 108</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f59e0b"></span>EM PROGRESSO — 32</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f97316"></span>EM REVISÃO — 4</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#8b5cf6"></span>EM TESTES — 0</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#9e9e9e"></span>EM BACKLOG — 30</div></div></div>
+<div class="wc-extra"><div class="wc-extra-stat">Subtarefas concluídas <strong>108</strong></div><div class="wc-extra-stat">Novas demandas <strong>3</strong></div></div>
+  </div>
+
+<div class="subsection-title">Controle de Demandas — Capacidade e Prazos</div><div class="kpi-grid"><div class="kpi-card critical"><div class="kpi-top"><div class="kpi-title">Itens Atrasados</div><div class="kpi-pill">Risco</div></div><div><span class="kpi-number">0</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Passaram da data prevista de entrega sem conclusão</div></div></div><div class="kpi-card salmon"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Horas por item</div><ul><li>Change Request - Indicadores Dashboard de Operações (procedente/improcedente) — 8h (Fernanda)</li></ul></div><div class="kpi-top"><div class="kpi-title">Horas Estimadas em Aberto</div><div class="kpi-pill">Capacidade</div></div><div><span class="kpi-number">8</span><span class="kpi-unit">horas</span></div><div class="kpi-stats"><div>Em itens ainda não concluídos, com estimativa preenchida</div></div></div></div><div class="chart-row"><div class="chart-card"><div class="chart-card-title">Por Analista</div><div class="analyst-list"><div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">F</span>Fernanda</div><div class="analyst-stats">6 itens em aberto · 8h estimadas</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Fernanda</div><ul><li>Dashboard Time de Estratégia - (Demais indicadores) · sem estimativa</li><li>Change Request - Indicadores Dashboard de Operações (procedente/improcedente) · bloqueada</li><li>Dashboard de Medição · bloqueada</li><li>Dashboard ARSESP · bloqueada</li><li>Dashboard Atendimento · bloqueada</li><li>Dashboard Gestão de Contratos · bloqueada</li></ul></div></div>
+<div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">S</span>Sem responsável</div><div class="analyst-stats">3 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Sem responsável</div><ul><li>Levantamento de tabelas para demanda do Jeysson · bloqueada</li><li>Criação de Views para demanda do Jeysson · bloqueada</li><li>Dashboard Estratégia Diretoria - Mudanças 2.0 · bloqueada</li></ul></div></div>
+<div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">J</span>Jeysson</div><div class="analyst-stats">2 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Jeysson</div><ul><li>Dashboard - Refact PBI · bloqueada</li><li>Dashboard - P&amp;C · bloqueada</li></ul></div></div></div></div></div><div class="chart-row"><div class="chart-card"><div class="chart-card-title">Demandas da Semana</div><div class="dw-table-wrap"><table class="dw-table"><thead><tr><th>Id Task/Subtask</th><th>Demanda</th><th>Status</th><th>Data Início</th><th>Data Prevista para Entrega</th><th>Observação / Bloqueio</th></tr></thead><tbody><tr><td class="dw-key">NDAV-244</td><td>Desenvolvimento de um Dashboard somente para a Diretoria, com base nos indicadores do time de Estrategia</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">13/10/2026</td><td class="dw-date">14/10/2026</td><td class="dw-obs"></td></tr>
+<tr><td class="dw-key"></td><td>Ingestão SAP X DATABRICKS (tabela solicitada pelo Douglas)</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">15/10/2026</td><td class="dw-date">15/10/2026</td><td class="dw-obs"></td></tr>
+<tr><td class="dw-key"></td><td>Dashboard Controles Internos - Mudanças - Versão 1.0</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">14/10/2026</td><td class="dw-date"></td><td class="dw-obs">Apresentada em 21/10</td></tr>
+<tr><td class="dw-key"></td><td>Dashboard Estratégia Diretoria - Mudanças  - Versão 1.0</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">13/10/2026</td><td class="dw-date"></td><td class="dw-obs">Iremos apresentar o que fizemos até o momento na reunião agendada para 21/10</td></tr></tbody></table></div></div></div>
+</div>
+</div>
+
 <script>
 (function() {
   var IS_OWNER = false;
-  var IS_RG_PAGE = false;
   // Trocado na hora de servir/publicar (applyWeekNav_ em WeeklyArchive.gs);
   // se continuar string (ex.: copia aberta pelo botao de imprimir), o
   // seletor de semana simplesmente nao aparece.
   var WEEK_NAV = {"mode":"static","rootRel":"","current":"2026-10-12"};
+  // Aba inicial: trocada por applyInitialTab_ ("?view=resumo" no Web App);
+  // no GitHub Pages, o #resumo / #report da URL tem prioridade.
+  var INITIAL_TAB = "__INITIAL_TAB_PLACEHOLDER__";
+  var activeTab = 'resumo';
   var RG_CHECKLIST_COPY_PLAIN = "";
   var RG_CHECKLIST_COPY_HTML = "";
   var cardComments = {};
@@ -1445,12 +1508,40 @@ a.jira-link:hover { text-decoration: underline; }
     document.close();
   }
 
-  /** Recarrega a pagina ATUAL (Weekly Report OU Resumo Gerencial - cada uma
-   * tem seu proprio HTML renderizado e guardado no Drive) depois de uma
-   * mutacao bem sucedida, sem misturar o conteudo de uma na outra. */
+  /** Recarrega a pagina depois de uma mutacao bem sucedida, voltando na
+   * mesma aba em que a pessoa estava. */
   function reloadCurrentPage() {
-    var fn = IS_RG_PAGE ? 'getCurrentResumoGerencialHtml' : 'getCurrentReportHtml';
-    google.script.run.withSuccessHandler(replaceWholePage)[fn]();
+    google.script.run.withSuccessHandler(replaceWholePage).getCurrentReportHtml(activeTab);
+  }
+
+  function showTab(tab) {
+    activeTab = tab === 'report' ? 'report' : 'resumo';
+    document.querySelectorAll('.report-tab').forEach(function(b) {
+      b.setAttribute('aria-selected', String(b.dataset.tab === activeTab));
+    });
+    document.querySelectorAll('.tab-pane').forEach(function(p) {
+      p.classList.toggle('active', p.dataset.tabPane === activeTab);
+    });
+    // O botao da barra imprime o Weekly Report; o Resumo tem o proprio.
+    var printBtn = document.getElementById('btn-print');
+    if (printBtn) printBtn.style.visibility = activeTab === 'report' ? 'visible' : 'hidden';
+  }
+
+  function initReportTabs() {
+    if (!document.querySelector('.tab-pane')) return;
+    var tab = INITIAL_TAB === 'report' ? 'report' : 'resumo';
+    if (location.hash === '#report' || location.hash === '#resumo') tab = location.hash.slice(1);
+    showTab(tab);
+    document.querySelectorAll('.report-tab').forEach(function(b) {
+      b.onclick = function() {
+        showTab(b.dataset.tab);
+        // No GitHub Pages a aba fica na URL (link compartilhavel); no Web
+        // App a pagina roda num iframe, entao nao adianta mexer no hash.
+        if (WEEK_NAV && WEEK_NAV.mode === 'static') {
+          try { history.replaceState(null, '', '#' + activeTab); } catch (e) {}
+        }
+      };
+    });
   }
 
   function initPrintButton() {
@@ -1660,19 +1751,22 @@ a.jira-link:hover { text-decoration: underline; }
     initRgRefreshButton();
     initCopyChecklistButton();
     initManualAddForms();
+    initReportTabs();
     initWeekNav();
   }
 
-  /** URL de uma semana: no Web App, "?week=" (a atual fica sem parametro);
-   * no GitHub Pages, semanas/<semana>/ relativo a raiz do site. */
+  /** URL de uma semana, abrindo na aba atual: no Web App, "?week=" (a
+   * atual fica sem parametro); no GitHub Pages, semanas/<semana>/ relativo
+   * a raiz do site. */
   function weekUrl(week, latest) {
     var isLatest = week === latest;
     if (WEEK_NAV.mode === 'static') {
-      var path = WEEK_NAV.rootRel + (isLatest ? '' : 'semanas/' + week + '/') + (IS_RG_PAGE ? 'resumo-gerencial/' : '');
-      return path || './';
+      var path = WEEK_NAV.rootRel + (isLatest ? '' : 'semanas/' + week + '/');
+      return (path || './') + '#' + activeTab;
     }
+    // Sem "view" o Web App abre no Resumo, entao so o Weekly Report precisa ir na URL.
     var params = [];
-    if (IS_RG_PAGE) params.push('view=resumo');
+    if (activeTab === 'report') params.push('view=report');
     if (!isLatest) params.push('week=' + week);
     return WEEK_NAV.baseUrl + (params.length ? '?' + params.join('&') : '');
   }
@@ -1691,6 +1785,9 @@ a.jira-link:hover { text-decoration: underline; }
     }
     el.innerHTML = html;
     el.style.display = 'flex';
+    // "Ir para a semana atual" tambem respeita a aba aberta no momento do clique.
+    var latestLink = el.querySelector('.week-nav-latest');
+    if (latestLink) latestLink.onclick = function() { latestLink.href = weekUrl(latest, latest); };
     document.getElementById('week-nav-select').onchange = function() {
       // _top: no Web App a pagina roda dentro do iframe do Apps Script.
       window.open(weekUrl(this.value, latest), '_top');
