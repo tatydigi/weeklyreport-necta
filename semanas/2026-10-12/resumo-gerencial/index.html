@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Resumo Gerencial - NECTA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a2e; background: #fff; }
+
+.page-break { page-break-after: always; }
+/* Tamanho de página fixado em A3 sem margens — mesma configuração usada no
+   Ctrl+P (Destino: Salvar como PDF, Papel: A3, Margens: Nenhumas, Escala: 101).
+   Declarar aqui evita depender do que ficou selecionado da última vez no diálogo. */
+@page { size: A3; margin: 0; }
+@media print {
+  /* O relatório roda dentro do iframe sandbox do Apps Script
+     (*.googleusercontent.com), que por padrão trata o conteúdo como uma área
+     com rolagem própria. Sem isto, a impressão via Ctrl+P captura só o que
+     está "visível" nesse scroll em vez do documento inteiro, virando 1
+     página só com conteúdo cortado/duplicado. */
+  html, body {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  .page-break { page-break-after: always; }
+  /* A3 tem o dobro da área de uma A4 — mantém o mesmo tamanho de fonte da tela
+     em vez de reduzir, para aproveitar o espaço extra em vez de deixá-lo vazio. */
+  body { font-size: 13px; }
+  .section { padding: 40px 56px; }
+  a.jira-link { color: inherit; text-decoration: none; }
+  /* Sem isso, o Chrome aplica "economia de tinta" no PDF e escurece/dessatura
+     fundos e degradês mesmo com "Imagens em segundo plano" marcado — força as
+     cores exatas da tela na impressão. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+
+/* ── Capa ──
+   Marca Digiage: uma cor dominante por tela (Navy) + Pink só como detalhe
+   de canto — nunca atravessando o texto, seguindo o guia de marca.
+   Na TELA a capa fica compacta (não faz sentido ocupar 100vh num relatório
+   que rola); na IMPRESSÃO (@media print, mais abaixo) ela volta a ocupar a
+   página inteira, exatamente como antes. */
+.cover {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  background:
+    radial-gradient(circle at 100% 100%, rgba(248,0,106,0.35) 0%, transparent 25%),
+    #122454;
+  color: #fff; text-align: center; padding: 20px 40px;
+}
+.cover-logos {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+}
+.logo-digiage { height: 28px; object-fit: contain; }
+.logo-necta { height: 28px; object-fit: contain; }
+.cover-logos-divider {
+  width: 1px; height: 22px; background: rgba(255,255,255,0.4);
+}
+.cover h1 { font-size: 20px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 6px; }
+.cover h2 { font-size: 12px; font-weight: 400; opacity: 0.85; margin-bottom: 10px; }
+.cover .date-badge {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);
+  padding: 6px 18px; border-radius: 4px; font-size: 11px; letter-spacing: 0.5px;
+}
+.cover .last-updated {
+  font-size: 10px; opacity: 0.7; margin-top: 10px;
+}
+@media print {
+  /* Restaura o tamanho de capa de página inteira só na impressão/PDF - a
+     regra .cover acima (fora de @media) já roda também ao imprimir, então
+     este bloco precisa vir DEPOIS dela no arquivo para ganhar no empate de
+     especificidade (CSS decide por ordem quando a especificidade é igual). */
+  .cover { min-height: 100vh; padding: 40px; }
+  .cover-logos { gap: 28px; margin-bottom: 60px; }
+  .logo-digiage, .logo-necta { height: 56px; }
+  .cover-logos-divider { height: 48px; }
+  .cover h1 { font-size: 42px; letter-spacing: 2px; margin-bottom: 16px; }
+  .cover h2 { font-size: 18px; margin-bottom: 40px; }
+  .cover .date-badge { padding: 10px 28px; font-size: 14px; letter-spacing: 1px; }
+  .cover .last-updated { font-size: 11px; margin-top: 16px; }
+}
+
+/* ── Seções ── */
+.section { padding: 32px 40px; border-bottom: 2px solid #dbe3f0; }
+/* Nenhum título (de seção ou subseção) pode ficar "sozinho" no fim de uma
+   página com o conteúdo inteiro pulando pra próxima — isso deixava um vão em
+   branco embaixo do título (visto no Painel de Impedimentos: "Aguardando
+   Cliente" ficava numa página e os cards de NDAV-71/115/181 na seguinte). */
+.section-title {
+  font-size: 17px; font-weight: 700; color: #122454;
+  border-left: 5px solid #F8006A; padding-left: 12px;
+  margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+  break-after: avoid; page-break-after: avoid;
+}
+.subsection-title {
+  font-size: 11.5px; font-weight: 800; color: #5a6a7a;
+  margin: 22px 0 10px; text-transform: uppercase; letter-spacing: 0.6px;
+  break-after: avoid; page-break-after: avoid;
+}
+
+/* ── Cores de fundo por seção ──
+   Off-white único da marca (#F6F9FF), alternado com branco puro só pra
+   separar visualmente uma seção da outra — em vez de um arco-íris pastel
+   fora da paleta oficial. */
+.section-status      { background: #fff; }
+.section-priority    { background: #F6F9FF; }
+.section-bignumbers  { background: #fff; }
+.section-areas       { background: #F6F9FF; }
+.section-changes     { background: #fff; }
+.section-impediments { background: #F6F9FF; }
+.section-monthly     { background: #fff; }
+
+/* ── Totalizador de status ── */
+.status-summary { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.status-card {
+  flex: 1; min-width: 110px;
+  background: #fff; border: 1px solid #dbe3f0; border-radius: 6px;
+  padding: 12px 16px; text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.status-card .count { font-size: 30px; font-weight: 800; }
+.status-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #5a6a7a; margin-top: 4px; }
+
+/* ── Lista de tarefas ── */
+.task-item { margin-bottom: 14px; border: 1px solid #dbe3f0; border-radius: 6px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+.task-header { background: #122454; color: #fff; padding: 8px 14px; font-weight: 600; font-size: 13px; }
+.task-header .jira-link { color: #F6926F; margin-right: 6px; font-family: monospace; }
+.subtask-list { padding: 4px 0; background: #fff; }
+/* Seção "Atividades da Semana" costuma ser curta — mantém a lista inteira
+   junta na impressão em vez de deixar o último item sozinho na página seguinte. */
+.section-priority .subtask-list { break-inside: avoid; page-break-inside: avoid; }
+/* O título nunca pode ficar "sozinho" no fim de uma página com a lista inteira
+   pulando pra próxima — isso deixava um vão em branco embaixo do título. */
+.section-priority .section-title { break-after: avoid; page-break-after: avoid; }
+/* Compacta as linhas desta seção especificamente, pra maximizar a chance de
+   título + lista caberem juntos na mesma página em vez de pular de página. */
+.section-priority .subtask-row { padding: 3px 14px 3px 28px; font-size: 12px; }
+.section-priority .badge { font-size: 9px; padding: 1px 7px; }
+.section-priority .section-title { margin-bottom: 10px; }
+.subtask-row {
+  display: flex; align-items: center; padding: 5px 14px 5px 28px;
+  border-bottom: 1px solid #eef2f7; gap: 10px; break-inside: avoid; page-break-inside: avoid;
+}
+.subtask-row:last-child { border-bottom: none; }
+.subtask-key { font-family: monospace; font-size: 12px; color: #F8006A; min-width: 80px; flex-shrink: 0; }
+.subtask-summary { flex: 1; }
+.subtask-parent { font-size: 11px; color: #5a6a7a; flex-shrink: 0; }
+
+/* ── Badge de status ── */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; white-space: nowrap; color: #fff;
+}
+
+/* ── Big Numbers ── */
+.bn-columns { display: flex; align-items: flex-start; gap: 16px; }
+.bn-subsection { break-inside: avoid; page-break-inside: avoid; flex: 1; min-width: 0; }
+.bn-subsection + .bn-subsection { border-left: 1px solid rgba(0,0,0,0.08); padding-left: 16px; }
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0; border-radius: 8px; padding: 12px 14px; }
+.tile.pink   { border-left-color: #F8006A; }
+.tile.salmon { border-left-color: #c2552e; }
+.tile.navy   { border-left-color: #122454; }
+.tile.green  { border-left-color: #16a34a; }
+.tile-value { font-size: 26px; font-weight: 900; line-height: 1; color: #122454; }
+.tile-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #5a6a7a; margin-top: 5px; line-height: 1.3; }
+
+/* ── Tabelas ── */
+table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
+th { background: #122454; color: #fff; padding: 7px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 6px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; }
+tr:nth-child(even) td { background: #f9fbfd; }
+
+/* ── Status das Tarefas (Kanban) - redesign aprovado em mockup: card mostra
+   so chave+nome; a lista de sub-tarefas daquele status fica num tooltip "i"
+   (hover/clique) em vez de um "[N subtasks]" sempre visivel. ── */
+.kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: start; margin-top: 8px; }
+.kanban-col { background: #fff; border: 1px solid #dbe3f0; border-radius: 10px; }
+@media print {
+  /* O Chrome nao pagina bem layouts CSS Grid na impressao - quando o board
+     nao cabe inteiro no espaco restante da pagina, ele empurra o grid
+     INTEIRO pra proxima pagina, deixando so o titulo da secao numa folha em
+     branco. Troca pra colunas inline-block so na impressao, que o motor de
+     paginacao do Chrome consegue quebrar entre paginas normalmente (igual
+     já funciona com <table>, mantendo a mesma aparencia lado a lado. */
+  .kanban-board { display: block; margin-top: 8px; font-size: 0; }
+  .kanban-col {
+    display: inline-block; vertical-align: top;
+    width: 19%; margin-right: 1%; font-size: 1rem;
+    /* overflow:hidden clicaria o conteudo que passa da borda - nunca usar
+       aqui (ja causou bug de pagina em branco no passado). */
+    overflow: visible;
+  }
+  /* 5 colunas de 19% + 4 margens de 1% entre elas = 99% (cabe). Sem isto,
+     19.2%+1% de margem x 5 colunas passava de 100% e a 5a coluna
+     ("Concluído", a com mais itens) quebrava pra uma linha nova ABAIXO das
+     outras 4 - desperdicando toda a altura que sobrava ao lado delas. */
+  .kanban-col:last-child { margin-right: 0; }
+  /* Colunas com muitos itens (ex.: "Concluído" com 100+) nao cabem numa
+     unica pagina com o tamanho de tela normal - encolhe bastante tudo
+     dentro do card so na impressao, e troca .kanban-cards de flex pra
+     block (flex tambem nao pagina bem no Chrome, mesmo problema do grid).
+     Forca 1 linha por card (chave+contagem+resumo juntos, resumo truncado
+     com reticencias) em vez de 2-3 linhas - precisa pra caber 100+ itens
+     numa unica pagina. */
+  .kanban-col-head { padding: 3px 5px; gap: 1px; }
+  .kanban-col-title { font-size: 7.5px; }
+  .kanban-col-count { font-size: 6.5px; }
+  .kanban-cards { display: block; padding: 2px; min-height: 0; }
+  /* .kanban-card vira flex de 1 linha so (chave+contagem+resumo juntos,
+     resumo truncado com reticencias) - evita "display:contents" (suporte
+     inconsistente no motor de impressao do Chrome, ja testado antes). */
+  .kanban-card {
+    display: flex; align-items: baseline; gap: 4px; flex-wrap: nowrap;
+    padding: 1px 3px; margin-bottom: 1px; border-radius: 2px;
+    white-space: nowrap; overflow: hidden;
+  }
+  .kanban-card .kanban-card-key { font-size: 6px; margin-right: 0; flex-shrink: 0; }
+  .kanban-card-count-print { font-size: 6px; flex-shrink: 0; color: #5a6a7a; }
+  .kanban-card-name {
+    font-size: 6px; line-height: 1.1; flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .kanban-empty { padding: 3px 0; font-size: 7px; }
+}
+.kanban-col-head { padding: 10px 12px; border-top: 4px solid #dbe3f0; }
+.kanban-col-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: #122454; }
+.kanban-col-count { font-size: 10px; color: #5a6a7a; margin-top: 2px; }
+.kanban-cards { padding: 8px; display: flex; flex-direction: column; gap: 6px; background: #F6F9FF; min-height: 40px; border-radius: 0 0 9px 9px; }
+.kanban-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 6px; padding: 7px 9px; position: relative; break-inside: avoid; page-break-inside: avoid; }
+.kanban-card-key { font-family: monospace; font-size: 10px; color: #F8006A; font-weight: 700; }
+.kanban-card-name { font-size: 10.5px; color: #1a1a2e; margin-top: 2px; line-height: 1.3; padding-right: 16px; }
+.kanban-card-count-print { display: none; }
+.kanban-empty { color: #bbb; font-size: 11px; text-align: center; padding: 10px 0; }
+
+/* ── Tooltip de leitura (hover/"i") - so pra informacao que nao precisa ser
+   editada (lista de sub-tarefas no Kanban, detalhe extra nas barras de
+   Areas Beneficiadas). Nunca usar isto onde precisa de clique/edicao - ver
+   .expand-card mais abaixo (Painel de Impedimentos e Alteracao de Escopo). */
+.info-dot {
+  position: absolute; top: 6px; right: 6px; width: 15px; height: 15px;
+  border-radius: 50%; border: 1px solid #dbe3f0; background: #F6F9FF;
+  color: #8893a8; font-size: 9px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; cursor: help;
+}
+.bar-row .info-dot { top: 10px; right: 14px; }
+.info-tooltip {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; width: 220px;
+  background: #1a1a2e; color: #f3f5fa; border-radius: 8px; padding: 9px 11px;
+  font-size: 11px; line-height: 1.5; box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease; pointer-events: none;
+}
+.bar-row .info-tooltip { width: 230px; }
+.kanban-card:hover .info-tooltip, .kanban-card:focus-within .info-tooltip,
+.bar-row:hover .info-tooltip, .bar-row:focus-within .info-tooltip {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.info-tooltip ul { margin: 0; padding-left: 14px; }
+.info-tooltip li { margin-bottom: 3px; }
+.info-tooltip li:last-child { margin-bottom: 0; }
+@media print { .info-dot, .info-tooltip { display: none !important; } }
+
+/* ── Atividades da Semana - linhas em card com borda colorida por status
+   (no lugar da tabela antiga com badge a direita). ── */
+.activity-list { display: flex; flex-direction: column; gap: 8px; }
+.activity-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 7px; padding: 8px 12px; break-inside: avoid; page-break-inside: avoid;
+}
+.activity-row.st-backlog { border-left-color: #8a93a6; }
+.activity-row.st-progresso { border-left-color: #d97706; }
+.activity-row.st-revisao { border-left-color: #ea580c; }
+.activity-row.st-testes { border-left-color: #7c3aed; }
+.activity-row.st-concluido { border-left-color: #16a34a; }
+.activity-key { font-family: monospace; font-weight: 700; color: #F8006A; font-size: 11.5px; min-width: 62px; }
+.activity-summary { flex: 1; font-size: 12.5px; min-width: 180px; }
+.activity-parent { font-size: 10.5px; color: #8893a8; white-space: nowrap; }
+.activity-badge {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 3px 9px; border-radius: 999px; color: #fff; white-space: nowrap;
+}
+.activity-row.st-backlog .activity-badge { background: #8a93a6; }
+.activity-row.st-progresso .activity-badge { background: #d97706; }
+.activity-row.st-revisao .activity-badge { background: #ea580c; }
+.activity-row.st-testes .activity-badge { background: #7c3aed; }
+.activity-row.st-concluido .activity-badge { background: #16a34a; }
+
+/* ── Areas Beneficiadas - lista ranqueada de barras (troca a tabela) ── */
+.bar-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.bar-row {
+  background: #fff; border: 1px solid #dbe3f0; border-radius: 8px;
+  padding: 10px 14px; position: relative; break-inside: avoid; page-break-inside: avoid;
+}
+.bar-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.bar-row-area { font-weight: 700; font-size: 13px; color: #1a1a2e; }
+.bar-row-dash { font-size: 11px; color: #5a6a7a; }
+.bar-row-value { font-weight: 800; font-size: 14px; color: #122454; flex-shrink: 0; }
+.bar-track { height: 10px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; background: #F8006A; border-radius: 999px; }
+.kpi-grid-small { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+/* Linha-resumo "Colaboradores da empresa (X) já beneficiados..." no fim da
+   secao - generica, reaproveitada so aqui (nao faz parte do redesign dos
+   cards .progress-card acima, que e so pra "Progresso Geral das Tarefas"). */
+.progress-item { break-inside: avoid; page-break-inside: avoid; }
+.progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.progress-label { font-size: 13px; color: #1a1a2e; }
+.progress-meta { font-size: 12px; white-space: nowrap; margin-left: 12px; flex-shrink: 0; }
+
+/* ── Cards expansiveis <details>/<summary> (clique pra abrir) - usados onde
+   precisa de edicao: Alteracao de Escopo/Novas Demandas e Painel de
+   Impedimentos. Mantem data-key/data-comments/data-hidden/.editable-comments/
+   .impediment-header EXATAMENTE como nos cards antigos, pro JS existente
+   (renderCard/applyHiddenState) continuar funcionando sem mudanca. ── */
+.expand-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.expand-card.salmon { border-left-color: #c2552e; }
+.expand-card.navy { border-left-color: #122454; }
+.expand-card.pink { border-left-color: #F8006A; }
+.expand-card[data-hidden="true"] { display: none; }
+.expand-card.curation-hidden { display: block; opacity: 0.55; border-style: dashed; }
+@media print { .expand-card[data-hidden="true"] { display: none !important; } }
+.expand-card > summary {
+  list-style: none; cursor: pointer; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.expand-card > summary::-webkit-details-marker { display: none; }
+.expand-card > summary::before {
+  content: '▸'; color: #8893a8; font-size: 11px; flex-shrink: 0;
+  transition: transform .15s ease;
+}
+.expand-card[open] > summary::before { transform: rotate(90deg); }
+@media print {
+  /* <details> fechado nao imprime o conteudo (comportamento nativo do
+     navegador) - forca aberto so na impressao, independente do estado na
+     tela, senao comentarios/sub-itens somem do PDF. */
+  .expand-card > summary::before { display: none; }
+  .expand-card .expand-body { display: block !important; }
+}
+.expand-key { font-family: monospace; font-weight: 800; font-size: 13px; }
+.expand-card.salmon .expand-key { color: #c2552e; }
+.expand-card.navy .expand-key { color: #122454; }
+.expand-card.pink .expand-key { color: #F8006A; }
+.expand-summary { flex: 1; font-weight: 600; min-width: 150px; }
+.expand-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+}
+.expand-card.salmon .expand-badge { background: #fdf1ec; color: #c2552e; border: 1px solid #f3cdb9; }
+.expand-card.navy .expand-badge { background: #f6f9ff; color: #122454; border: 1px solid #dbe3f0; }
+.expand-card.pink .expand-badge { background: #fff0f8; color: #F8006A; border: 1px solid #fbc9e0; }
+.expand-days {
+  font-size: 10px; color: #b91c1c; font-style: italic; white-space: nowrap; flex-shrink: 0;
+  background: #fdecec; padding: 2px 8px; border-radius: 10px;
+}
+.expand-resp { font-size: 11px; font-weight: 700; color: #122454; white-space: nowrap; }
+.expand-body { padding: 0 14px 14px 32px; }
+.expand-subitem { padding: 8px 0; border-top: 1px solid #eef2f7; }
+.expand-subitem:first-child { border-top: none; }
+.expand-subitem-title { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cr-description { color: #5a6a7a; font-size: 12px; margin: 4px 0 8px; white-space: pre-wrap; }
+/* Comentarios - mesmas classes que o JS compartilhado (buildCommentEl em
+   Template.gs) cria em qualquer card com .editable-comments, independente
+   da cor do card onde aparecem. */
+.cr-comment { background: #fff0f8; border-left: 3px solid #F8006A; padding: 6px 10px; margin-bottom: 6px; border-radius: 0 4px 4px 0; }
+.cr-comment-meta { font-size: 11px; color: #5a6a7a; margin-bottom: 3px; }
+.cr-comment-body { white-space: pre-wrap; }
+.no-items { color: #5a6a7a; font-style: italic; padding: 8px 0; font-size: 12px; }
+.td-key { font-family: monospace; color: #F8006A; }
+.td-date { color: #5a6a7a; font-size: 11px; }
+
+/* ── Links Jira ── */
+a.jira-link { color: #122454; text-decoration: none; font-weight: 600; }
+a.jira-link:hover { text-decoration: underline; }
+
+/* ── Agrupamento por status ── */
+.status-group { margin-bottom: 14px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.10); }
+.status-group-header {
+  padding: 10px 16px; display: flex; align-items: center;
+  justify-content: space-between; font-weight: 700;
+}
+.status-label { text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+.status-count { opacity: 0.9; font-size: 12px; }
+.parent-group { border-bottom: 1px solid #eef2f7; }
+.parent-group:last-child { border-bottom: none; }
+.parent-group-header {
+  background: #f3f0f8; padding: 6px 14px;
+  font-weight: 600; color: #122454;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid #dbe3f0;
+}
+.parent-group .subtask-row { padding-left: 42px; }
+
+/* ── Botões de edição (ocultos na impressão) ── */
+.no-print { display: inline-block; }
+@media print { .no-print { display: none !important; } }
+.btn-remove {
+  background: none; border: none; cursor: pointer; color: #c0392b;
+  font-size: 11px; padding: 0 4px; margin-left: 8px; opacity: 0.6;
+  vertical-align: middle;
+}
+.btn-remove:hover { opacity: 1; }
+.btn-add-comment {
+  display: inline-block; margin-top: 8px; padding: 4px 10px;
+  background: none; border: 1px dashed #F8006A; border-radius: 4px;
+  color: #F8006A; font-size: 11px; cursor: pointer;
+}
+.btn-add-comment:hover { background: #fff0f8; }
+.add-comment-form { margin-top: 8px; }
+.add-comment-form .comment-input {
+  width: 100%; padding: 6px 8px; border: 1px solid #dbe3f0; border-radius: 4px;
+  font-family: inherit; font-size: 12px; resize: vertical;
+}
+.add-comment-form .form-actions { margin-top: 6px; display: flex; gap: 8px; }
+.btn-confirm {
+  padding: 4px 12px; background: #122454; color: #fff;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.btn-cancel {
+  padding: 4px 12px; background: #eee; color: #333;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.save-indicator {
+  font-size: 10px; color: #22c55e; margin-left: 8px; opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* ── Subsecções do Painel de Impedimentos - .subsection-title agora é um
+   rotulo simples (ver regra acima), sem mais faixa colorida de fundo por
+   subsecao (a cor ja vem da borda esquerda de cada .expand-card). ── */
+.subsection-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 28px 0 0; }
+
+/* ── Cards de impedimento ── */
+.impediment-card {
+  margin-bottom: 16px; border-radius: 6px; overflow: hidden;
+  background: #fff; border: 1px solid #dbe3f0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  break-inside: avoid; page-break-inside: avoid;
+}
+/* .impediment-header SEM regra visual propria de proposito: a classe so
+   continua existindo como "gancho" pro JS (applyHiddenState faz
+   card.querySelector('.impediment-header')) - o visual de verdade agora vem
+   de ".expand-card > summary" (ver bloco acima), pra nao haver conflito. */
+.impediment-summary { flex: 1; font-weight: 600; min-width: 150px; }
+.impediment-meta { font-size: 11px; color: #5a6a7a; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.impediment-days {
+  font-size: 10px; color: #b91c1c; font-style: italic; white-space: nowrap; flex-shrink: 0;
+  background: #fdecec; padding: 2px 8px; border-radius: 10px;
+}
+.impediment-comments { padding: 10px 16px; }
+.impediment-card[data-hidden="true"] { display: none; }
+.impediment-card.curation-hidden {
+  display: block; opacity: 0.55; border-style: dashed;
+}
+@media print {
+  /* Oculto nesta semana nunca aparece impresso, mesmo que esteja
+     visível na tela em modo de curadoria (--serve). */
+  .impediment-card[data-hidden="true"] { display: none !important; }
+}
+.impediment-hidden-tag {
+  display: inline-block; background: #6b7280; color: #fff; font-size: 10px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+}
+.btn-hide {
+  padding: 3px 10px; background: none; border: 1px solid #c0392b; border-radius: 4px;
+  color: #c0392b; font-size: 11px; cursor: pointer; margin-left: auto;
+}
+.btn-hide:hover { background: #fdf0f0; }
+.btn-restore {
+  padding: 3px 10px; background: #122454; border: none; border-radius: 4px;
+  color: #fff; font-size: 11px; cursor: pointer; margin-left: auto;
+}
+
+/* ── Seção de Progresso - cards com borda colorida por faixa de avanço
+   (3 niveis) + card "Total Geral" destacado, no lugar das barras antigas. ── */
+.section-progress { background: #F6F9FF; }
+.progress-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.progress-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 8px; padding: 12px 16px; break-inside: avoid; page-break-inside: avoid;
+}
+.progress-card.tier-high { border-left-color: #16a34a; }
+.progress-card.tier-mid { border-left-color: #c2552e; }
+.progress-card.tier-low { border-left-color: #F8006A; }
+.progress-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.progress-card-name { font-size: 13px; font-weight: 600; }
+.progress-card-name .pkey { font-family: monospace; color: #F8006A; font-weight: 700; margin-right: 6px; }
+.progress-card-meta { font-size: 12px; font-weight: 700; color: #5a6a7a; white-space: nowrap; }
+.progress-track { height: 11px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; }
+.tier-high .progress-fill { background: #16a34a; }
+.tier-mid .progress-fill { background: #c2552e; }
+.tier-low .progress-fill { background: #F8006A; }
+.progress-total {
+  background: #122454; color: #fff; border-radius: 10px; padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.progress-total-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.progress-total-value { font-size: 24px; font-weight: 900; }
+.progress-total-track { flex: 1; min-width: 160px; height: 14px; background: rgba(255,255,255,0.2); border-radius: 999px; overflow: hidden; }
+.progress-total-fill { height: 100%; background: #F8006A; border-radius: 999px; }
+
+/* ── Produtividade Mensal (só na última semana do mês) - reaproveita
+   .progress-bar-track/.progress-bar-fill (NAO sao as mesmas classes do
+   Progresso Geral acima, que usa .progress-track/.progress-fill). ── */
+.progress-bar-track { height: 12px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-bar-fill  { height: 100%; border-radius: 999px; }
+.monthly-legend { font-size: 11px; color: #5a6a7a; margin-bottom: 16px; }
+.monthly-chart { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+.monthly-bar-item { display: flex; align-items: center; gap: 12px; break-inside: avoid; page-break-inside: avoid; }
+.monthly-bar-label { width: 170px; flex-shrink: 0; font-size: 12px; color: #1a1a2e; }
+.monthly-chart .progress-bar-track { flex: 1; }
+.monthly-bar-count { width: 30px; text-align: right; font-weight: 700; color: #122454; flex-shrink: 0; }
+.monthly-bar-item.monthly-total {
+  margin-top: 10px; padding-top: 14px; border-top: 2px solid #6b7280;
+}
+.monthly-total .monthly-bar-label { font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.monthly-total .progress-bar-track { height: 16px; }
+.monthly-total .monthly-bar-count { font-size: 14px; }
+.owner-bar {
+  display: none; align-items: center; gap: 12px;
+  background: #122454; color: #fff; padding: 8px 16px; font-size: 12px;
+}
+.owner-bar button {
+  padding: 5px 14px; background: #F8006A; color: #fff; border: none;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.owner-bar button:disabled { opacity: 0.6; cursor: default; }
+.owner-bar .owner-bar-status { opacity: 0.85; }
+.print-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 8px 16px; background: #F6F9FF; border-bottom: 1px solid #dbe3f0;
+}
+.print-bar button {
+  padding: 5px 14px; background: #fff; color: #122454; border: 1px solid #122454;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.print-bar button:hover { background: #eef2fb; }
+
+/* ── Resumo Gerencial ──
+   Agora vive em pagina PROPRIA (RG_PAGE_TEMPLATE, servida em
+   "?view=resumo") - nao faz mais parte do HTML_TEMPLATE do relatorio
+   semanal. Continua reaproveitando o mesmo <style>/<script>. */
+.rg-section { padding: 32px 40px; background: #fff; }
+.rg-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.section-subtitle { font-size: 11.5px; color: #5a6a7a; margin-top: 4px; }
+.rg-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-top: 2px; flex-wrap: wrap; }
+.rg-no-print-flag {
+  font-size: 10.5px; color: #92400e; background: #FFF9E9; border: 1px solid #f3d98f;
+  padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+}
+.btn-rg-export {
+  padding: 8px 16px; background: #F8006A; color: #fff; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.btn-rg-refresh {
+  padding: 8px 16px; background: #fff; color: #122454; border: 1px solid #122454; border-radius: 6px;
+  font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.rg-refresh-status { font-size: 11px; color: #22c55e; white-space: nowrap; }
+
+.chart-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.chart-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 8px; padding: 16px 18px; flex: 1; min-width: 260px; }
+.chart-card-title { font-size: 11.5px; font-weight: 800; color: #122454; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+.chart-card-hint { font-size: 10px; color: #94a3b8; margin-bottom: 10px; }
+.status-stack-wrap { margin-top: 4px; }
+.status-stack { display: flex; gap: 2px; height: 26px; border-radius: 6px; overflow: hidden; }
+.status-seg { display: flex; align-items: center; justify-content: center; }
+.status-seg-label { font-size: 10px; font-weight: 800; color: #fff; }
+.status-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
+.status-legend-item { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #334155; }
+.status-legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.status-panel-pct { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+.status-panel-pct span { font-size: 11px; font-weight: 700; color: #5a6a7a; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px; }
+
+/* ── Resumo Gerencial: blocos executivos (KPIs com borda colorida +
+   tooltip de detalhe ao passar o mouse) - paleta oficial Digiage (Navy/
+   Pink/Salmao), com Verde reservado pro significado de "Concluido" (ja
+   usado em todo o resto do relatorio) e Vermelho so pro alerta de risco. ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 18px 0; }
+.kpi-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
+  min-width: 0; position: relative;
+}
+.kpi-card.pink { border-left-color: #F8006A; }
+.kpi-card.navy { border-left-color: #122454; }
+.kpi-card.salmon { border-left-color: #c2552e; }
+.kpi-card.green { border-left-color: #16a34a; }
+.kpi-card.critical { border-left-color: #dc2626; }
+.kpi-card .kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kpi-title { font-size: 12px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; }
+.kpi-card.pink .kpi-title { color: #F8006A; }
+.kpi-card.navy .kpi-title { color: #122454; }
+.kpi-card.salmon .kpi-title { color: #c2552e; }
+.kpi-card.green .kpi-title { color: #16a34a; }
+.kpi-card.critical .kpi-title { color: #dc2626; }
+.kpi-pill { font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.kpi-card.pink .kpi-pill { background: #fff0f8; color: #F8006A; border: 1px solid #fbc9e0; }
+.kpi-card.navy .kpi-pill { background: #f6f9ff; color: #122454; border: 1px solid #dbe3f0; }
+.kpi-card.salmon .kpi-pill { background: #fdf1ec; color: #c2552e; border: 1px solid #f3cdb9; }
+.kpi-card.green .kpi-pill { background: #eefbf3; color: #16a34a; border: 1px solid #bdebd1; }
+.kpi-card.critical .kpi-pill { background: #fef2f2; color: #dc2626; border: 1px solid #fac9c9; }
+.kpi-number { font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -0.02em; color: #15192b; }
+.kpi-unit { font-size: 13px; font-weight: 600; color: #5a6a7a; margin-left: 6px; }
+.kpi-stats { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5a6a7a; }
+.kpi-stats strong { color: #15192b; font-weight: 700; }
+.kpi-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.kpi-chip {
+  font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+  background: #eefbf3; color: #16a34a; border: 1px solid #bdebd1;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.kpi-info {
+  position: absolute; top: 16px; right: 18px; width: 18px; height: 18px;
+  border-radius: 50%; border: 1px solid #dbe3f0; background: #F6F9FF;
+  color: #8893a8; font-size: 10.5px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; cursor: help;
+}
+.kpi-tooltip {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 20;
+  background: #15192b; color: #f3f5fa; border-radius: 10px; padding: 12px 14px;
+  font-size: 12px; line-height: 1.55; box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease; pointer-events: none;
+}
+.kpi-card:hover .kpi-tooltip, .kpi-card:focus-within .kpi-tooltip,
+.analyst-row:hover .kpi-tooltip, .analyst-row:focus-within .kpi-tooltip {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.kpi-tooltip-title { font-weight: 800; margin-bottom: 7px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.75; }
+.kpi-tooltip ul { margin: 0; padding-left: 16px; }
+.kpi-tooltip li { margin-bottom: 4px; }
+.kpi-tooltip li:last-child { margin-bottom: 0; }
+@media print { .kpi-tooltip, .kpi-info { display: none !important; } }
+
+.analyst-list { display: flex; flex-direction: column; gap: 10px; }
+.analyst-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; border: 1px solid #dbe3f0; border-radius: 8px; background: #F6F9FF;
+  position: relative;
+}
+.analyst-row .kpi-info { position: static; flex-shrink: 0; }
+.analyst-row .kpi-tooltip { left: auto; right: 0; width: 280px; }
+.analyst-name { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; }
+.analyst-avatar {
+  width: 26px; height: 26px; border-radius: 50%; background: #122454; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;
+  flex-shrink: 0;
+}
+.analyst-stats { font-size: 12px; color: #5a6a7a; text-align: right; }
+.analyst-stats strong { color: #15192b; }
+
+/* Demandas da Semana (planilha Controle de Demandas) - substitui o antigo
+   card "Motivos de Bloqueio"; a coluna Observacao/Bloqueio traz o motivo. */
+.dw-table-wrap { overflow-x: auto; margin-top: 10px; }
+.dw-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.dw-table th {
+  background: #122454; color: #fff; font-size: 10.5px; font-weight: 700; text-align: left;
+  padding: 8px 10px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.dw-table td { padding: 8px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; color: #15192b; }
+.dw-table tbody tr:nth-child(even) td { background: #f6f9ff; }
+.dw-table .dw-key { font-family: monospace; font-weight: 800; color: #F8006A; white-space: nowrap; }
+.dw-table .dw-date { white-space: nowrap; }
+.dw-table .dw-obs { color: #5a6a7a; }
+.dw-status {
+  display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 10px; font-weight: 700;
+  white-space: nowrap; background: #eef1f6; color: #5a6a7a;
+}
+.dw-status.dw-st-nao-iniciada { background: #eef1f6; color: #5a6a7a; }
+.dw-status.dw-st-andamento { background: #fff4e0; color: #b45309; }
+.dw-status.dw-st-concluida { background: #eefbf3; color: #16a34a; }
+.dw-status.dw-st-bloqueada { background: #fef2f2; color: #dc2626; }
+.dw-status.dw-st-recorrente { background: #eef2ff; color: #122454; }
+
+/* Pilula do responsavel (assignee), totalmente arredondada (999px) igual
+   ao resto das pilulas/badges do relatorio. */
+.owner-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #eef2ff; color: #122454; border: 1px solid #c7d2f0;
+  font-size: 10.5px; font-weight: 700; padding: 2px 10px 2px 4px; border-radius: 999px;
+}
+.owner-avatar {
+  width: 16px; height: 16px; border-radius: 50%; background: #122454; color: #fff;
+  font-size: 8.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+/* Pilula do responsavel: editavel pelo dono (redireciona a demanda no
+   relatorio - ex.: para o cliente - sem alterar nada no Jira). */
+.owner-pill-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.owner-pill-empty { background: #f3f4f6; color: #9aa5b1; border-style: dashed; font-weight: 600; }
+.btn-edit-responsavel {
+  background: none; border: none; cursor: pointer; color: #122454;
+  font-size: 11px; padding: 0 2px; opacity: 0.55; vertical-align: middle;
+}
+.btn-edit-responsavel:hover { opacity: 1; }
+.resp-edit-form { display: inline-flex; align-items: center; gap: 6px; }
+.resp-input {
+  padding: 3px 8px; border: 1px solid #dbe3f0; border-radius: 4px;
+  font-family: inherit; font-size: 11.5px; min-width: 150px;
+}
+.btn-resp-confirm {
+  padding: 3px 10px; background: #122454; color: #fff;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 11px;
+}
+.btn-resp-cancel {
+  padding: 3px 10px; background: #eee; color: #333;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 11px;
+}
+/* Some so na impressao/exportacao PROPRIA do Resumo Gerencial (a aba
+   separada aberta pelo botao de exportar) - nunca aparece em nenhum PDF. */
+@media print { .rg-only-screen { display: none !important; } }
+
+/* Link "Ver Resumo Gerencial" no relatorio semanal - abre a pagina separada
+   numa aba nova. */
+.print-bar a.btn-view-rg {
+  padding: 5px 14px; background: #122454; color: #fff; border: none;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+  text-decoration: none; margin-right: auto;
+}
+.print-bar a.btn-view-rg:hover { background: #0d1b3f; }
+
+/* Seletor de semana (arquivo semanal) - escondido ate initWeekNav() achar
+   alguma semana. */
+.week-nav {
+  display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 16px; background: #fff; border-bottom: 1px solid #dbe3f0; font-size: 12px;
+}
+.week-nav label { font-weight: 700; color: #122454; }
+.week-nav select {
+  padding: 4px 8px; border: 1px solid #c7d2f0; border-radius: 4px; font-size: 12px;
+  color: #122454; background: #f6f9ff; font-family: inherit;
+}
+.week-nav .week-nav-archived {
+  background: #fff4e0; color: #b45309; border: 1px solid #f3d98f; border-radius: 999px;
+  padding: 2px 10px; font-weight: 700; font-size: 11px;
+}
+.week-nav a.week-nav-latest { color: #F8006A; font-weight: 700; text-decoration: none; }
+.week-nav a.week-nav-latest:hover { text-decoration: underline; }
+
+/* Comparativo com a semana anterior */
+.week-compare-card { margin-bottom: 16px; }
+.wc-ref { font-size: 11.5px; color: #5a6a7a; margin: 4px 0 12px; }
+.wc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.wc-tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #122454; border-radius: 8px; padding: 10px 12px; }
+.wc-value { font-size: 22px; font-weight: 900; color: #15192b; line-height: 1; }
+.wc-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #5a6a7a; margin: 5px 0 6px; line-height: 1.3; }
+.wc-delta { display: inline-block; font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 999px; margin-right: 6px; }
+.wc-delta.wc-good { background: #eefbf3; color: #16a34a; }
+.wc-delta.wc-bad { background: #fef2f2; color: #dc2626; }
+.wc-delta.wc-neutral { background: #eef1f6; color: #5a6a7a; }
+.wc-prev { font-size: 10.5px; color: #8893a8; }
+</style>
+</head>
+<body>
+
+<!-- Barra de atualizacao manual do Jira - so aparece para o dono (IS_OWNER),
+     nunca impressa. A checagem real de permissao e sempre no servidor. -->
+<div class="owner-bar no-print" id="owner-bar">
+  <button id="btn-refresh-jira">Atualizar dados do Jira</button>
+  <span class="owner-bar-status" id="owner-bar-status"></span>
+</div>
+
+<!-- Seletor de semana (arquivo semanal) - montado no cliente por initWeekNav(). -->
+<div class="week-nav no-print" id="week-nav"></div>
+
+<!-- RESUMO GERENCIAL — nao entra no PDF do relatorio semanal (a classe
+     no-print so importa quando esta pagina e aberta de dentro do botao de
+     exportar - aqui ela e o conteudo principal); tem seu proprio botao de
+     exportacao/impressao. -->
+<div class="rg-section no-print" id="resumo-gerencial-section">
+  <div class="rg-header-row">
+    <div>
+      <div class="section-title">Resumo Gerencial</div>
+      <div class="section-subtitle">Semana de referência: 12/10/2026 a 16/10/2026 &nbsp;·&nbsp; Dados do Jira atualizados em: 20/10/2026 às 16:55</div>
+    </div>
+    <div class="rg-actions rg-only-screen">
+      <button class="btn-rg-refresh no-print" id="btn-rg-refresh" style="display:none">🔄 Atualizar apenas o Resumo Gerencial</button>
+      <span class="rg-refresh-status no-print" id="rg-refresh-status"></span>
+      <button class="btn-rg-export" id="btn-rg-export">🖨️ Imprimir / Exportar PDF do Resumo Gerencial</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+<div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 126 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 82 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 82 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 82 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">4</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>93 dias</strong> (pico de <strong>126 dias</strong>)</div><div>Afeta <strong>4 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card navy"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-115 — [DASH] Painel de SLAs de Atendimento e Encerramento · 105 dias</li><li>NDAV-54 — [DASH] Projeto - Gestão de Contratos | Frotas · 75 dias</li><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 68 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 47 dias</li><li>NDAV-232 — [DASH] Medição · 19 dias</li><li>NDAV-245 — [DASH][Controles Internos (Riscos)] - Criação do Dashboard · 12 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">7</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>48 dias</strong> (pico de <strong>105 dias</strong>)</div><div>Afeta <strong>7 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card green"><div class="kpi-top"><div class="kpi-title">Entregas da Semana</div><div class="kpi-pill">Concluído</div></div><div><span class="kpi-number">0</span><span class="kpi-unit">entregas</span></div><div class="kpi-stats"><div><strong>14</strong> entregas acumuladas no projeto</div></div></div>
+  </div>
+
+  <div class="chart-card week-compare-card">
+    <div class="chart-card-title">Comparativo com a Semana Anterior</div>
+<div class="wc-ref">Comparado com: <strong>registro de 09/10/2026</strong></div><div class="wc-grid"><div class="wc-tile"><div class="wc-value">62%</div><div class="wc-label">Progresso Geral</div><span class="wc-delta wc-neutral">= 0%</span><span class="wc-prev">antes: 62%</span></div><div class="wc-tile"><div class="wc-value">107</div><div class="wc-label">Subtarefas Concluídas</div><span class="wc-delta wc-good">▲ +1</span><span class="wc-prev">antes: 106</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Entregas na Semana</div><span class="wc-delta wc-neutral">= 0</span><span class="wc-prev">antes: 0</span></div><div class="wc-tile"><div class="wc-value">4</div><div class="wc-label">Aguardando Cliente</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">7</div><div class="wc-label">Em Validação pelo Cliente</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">1</div><div class="wc-label">Novas Demandas</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Itens Atrasados</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">8h</div><div class="wc-label">Horas em Aberto</div><span class="wc-delta wc-neutral">sem dado anterior</span></div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="rg-header-row" style="margin-bottom:0">
+      <div>
+        <div class="chart-card-title">Distribuição Atual por Status</div>
+        <div class="chart-card-hint">Todas as sub-tarefas do épico — 172 no total</div>
+      </div>
+      <div class="status-panel-pct">62%<span>concluído</span></div>
+    </div>
+    <div class="status-stack-wrap"><div class="status-stack"><div class="status-seg" style="background:#22c55e;flex:107" title="CONCLUÍDO: 107"><span class="status-seg-label">62%</span></div><div class="status-seg" style="background:#f59e0b;flex:32" title="EM PROGRESSO: 32"><span class="status-seg-label">19%</span></div><div class="status-seg" style="background:#f97316;flex:4" title="EM REVISÃO: 4"></div><div class="status-seg" style="background:#9e9e9e;flex:29" title="EM BACKLOG: 29"><span class="status-seg-label">17%</span></div></div><div class="status-legend"><div class="status-legend-item"><span class="status-legend-dot" style="background:#22c55e"></span>CONCLUÍDO — 107</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f59e0b"></span>EM PROGRESSO — 32</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f97316"></span>EM REVISÃO — 4</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#8b5cf6"></span>EM TESTES — 0</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#9e9e9e"></span>EM BACKLOG — 29</div></div></div>
+  </div>
+
+<div class="subsection-title">Controle de Demandas — Capacidade e Prazos</div><div class="kpi-grid"><div class="kpi-card critical"><div class="kpi-top"><div class="kpi-title">Itens Atrasados</div><div class="kpi-pill">Risco</div></div><div><span class="kpi-number">0</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Passaram da data prevista de entrega sem conclusão</div></div></div><div class="kpi-card salmon"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Horas por item</div><ul><li>Change Request - Indicadores Dashboard de Operações (procedente/improcedente) — 8h (Fernanda)</li></ul></div><div class="kpi-top"><div class="kpi-title">Horas Estimadas em Aberto</div><div class="kpi-pill">Capacidade</div></div><div><span class="kpi-number">8</span><span class="kpi-unit">horas</span></div><div class="kpi-stats"><div>Em itens ainda não concluídos, com estimativa preenchida</div></div></div></div><div class="chart-row"><div class="chart-card"><div class="chart-card-title">Por Analista</div><div class="analyst-list"><div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">F</span>Fernanda</div><div class="analyst-stats">6 itens em aberto · 8h estimadas</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Fernanda</div><ul><li>Dashboard Time de Estratégia - (Demais indicadores) · sem estimativa</li><li>Change Request - Indicadores Dashboard de Operações (procedente/improcedente) · bloqueada</li><li>Dashboard de Medição · bloqueada</li><li>Dashboard ARSESP · bloqueada</li><li>Dashboard Atendimento · bloqueada</li><li>Dashboard Gestão de Contratos · bloqueada</li></ul></div></div>
+<div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">S</span>Sem responsável</div><div class="analyst-stats">3 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Sem responsável</div><ul><li>Levantamento de tabelas para demanda do Jeysson · bloqueada</li><li>Criação de Views para demanda do Jeysson · bloqueada</li><li>Dashboard Estratégia Diretoria - Mudanças 2.0 · bloqueada</li></ul></div></div>
+<div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">J</span>Jeysson</div><div class="analyst-stats">2 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Jeysson</div><ul><li>Dashboard - Refact PBI · bloqueada</li><li>Dashboard - P&amp;C · bloqueada</li></ul></div></div></div></div></div><div class="chart-row"><div class="chart-card"><div class="chart-card-title">Demandas da Semana</div><div class="dw-table-wrap"><table class="dw-table"><thead><tr><th>Id Task/Subtask</th><th>Demanda</th><th>Status</th><th>Data Início</th><th>Data Prevista para Entrega</th><th>Observação / Bloqueio</th></tr></thead><tbody><tr><td class="dw-key">NDAV-244</td><td>Desenvolvimento de um Dashboard somente para a Diretoria, com base nos indicadores do time de Estrategia</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">13/10/2026</td><td class="dw-date">14/10/2026</td><td class="dw-obs"></td></tr>
+<tr><td class="dw-key"></td><td>Ingestão SAP X DATABRICKS (tabela solicitada pelo Douglas)</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">15/10/2026</td><td class="dw-date">15/10/2026</td><td class="dw-obs"></td></tr>
+<tr><td class="dw-key"></td><td>Dashboard Controles Internos - Mudanças - Versão 1.0</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">14/10/2026</td><td class="dw-date"></td><td class="dw-obs">Apresentada em 21/10</td></tr>
+<tr><td class="dw-key"></td><td>Dashboard Estratégia Diretoria - Mudanças  - Versão 1.0</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">13/10/2026</td><td class="dw-date"></td><td class="dw-obs">Iremos apresentar o que fizemos até o momento na reunião agendada para 21/10</td></tr></tbody></table></div></div></div>
+</div>
+
+<script>
+(function() {
+  var IS_OWNER = false;
+  var IS_RG_PAGE = true;
+  // Trocado na hora de servir/publicar (applyWeekNav_ em WeeklyArchive.gs);
+  // se continuar string (ex.: copia aberta pelo botao de imprimir), o
+  // seletor de semana simplesmente nao aparece.
+  var WEEK_NAV = {"mode":"static","rootRel":"../../../","current":"2026-10-12"};
+  var RG_CHECKLIST_COPY_PLAIN = "";
+  var RG_CHECKLIST_COPY_HTML = "";
+  var cardComments = {};
+  var hiddenKeys = {};
+  var responsavelByKey = {};
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtDate(d) {
+    if (!d) return '';
+    try { return d.substring(0,10).split('-').reverse().join('/'); } catch(e) { return d; }
+  }
+
+  function buildCommentEl(key, c, idx) {
+    var div = document.createElement('div');
+    div.className = 'cr-comment';
+    var inner = '';
+    if (c.author) {
+      inner += '<div class="cr-comment-meta">' + escHtml(c.author);
+      if (c.date) inner += ' &nbsp;&middot;&nbsp; ' + fmtDate(c.date);
+      inner += '</div>';
+    }
+    inner += '<div class="cr-comment-body">' + escHtml(c.body) + '</div>';
+    div.innerHTML = inner;
+    if (IS_OWNER) {
+      var btn = document.createElement('button');
+      btn.className = 'btn-remove no-print';
+      btn.title = 'Remover este comentário';
+      btn.innerHTML = '&#10005;';
+      btn.onclick = (function(k, i) { return function() { removeComment(k, i); }; })(key, idx);
+      div.appendChild(btn);
+    }
+    return div;
+  }
+
+  /** Uma mesma chave (Jira ou manual) pode aparecer em mais de um lugar na
+   * mesma pagina (ex.: dentro do Painel de Impedimentos) - atualiza todas as
+   * ocorrencias, nao so a primeira. */
+  function forEachCardWithKey(key, fn) {
+    document.querySelectorAll('[data-key="' + key + '"]').forEach(fn);
+  }
+
+  /** Mesma ideia de forEachCardWithKey, mas para o "slot" do responsavel
+   * (.owner-pill-wrap, identificado por data-resp-key) - NUNCA usar
+   * forEachCardWithKey aqui: ele seleciona o CARD inteiro (data-key), e
+   * passar o card inteiro pra renderResponsavelPill apaga todo o conteudo do
+   * card (renderResponsavelPill faz wrap.innerHTML = ''), sobrando so o
+   * placeholder de responsavel. */
+  function forEachRespWrapWithKey(key, fn) {
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key="' + key + '"]').forEach(fn);
+  }
+
+  function renderCard(card) {
+    var key = card.dataset.key;
+    var comments = cardComments[key] || [];
+    var container = card.querySelector('.editable-comments');
+    if (!container) return;
+    container.innerHTML = '';
+    comments.forEach(function(c, idx) {
+      container.appendChild(buildCommentEl(key, c, idx));
+    });
+    if (IS_OWNER) {
+      var addBtn = document.createElement('button');
+      addBtn.className = 'btn-add-comment no-print';
+      addBtn.textContent = '+ Adicionar comentario';
+      addBtn.onclick = function() { showAddForm(key, container, addBtn); };
+      container.appendChild(addBtn);
+    }
+  }
+
+  function showAddForm(key, container, addBtn) {
+    addBtn.style.display = 'none';
+    var form = document.createElement('div');
+    form.className = 'add-comment-form no-print';
+    form.innerHTML =
+      '<textarea class="comment-input" rows="3" placeholder="Digite o comentario..."></textarea>' +
+      '<div class="form-actions">' +
+        '<button class="btn-confirm">Confirmar</button>' +
+        '<button class="btn-cancel">Cancelar</button>' +
+        '<span class="save-indicator" id="si-' + escHtml(key) + '">Salvo!</span>' +
+      '</div>';
+    form.querySelector('.btn-confirm').onclick = function() {
+      var body = form.querySelector('.comment-input').value.trim();
+      if (!body) return;
+      if (!cardComments[key]) cardComments[key] = [];
+      cardComments[key].push({body: body, source: 'manual'});
+      saveCard(key, form.querySelector('#si-' + escHtml(key)));
+      forEachCardWithKey(key, renderCard);
+    };
+    form.querySelector('.btn-cancel').onclick = function() {
+      form.remove();
+      addBtn.style.display = '';
+    };
+    container.insertBefore(form, addBtn);
+    form.querySelector('.comment-input').focus();
+  }
+
+  function removeComment(key, idx) {
+    if (!cardComments[key]) return;
+    cardComments[key].splice(idx, 1);
+    saveCard(key, null);
+    forEachCardWithKey(key, renderCard);
+  }
+
+  /** Monta o conteudo do "slot" de responsavel (pilula/placeholder + botao de
+   * editar, so para o dono) a partir de responsavelByKey - mesma logica de
+   * data-driven usada nos comentarios. Editar aqui NUNCA altera o Jira - so
+   * muda quem o relatorio mostra como responsavel pela pendencia. */
+  function renderResponsavelPill(wrap) {
+    var key = wrap.dataset.respKey;
+    var name = responsavelByKey[key] || '';
+    wrap.innerHTML = '';
+    if (name) {
+      var pill = document.createElement('span');
+      pill.className = 'owner-pill';
+      pill.textContent = '👤 ' + name;
+      wrap.appendChild(pill);
+    } else if (IS_OWNER) {
+      var placeholder = document.createElement('span');
+      placeholder.className = 'owner-pill owner-pill-empty no-print';
+      placeholder.textContent = '+ Responsável';
+      wrap.appendChild(placeholder);
+    }
+    if (IS_OWNER) {
+      var editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit-responsavel no-print';
+      editBtn.type = 'button';
+      editBtn.title = 'Editar responsável exibido no relatório (não altera o Jira)';
+      editBtn.innerHTML = '&#9998;';
+      editBtn.onclick = function() { showResponsavelForm(key, wrap); };
+      wrap.appendChild(editBtn);
+    }
+  }
+
+  function showResponsavelForm(key, wrap) {
+    var form = document.createElement('span');
+    form.className = 'resp-edit-form no-print';
+    form.innerHTML =
+      '<input type="text" class="resp-input" placeholder="Nome do responsável (ex.: Cliente)" />' +
+      '<button class="btn-resp-confirm" type="button">OK</button>' +
+      '<button class="btn-resp-cancel" type="button">Cancelar</button>';
+    var input = form.querySelector('.resp-input');
+    input.value = responsavelByKey[key] || '';
+    wrap.innerHTML = '';
+    wrap.appendChild(form);
+    input.focus();
+    input.select();
+
+    form.querySelector('.btn-resp-cancel').onclick = function() {
+      forEachRespWrapWithKey(key, renderResponsavelPill);
+    };
+    form.querySelector('.btn-resp-confirm').onclick = function() {
+      persistResponsavel(key, input.value.trim());
+    };
+    input.onkeydown = function(e) {
+      if (e.key === 'Enter') form.querySelector('.btn-resp-confirm').click();
+      if (e.key === 'Escape') form.querySelector('.btn-resp-cancel').click();
+    };
+  }
+
+  function persistResponsavel(key, value) {
+    var previous = responsavelByKey[key];
+    responsavelByKey[key] = value; // atualizacao otimista
+    forEachRespWrapWithKey(key, renderResponsavelPill);
+    google.script.run
+      .withSuccessHandler(function() { forEachRespWrapWithKey(key, renderResponsavelPill); })
+      .withFailureHandler(function(e) {
+        console.error('Erro ao salvar responsável:', e);
+        responsavelByKey[key] = previous;
+        forEachRespWrapWithKey(key, renderResponsavelPill);
+        alert('Erro ao salvar responsável: ' + e);
+      })
+      .saveResponsavel(key, value);
+  }
+
+  function applyHiddenState(card) {
+    if (card.dataset.hidden === undefined) return; // não é um card de impedimento
+    var key = card.dataset.key;
+    var isHidden = !!hiddenKeys[key];
+    // O CSS base esconde o card via [data-hidden="true"] (display:none).
+    // Sem atualizar este atributo aqui, "Restaurar" so tirava a classe
+    // .curation-hidden mas o atributo continuava "true" - o card ficava
+    // preso invisivel em vez de voltar ao normal.
+    card.dataset.hidden = isHidden ? 'true' : 'false';
+    var header = card.querySelector('.impediment-header');
+    if (!header) return;
+    var oldBtn = header.querySelector('.btn-hide, .btn-restore');
+    if (oldBtn) oldBtn.remove();
+    var oldTag = header.querySelector('.impediment-hidden-tag');
+    if (oldTag) oldTag.remove();
+
+    if (isHidden && IS_OWNER) {
+      // So a dona ve o card oculto (esmaecido, com borda tracejada) com a
+      // opcao de restaurar - pra qualquer outra pessoa ele fica totalmente
+      // invisivel (display:none via [data-hidden="true"] no CSS base).
+      card.classList.add('curation-hidden');
+      var tag = document.createElement('span');
+      tag.className = 'impediment-hidden-tag no-print';
+      tag.textContent = 'Oculto nesta semana';
+      header.appendChild(tag);
+      var restoreBtn = document.createElement('button');
+      restoreBtn.className = 'btn-restore no-print';
+      restoreBtn.textContent = 'Restaurar';
+      // header agora pode ser um <summary> (cards expansiveis clique-pra-abrir) -
+      // sem isto, clicar no botao tambem expandiria/recolheria o card, ja que
+      // qualquer clique dentro de <summary> alterna o <details> por padrao.
+      restoreBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); setHidden(key, false, card); };
+      header.appendChild(restoreBtn);
+    } else if (!isHidden && IS_OWNER) {
+      card.classList.remove('curation-hidden');
+      var hideBtn = document.createElement('button');
+      hideBtn.className = 'btn-hide no-print';
+      hideBtn.textContent = 'Ocultar esta semana';
+      hideBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); setHidden(key, true, card); };
+      header.appendChild(hideBtn);
+    } else {
+      card.classList.remove('curation-hidden');
+    }
+  }
+
+  function setHidden(key, hidden /*, card - nao usado mais, ver forEachCardWithKey */) {
+    hiddenKeys[key] = hidden;
+    forEachCardWithKey(key, applyHiddenState); // atualizacao otimista - nao espera o servidor pra mudar o botao
+    google.script.run
+      .withSuccessHandler(function() { forEachCardWithKey(key, applyHiddenState); })
+      .withFailureHandler(function(e) {
+        console.error('Erro ao ocultar/restaurar:', e);
+        hiddenKeys[key] = !hidden; // desfaz a atualizacao otimista
+        forEachCardWithKey(key, applyHiddenState);
+      })
+      .saveHidden(key, hidden);
+  }
+
+  function saveCard(key, indicator) {
+    google.script.run
+      .withSuccessHandler(function() {
+        if (indicator) {
+          indicator.style.opacity = '1';
+          setTimeout(function() { indicator.style.opacity = '0'; }, 2000);
+        }
+      })
+      .withFailureHandler(function(e) { console.error('Erro ao salvar comentario:', e); })
+      .saveComment(key, cardComments[key] || []);
+  }
+
+  function replaceWholePage(html) {
+    // Evita location.reload(): o sandbox do HtmlService usa um subdominio
+    // *.googleusercontent.com diferente a cada carga, e reload() quebra a
+    // comunicacao por postMessage no meio do caminho, deixando a pagina em
+    // branco. document.write() substitui o documento sem navegar de verdade.
+    document.open();
+    document.write(html);
+    document.close();
+  }
+
+  /** Recarrega a pagina ATUAL (Weekly Report OU Resumo Gerencial - cada uma
+   * tem seu proprio HTML renderizado e guardado no Drive) depois de uma
+   * mutacao bem sucedida, sem misturar o conteudo de uma na outra. */
+  function reloadCurrentPage() {
+    var fn = IS_RG_PAGE ? 'getCurrentResumoGerencialHtml' : 'getCurrentReportHtml';
+    google.script.run.withSuccessHandler(replaceWholePage)[fn]();
+  }
+
+  function initPrintButton() {
+    var btn = document.getElementById('btn-print');
+    if (!btn) return;
+    btn.onclick = function() {
+      // Abre o documento inteiro (outerHTML atual) numa aba nova via Blob,
+      // fora do iframe sandbox do Apps Script - sem isso, window.print()
+      // direto so imprime o que cabe na altura fixa desse iframe.
+      var htmlContent = '<!DOCTYPE html>' + document.documentElement.outerHTML;
+      var blob = new Blob([htmlContent], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var printWin = window.open(url, '_blank');
+      if (!printWin) {
+        alert('O navegador bloqueou a nova aba. Habilite pop-ups para este site e tente de novo.');
+        URL.revokeObjectURL(url);
+        return;
+      }
+      printWin.addEventListener('load', function() {
+        printWin.print();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+      });
+    };
+  }
+
+  function initRgExportButton() {
+    var btn = document.getElementById('btn-rg-export');
+    if (!btn) return;
+    btn.onclick = function() {
+      var sectionEl = document.getElementById('resumo-gerencial-section');
+      var styleEl = document.querySelector('style');
+      // Forca o conteudo (que tem a classe no-print) a aparecer nesta aba
+      // separada, e some com os botoes de acao (que so fazem sentido na
+      // tela original) - a mesma classe .no-print do resto do documento
+      // continua escondendo tudo o mais, entao so o Resumo Gerencial sai.
+      var overrideCss = '<style>.no-print{display:block !important;} .rg-only-screen{display:none !important;} body{padding:0;background:#fff;}</style>';
+      var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+        (styleEl ? styleEl.outerHTML : '') + overrideCss +
+        '</head><body>' + sectionEl.outerHTML + '</body></html>';
+      var blob = new Blob([htmlContent], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var printWin = window.open(url, '_blank');
+      if (!printWin) {
+        alert('O navegador bloqueou a nova aba. Habilite pop-ups para este site e tente de novo.');
+        URL.revokeObjectURL(url);
+        return;
+      }
+      printWin.addEventListener('load', function() {
+        printWin.print();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+      });
+    };
+  }
+
+  /** Botao "Atualizar apenas o Resumo Gerencial" - reprocessa os dados JA
+   * buscados do Jira (snapshot atual) sem chamar o Jira de novo, so pra
+   * reaplicar curadoria/itens manuais/historico mais recentes. Bem mais
+   * rapido que "Atualizar dados do Jira" (que busca tudo de novo). */
+  function initRgRefreshButton() {
+    var btn = document.getElementById('btn-rg-refresh');
+    if (!IS_OWNER || !btn) return;
+    btn.style.display = '';
+    var status = document.getElementById('rg-refresh-status');
+    btn.onclick = function() {
+      btn.disabled = true;
+      if (status) status.textContent = 'Atualizando Resumo Gerencial...';
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          if (resp && resp.ok) {
+            if (status) status.textContent = 'Atualizado! Recarregando...';
+            reloadCurrentPage();
+          } else {
+            if (status) status.textContent = 'Erro: ' + ((resp && resp.error) || 'falha desconhecida.');
+            btn.disabled = false;
+          }
+        })
+        .withFailureHandler(function(e) {
+          if (status) status.textContent = 'Erro ao atualizar: ' + e;
+          btn.disabled = false;
+        })
+        .refreshResumoGerencialOnly();
+    };
+  }
+
+  function initCopyChecklistButton() {
+    var btn = document.getElementById('btn-copy-checklist');
+    if (!btn) return;
+    var status = document.getElementById('rg-copy-status');
+    btn.onclick = function() {
+      var showOk = function() {
+        if (status) {
+          status.textContent = 'Copiado!';
+          setTimeout(function() { status.textContent = ''; }, 2500);
+        }
+      };
+      var showErr = function(e) {
+        if (status) status.textContent = 'Erro ao copiar: ' + e;
+      };
+      if (navigator.clipboard && window.ClipboardItem) {
+        var item = new ClipboardItem({
+          'text/html': new Blob([RG_CHECKLIST_COPY_HTML], { type: 'text/html' }),
+          'text/plain': new Blob([RG_CHECKLIST_COPY_PLAIN], { type: 'text/plain' })
+        });
+        navigator.clipboard.write([item]).then(showOk).catch(function() {
+          // Fallback: alguns navegadores nao aceitam multi-formato via write() -
+          // copia so o texto simples, que funciona em qualquer lugar.
+          navigator.clipboard.writeText(RG_CHECKLIST_COPY_PLAIN).then(showOk).catch(showErr);
+        });
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(RG_CHECKLIST_COPY_PLAIN).then(showOk).catch(showErr);
+      } else {
+        showErr('Clipboard API indisponível neste navegador.');
+      }
+    };
+  }
+
+  function initManualAddForms() {
+    if (!IS_OWNER) return; // adicionar item manual e edicao - so a dona ve os botoes/formularios
+    document.querySelectorAll('.btn-add-manual').forEach(function(addBtn) {
+      var section = addBtn.dataset.section;
+      var form = document.querySelector('.manual-add-form[data-section-form="' + section + '"]');
+      if (!form) return;
+      addBtn.onclick = function() {
+        addBtn.style.display = 'none';
+        form.style.display = 'block';
+      };
+      var cancelBtn = form.querySelector('.btn-manual-cancel');
+      cancelBtn.onclick = function() {
+        form.style.display = 'none';
+        addBtn.style.display = '';
+      };
+      var confirmBtn = form.querySelector('.btn-manual-confirm');
+      confirmBtn.onclick = function() {
+        var fields = {};
+        form.querySelectorAll('[data-field]').forEach(function(input) {
+          fields[input.dataset.field] = input.value;
+        });
+        if (!fields.titulo || !fields.titulo.trim()) {
+          alert('Preencha o título / resumo.');
+          return;
+        }
+        confirmBtn.disabled = true;
+        google.script.run
+          .withSuccessHandler(function() { reloadCurrentPage(); })
+          .withFailureHandler(function(e) {
+            alert('Erro ao adicionar item manual: ' + e);
+            confirmBtn.disabled = false;
+          })
+          .addManualItemAndRender(section, fields);
+      };
+    });
+  }
+
+  function initOwnerBar() {
+    var bar = document.getElementById('owner-bar');
+    if (!IS_OWNER || !bar) return;
+    bar.style.display = 'flex';
+    var btn = document.getElementById('btn-refresh-jira');
+    var status = document.getElementById('owner-bar-status');
+    btn.onclick = function() {
+      btn.disabled = true;
+      status.textContent = 'Atualizando dados do Jira...';
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          if (resp && resp.ok) {
+            status.textContent = 'Atualizado! Recarregando...';
+            reloadCurrentPage();
+          } else {
+            status.textContent = 'Erro: ' + ((resp && resp.error) || 'falha desconhecida.');
+            btn.disabled = false;
+          }
+        })
+        .withFailureHandler(function(e) {
+          status.textContent = 'Erro ao atualizar: ' + e;
+          btn.disabled = false;
+        })
+        .triggerRefreshJira();
+    };
+  }
+
+  function init() {
+    // Carrega estado inicial dos data-comments e data-hidden embutidos no HTML
+    document.querySelectorAll('[data-key]').forEach(function(card) {
+      var key = card.dataset.key;
+      try {
+        cardComments[key] = JSON.parse(card.dataset.comments || '[]');
+      } catch(e) { cardComments[key] = []; }
+      if (card.dataset.hidden === 'true') {
+        hiddenKeys[key] = true;
+      }
+    });
+
+    document.querySelectorAll('[data-key]').forEach(function(card) {
+      renderCard(card);
+      applyHiddenState(card);
+    });
+
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key]').forEach(function(wrap) {
+      var key = wrap.dataset.respKey;
+      if (!(key in responsavelByKey)) responsavelByKey[key] = wrap.dataset.respName || '';
+    });
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key]').forEach(renderResponsavelPill);
+
+    initOwnerBar();
+    initPrintButton();
+    initRgExportButton();
+    initRgRefreshButton();
+    initCopyChecklistButton();
+    initManualAddForms();
+    initWeekNav();
+  }
+
+  /** URL de uma semana: no Web App, "?week=" (a atual fica sem parametro);
+   * no GitHub Pages, semanas/<semana>/ relativo a raiz do site. */
+  function weekUrl(week, latest) {
+    var isLatest = week === latest;
+    if (WEEK_NAV.mode === 'static') {
+      var path = WEEK_NAV.rootRel + (isLatest ? '' : 'semanas/' + week + '/') + (IS_RG_PAGE ? 'resumo-gerencial/' : '');
+      return path || './';
+    }
+    var params = [];
+    if (IS_RG_PAGE) params.push('view=resumo');
+    if (!isLatest) params.push('week=' + week);
+    return WEEK_NAV.baseUrl + (params.length ? '?' + params.join('&') : '');
+  }
+
+  function renderWeekNav(el, weeks, latest) {
+    if (!weeks || !weeks.length) return;
+    var current = WEEK_NAV.current;
+    var options = weeks.map(function(w) {
+      return '<option value="' + escHtml(w.week) + '"' + (w.week === current ? ' selected' : '') + '>' +
+        escHtml(w.label || w.week) + (w.week === latest ? ' (atual)' : '') + '</option>';
+    }).join('');
+    var html = '<label for="week-nav-select">📅 Semana:</label><select id="week-nav-select">' + options + '</select>';
+    if (current !== latest) {
+      html += '<span class="week-nav-archived">Semana anterior — somente leitura</span>' +
+        '<a class="week-nav-latest" href="' + escHtml(weekUrl(latest, latest)) + '" target="_top">Ir para a semana atual</a>';
+    }
+    el.innerHTML = html;
+    el.style.display = 'flex';
+    document.getElementById('week-nav-select').onchange = function() {
+      // _top: no Web App a pagina roda dentro do iframe do Apps Script.
+      window.open(weekUrl(this.value, latest), '_top');
+    };
+  }
+
+  function initWeekNav() {
+    var el = document.getElementById('week-nav');
+    if (!el || !WEEK_NAV || typeof WEEK_NAV !== 'object') return;
+    if (WEEK_NAV.mode === 'static') {
+      // Paginas estaticas leem o indice publicado, assim copias antigas
+      // tambem enxergam as semanas que vieram depois delas.
+      fetch(WEEK_NAV.rootRel + 'semanas/index.json', { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(idx) { if (idx) renderWeekNav(el, idx.weeks, idx.latest); })
+        .catch(function() {});
+    } else {
+      renderWeekNav(el, WEEK_NAV.weeks, WEEK_NAV.latest);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
