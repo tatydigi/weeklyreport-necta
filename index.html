@@ -850,7 +850,7 @@ a.jira-link:hover { text-decoration: underline; }
 <!-- Barra de atualizacao manual do Jira - so aparece para o dono (IS_OWNER),
      nunca impressa. A checagem real de permissao e sempre no servidor. -->
 <div class="owner-bar no-print" id="owner-bar">
-  <button id="btn-refresh-jira">Atualizar dados do Jira</button>
+  <button id="btn-refresh-jira" title="Busca os dados do Jira e atualiza as 2 abas">🔄 Atualizar</button>
   <span class="owner-bar-status" id="owner-bar-status"></span>
 </div>
 
@@ -878,7 +878,7 @@ a.jira-link:hover { text-decoration: underline; }
         <span class="hdr-week-text">12/10/2026 a 16/10/2026</span>
         <span class="week-nav" id="week-nav"></span>
       </div>
-      <span class="hdr-chip"><span class="hdr-live-dot"></span><span class="k">Jira</span>atualizado em 21/10/2026 às 18:52</span>
+      <span class="hdr-chip"><span class="hdr-live-dot"></span><span class="k">Jira</span>atualizado em 21/10/2026 às 19:06</span>
     </div>
   </div>
   <div class="hdr-bar no-print">
@@ -903,7 +903,7 @@ a.jira-link:hover { text-decoration: underline; }
   <h1>REPORT SEMANAL</h1>
   <h2>[DGGNCT002] Squad Dados &nbsp;·&nbsp; NECTA</h2>
   <div class="date-badge">Semana de referência: 12/10/2026 a 16/10/2026</div>
-  <div class="last-updated">Dados do Jira atualizados em: 21/10/2026 às 18:52</div>
+  <div class="last-updated">Dados do Jira atualizados em: 21/10/2026 às 19:06</div>
 </div>
 
 <!-- COMO FOI A SEMANA: comparativo enxuto com a semana anterior (ver WeeklyArchive.gs) -->
@@ -1185,7 +1185,7 @@ a.jira-link:hover { text-decoration: underline; }
      data de atualizacao ficam no cabecalho (iguais nas 2 abas). -->
 <div class="rg-section no-print" id="resumo-gerencial-section">
   <div class="rg-actions rg-only-screen rg-owner-actions">
-    <button class="btn-rg-refresh no-print" id="btn-rg-refresh" style="display:none">🔄 Atualizar apenas o Resumo Gerencial</button>
+    <button class="btn-rg-refresh no-print" id="btn-rg-refresh" style="display:none" title="Atualiza as 2 abas com as planilhas, comentários e itens manuais, usando os dados do Jira da última atualização">⚡ Atualização rápida</button>
     <span class="rg-refresh-status no-print" id="rg-refresh-status"></span>
   </div>
 
@@ -1566,10 +1566,10 @@ a.jira-link:hover { text-decoration: underline; }
     };
   }
 
-  /** Botao "Atualizar apenas o Resumo Gerencial" - reprocessa os dados JA
+  /** Botao "Atualização rápida" - reprocessa os dados JA
    * buscados do Jira (snapshot atual) sem chamar o Jira de novo, so pra
    * reaplicar curadoria/itens manuais/historico mais recentes. Bem mais
-   * rapido que "Atualizar dados do Jira" (que busca tudo de novo). */
+   * rapido que "Atualizar" (que busca tudo de novo). */
   function initRgRefreshButton() {
     var btn = document.getElementById('btn-rg-refresh');
     if (!IS_OWNER || !btn) return;
@@ -1577,7 +1577,7 @@ a.jira-link:hover { text-decoration: underline; }
     var status = document.getElementById('rg-refresh-status');
     btn.onclick = function() {
       btn.disabled = true;
-      if (status) status.textContent = 'Atualizando Resumo Gerencial...';
+      if (status) status.textContent = 'Atualização rápida em andamento...';
       google.script.run
         .withSuccessHandler(function(resp) {
           if (resp && resp.ok) {
@@ -1673,7 +1673,7 @@ a.jira-link:hover { text-decoration: underline; }
     var status = document.getElementById('owner-bar-status');
     btn.onclick = function() {
       btn.disabled = true;
-      status.textContent = 'Atualizando dados do Jira...';
+      status.textContent = 'Atualizando (buscando dados do Jira)...';
       google.script.run
         .withSuccessHandler(function(resp) {
           if (resp && resp.ok) {
