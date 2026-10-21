@@ -731,6 +731,37 @@ a.jira-link:hover { text-decoration: underline; }
   text-decoration: none; margin-right: auto;
 }
 .print-bar a.btn-view-rg:hover { background: #0d1b3f; }
+
+/* Seletor de semana (arquivo semanal) - escondido ate initWeekNav() achar
+   alguma semana. */
+.week-nav {
+  display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 16px; background: #fff; border-bottom: 1px solid #dbe3f0; font-size: 12px;
+}
+.week-nav label { font-weight: 700; color: #122454; }
+.week-nav select {
+  padding: 4px 8px; border: 1px solid #c7d2f0; border-radius: 4px; font-size: 12px;
+  color: #122454; background: #f6f9ff; font-family: inherit;
+}
+.week-nav .week-nav-archived {
+  background: #fff4e0; color: #b45309; border: 1px solid #f3d98f; border-radius: 999px;
+  padding: 2px 10px; font-weight: 700; font-size: 11px;
+}
+.week-nav a.week-nav-latest { color: #F8006A; font-weight: 700; text-decoration: none; }
+.week-nav a.week-nav-latest:hover { text-decoration: underline; }
+
+/* Comparativo com a semana anterior */
+.week-compare-card { margin-bottom: 16px; }
+.wc-ref { font-size: 11.5px; color: #5a6a7a; margin: 4px 0 12px; }
+.wc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.wc-tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #122454; border-radius: 8px; padding: 10px 12px; }
+.wc-value { font-size: 22px; font-weight: 900; color: #15192b; line-height: 1; }
+.wc-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #5a6a7a; margin: 5px 0 6px; line-height: 1.3; }
+.wc-delta { display: inline-block; font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 999px; margin-right: 6px; }
+.wc-delta.wc-good { background: #eefbf3; color: #16a34a; }
+.wc-delta.wc-bad { background: #fef2f2; color: #dc2626; }
+.wc-delta.wc-neutral { background: #eef1f6; color: #5a6a7a; }
+.wc-prev { font-size: 10.5px; color: #8893a8; }
 </style>
 </head>
 <body>
@@ -741,6 +772,9 @@ a.jira-link:hover { text-decoration: underline; }
   <button id="btn-refresh-jira">Atualizar dados do Jira</button>
   <span class="owner-bar-status" id="owner-bar-status"></span>
 </div>
+
+<!-- Seletor de semana (arquivo semanal) - montado no cliente por initWeekNav(). -->
+<div class="week-nav no-print" id="week-nav"></div>
 
 <!-- RESUMO GERENCIAL — nao entra no PDF do relatorio semanal (a classe
      no-print so importa quando esta pagina e aberta de dentro do botao de
@@ -763,6 +797,11 @@ a.jira-link:hover { text-decoration: underline; }
 <div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 126 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 82 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 82 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 82 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">4</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>93 dias</strong> (pico de <strong>126 dias</strong>)</div><div>Afeta <strong>4 entregáveis</strong> do projeto</div></div></div>
 <div class="kpi-card navy"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-115 — [DASH] Painel de SLAs de Atendimento e Encerramento · 105 dias</li><li>NDAV-54 — [DASH] Projeto - Gestão de Contratos | Frotas · 75 dias</li><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 68 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 47 dias</li><li>NDAV-232 — [DASH] Medição · 19 dias</li><li>NDAV-245 — [DASH][Controles Internos (Riscos)] - Criação do Dashboard · 12 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">7</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>48 dias</strong> (pico de <strong>105 dias</strong>)</div><div>Afeta <strong>7 entregáveis</strong> do projeto</div></div></div>
 <div class="kpi-card green"><div class="kpi-top"><div class="kpi-title">Entregas da Semana</div><div class="kpi-pill">Concluído</div></div><div><span class="kpi-number">0</span><span class="kpi-unit">entregas</span></div><div class="kpi-stats"><div><strong>14</strong> entregas acumuladas no projeto</div></div></div>
+  </div>
+
+  <div class="chart-card week-compare-card">
+    <div class="chart-card-title">Comparativo com a Semana Anterior</div>
+<div class="wc-ref">Comparado com: <strong>registro de 09/10/2026</strong></div><div class="wc-grid"><div class="wc-tile"><div class="wc-value">62%</div><div class="wc-label">Progresso Geral</div><span class="wc-delta wc-neutral">= 0%</span><span class="wc-prev">antes: 62%</span></div><div class="wc-tile"><div class="wc-value">107</div><div class="wc-label">Subtarefas Concluídas</div><span class="wc-delta wc-good">▲ +1</span><span class="wc-prev">antes: 106</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Entregas na Semana</div><span class="wc-delta wc-neutral">= 0</span><span class="wc-prev">antes: 0</span></div><div class="wc-tile"><div class="wc-value">4</div><div class="wc-label">Aguardando Cliente</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">7</div><div class="wc-label">Em Validação pelo Cliente</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">1</div><div class="wc-label">Novas Demandas</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Itens Atrasados</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">8h</div><div class="wc-label">Horas em Aberto</div><span class="wc-delta wc-neutral">sem dado anterior</span></div></div>
   </div>
 
   <div class="chart-card">
@@ -788,6 +827,10 @@ a.jira-link:hover { text-decoration: underline; }
 (function() {
   var IS_OWNER = false;
   var IS_RG_PAGE = true;
+  // Trocado na hora de servir/publicar (applyWeekNav_ em WeeklyArchive.gs);
+  // se continuar string (ex.: copia aberta pelo botao de imprimir), o
+  // seletor de semana simplesmente nao aparece.
+  var WEEK_NAV = {"mode":"static","rootRel":"../","current":"2026-10-12"};
   var RG_CHECKLIST_COPY_PLAIN = "";
   var RG_CHECKLIST_COPY_HTML = "";
   var cardComments = {};
@@ -1262,6 +1305,56 @@ a.jira-link:hover { text-decoration: underline; }
     initRgRefreshButton();
     initCopyChecklistButton();
     initManualAddForms();
+    initWeekNav();
+  }
+
+  /** URL de uma semana: no Web App, "?week=" (a atual fica sem parametro);
+   * no GitHub Pages, semanas/<semana>/ relativo a raiz do site. */
+  function weekUrl(week, latest) {
+    var isLatest = week === latest;
+    if (WEEK_NAV.mode === 'static') {
+      var path = WEEK_NAV.rootRel + (isLatest ? '' : 'semanas/' + week + '/') + (IS_RG_PAGE ? 'resumo-gerencial/' : '');
+      return path || './';
+    }
+    var params = [];
+    if (IS_RG_PAGE) params.push('view=resumo');
+    if (!isLatest) params.push('week=' + week);
+    return WEEK_NAV.baseUrl + (params.length ? '?' + params.join('&') : '');
+  }
+
+  function renderWeekNav(el, weeks, latest) {
+    if (!weeks || !weeks.length) return;
+    var current = WEEK_NAV.current;
+    var options = weeks.map(function(w) {
+      return '<option value="' + escHtml(w.week) + '"' + (w.week === current ? ' selected' : '') + '>' +
+        escHtml(w.label || w.week) + (w.week === latest ? ' (atual)' : '') + '</option>';
+    }).join('');
+    var html = '<label for="week-nav-select">📅 Semana:</label><select id="week-nav-select">' + options + '</select>';
+    if (current !== latest) {
+      html += '<span class="week-nav-archived">Semana anterior — somente leitura</span>' +
+        '<a class="week-nav-latest" href="' + escHtml(weekUrl(latest, latest)) + '" target="_top">Ir para a semana atual</a>';
+    }
+    el.innerHTML = html;
+    el.style.display = 'flex';
+    document.getElementById('week-nav-select').onchange = function() {
+      // _top: no Web App a pagina roda dentro do iframe do Apps Script.
+      window.open(weekUrl(this.value, latest), '_top');
+    };
+  }
+
+  function initWeekNav() {
+    var el = document.getElementById('week-nav');
+    if (!el || !WEEK_NAV || typeof WEEK_NAV !== 'object') return;
+    if (WEEK_NAV.mode === 'static') {
+      // Paginas estaticas leem o indice publicado, assim copias antigas
+      // tambem enxergam as semanas que vieram depois delas.
+      fetch(WEEK_NAV.rootRel + 'semanas/index.json', { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(idx) { if (idx) renderWeekNav(el, idx.weeks, idx.latest); })
+        .catch(function() {});
+    } else {
+      renderWeekNav(el, WEEK_NAV.weeks, WEEK_NAV.latest);
+    }
   }
 
   if (document.readyState === 'loading') {
