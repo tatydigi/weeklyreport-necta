@@ -731,6 +731,37 @@ a.jira-link:hover { text-decoration: underline; }
   text-decoration: none; margin-right: auto;
 }
 .print-bar a.btn-view-rg:hover { background: #0d1b3f; }
+
+/* Seletor de semana (arquivo semanal) - escondido ate initWeekNav() achar
+   alguma semana. */
+.week-nav {
+  display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 16px; background: #fff; border-bottom: 1px solid #dbe3f0; font-size: 12px;
+}
+.week-nav label { font-weight: 700; color: #122454; }
+.week-nav select {
+  padding: 4px 8px; border: 1px solid #c7d2f0; border-radius: 4px; font-size: 12px;
+  color: #122454; background: #f6f9ff; font-family: inherit;
+}
+.week-nav .week-nav-archived {
+  background: #fff4e0; color: #b45309; border: 1px solid #f3d98f; border-radius: 999px;
+  padding: 2px 10px; font-weight: 700; font-size: 11px;
+}
+.week-nav a.week-nav-latest { color: #F8006A; font-weight: 700; text-decoration: none; }
+.week-nav a.week-nav-latest:hover { text-decoration: underline; }
+
+/* Comparativo com a semana anterior */
+.week-compare-card { margin-bottom: 16px; }
+.wc-ref { font-size: 11.5px; color: #5a6a7a; margin: 4px 0 12px; }
+.wc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.wc-tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #122454; border-radius: 8px; padding: 10px 12px; }
+.wc-value { font-size: 22px; font-weight: 900; color: #15192b; line-height: 1; }
+.wc-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #5a6a7a; margin: 5px 0 6px; line-height: 1.3; }
+.wc-delta { display: inline-block; font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 999px; margin-right: 6px; }
+.wc-delta.wc-good { background: #eefbf3; color: #16a34a; }
+.wc-delta.wc-bad { background: #fef2f2; color: #dc2626; }
+.wc-delta.wc-neutral { background: #eef1f6; color: #5a6a7a; }
+.wc-prev { font-size: 10.5px; color: #8893a8; }
 </style>
 </head>
 <body>
@@ -746,6 +777,9 @@ a.jira-link:hover { text-decoration: underline; }
   <a class="btn-view-rg" href="https://weeklyreport-necta.digiage-reports.workers.dev/resumo-gerencial/" target="_blank" rel="noopener">📊 Ver Resumo Gerencial</a>
   <button id="btn-print">Imprimir / Exportar PDF</button>
 </div>
+
+<!-- Seletor de semana (arquivo semanal) - montado no cliente por initWeekNav(). -->
+<div class="week-nav no-print" id="week-nav"></div>
 
 <!-- Barra de atualizacao manual do Jira - so aparece para o dono (IS_OWNER),
      nunca impressa. A checagem real de permissao e sempre no servidor. -->
@@ -765,6 +799,12 @@ a.jira-link:hover { text-decoration: underline; }
   <h2>[DGGNCT002] Squad Dados &nbsp;·&nbsp; NECTA</h2>
   <div class="date-badge">Semana de referência: 12/10/2026 a 16/10/2026</div>
   <div class="last-updated">Dados do Jira atualizados em: 20/10/2026 às 16:55</div>
+</div>
+
+<!-- COMPARATIVO COM A SEMANA ANTERIOR (ver WeeklyArchive.gs) -->
+<div class="section section-week-compare">
+  <div class="section-title">Comparativo com a Semana Anterior</div>
+<div class="wc-ref">Comparado com: <strong>registro de 09/10/2026</strong></div><div class="wc-grid"><div class="wc-tile"><div class="wc-value">62%</div><div class="wc-label">Progresso Geral</div><span class="wc-delta wc-neutral">= 0%</span><span class="wc-prev">antes: 62%</span></div><div class="wc-tile"><div class="wc-value">107</div><div class="wc-label">Subtarefas Concluídas</div><span class="wc-delta wc-good">▲ +1</span><span class="wc-prev">antes: 106</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Entregas na Semana</div><span class="wc-delta wc-neutral">= 0</span><span class="wc-prev">antes: 0</span></div><div class="wc-tile"><div class="wc-value">4</div><div class="wc-label">Aguardando Cliente</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">7</div><div class="wc-label">Em Validação pelo Cliente</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">1</div><div class="wc-label">Novas Demandas</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Itens Atrasados</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">8h</div><div class="wc-label">Horas em Aberto</div><span class="wc-delta wc-neutral">sem dado anterior</span></div></div>
 </div>
 
 <!-- SEÇÃO 2: STATUS DAS TAREFAS -->
@@ -1128,6 +1168,10 @@ a.jira-link:hover { text-decoration: underline; }
 (function() {
   var IS_OWNER = false;
   var IS_RG_PAGE = false;
+  // Trocado na hora de servir/publicar (applyWeekNav_ em WeeklyArchive.gs);
+  // se continuar string (ex.: copia aberta pelo botao de imprimir), o
+  // seletor de semana simplesmente nao aparece.
+  var WEEK_NAV = {"mode":"static","rootRel":"","current":"2026-10-12"};
   var RG_CHECKLIST_COPY_PLAIN = "";
   var RG_CHECKLIST_COPY_HTML = "";
   var cardComments = {};
@@ -1602,6 +1646,56 @@ a.jira-link:hover { text-decoration: underline; }
     initRgRefreshButton();
     initCopyChecklistButton();
     initManualAddForms();
+    initWeekNav();
+  }
+
+  /** URL de uma semana: no Web App, "?week=" (a atual fica sem parametro);
+   * no GitHub Pages, semanas/<semana>/ relativo a raiz do site. */
+  function weekUrl(week, latest) {
+    var isLatest = week === latest;
+    if (WEEK_NAV.mode === 'static') {
+      var path = WEEK_NAV.rootRel + (isLatest ? '' : 'semanas/' + week + '/') + (IS_RG_PAGE ? 'resumo-gerencial/' : '');
+      return path || './';
+    }
+    var params = [];
+    if (IS_RG_PAGE) params.push('view=resumo');
+    if (!isLatest) params.push('week=' + week);
+    return WEEK_NAV.baseUrl + (params.length ? '?' + params.join('&') : '');
+  }
+
+  function renderWeekNav(el, weeks, latest) {
+    if (!weeks || !weeks.length) return;
+    var current = WEEK_NAV.current;
+    var options = weeks.map(function(w) {
+      return '<option value="' + escHtml(w.week) + '"' + (w.week === current ? ' selected' : '') + '>' +
+        escHtml(w.label || w.week) + (w.week === latest ? ' (atual)' : '') + '</option>';
+    }).join('');
+    var html = '<label for="week-nav-select">📅 Semana:</label><select id="week-nav-select">' + options + '</select>';
+    if (current !== latest) {
+      html += '<span class="week-nav-archived">Semana anterior — somente leitura</span>' +
+        '<a class="week-nav-latest" href="' + escHtml(weekUrl(latest, latest)) + '" target="_top">Ir para a semana atual</a>';
+    }
+    el.innerHTML = html;
+    el.style.display = 'flex';
+    document.getElementById('week-nav-select').onchange = function() {
+      // _top: no Web App a pagina roda dentro do iframe do Apps Script.
+      window.open(weekUrl(this.value, latest), '_top');
+    };
+  }
+
+  function initWeekNav() {
+    var el = document.getElementById('week-nav');
+    if (!el || !WEEK_NAV || typeof WEEK_NAV !== 'object') return;
+    if (WEEK_NAV.mode === 'static') {
+      // Paginas estaticas leem o indice publicado, assim copias antigas
+      // tambem enxergam as semanas que vieram depois delas.
+      fetch(WEEK_NAV.rootRel + 'semanas/index.json', { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(idx) { if (idx) renderWeekNav(el, idx.weeks, idx.latest); })
+        .catch(function() {});
+    } else {
+      renderWeekNav(el, WEEK_NAV.weeks, WEEK_NAV.latest);
+    }
   }
 
   if (document.readyState === 'loading') {
