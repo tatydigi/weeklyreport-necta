@@ -98,10 +98,8 @@ body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 13px; col
   break-after: avoid; page-break-after: avoid;
 }
 .subsection-title {
-  font-size: 13px; font-weight: 800; color: #fff;
-  margin: 20px 0 14px; padding: 10px 16px; border-radius: 4px;
-  text-transform: uppercase; letter-spacing: 1px;
-  background: #122454;
+  font-size: 11.5px; font-weight: 800; color: #5a6a7a;
+  margin: 22px 0 10px; text-transform: uppercase; letter-spacing: 0.6px;
   break-after: avoid; page-break-after: avoid;
 }
 
@@ -164,21 +162,14 @@ body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 13px; col
 .bn-columns { display: flex; align-items: flex-start; gap: 16px; }
 .bn-subsection { break-inside: avoid; page-break-inside: avoid; flex: 1; min-width: 0; }
 .bn-subsection + .bn-subsection { border-left: 1px solid rgba(0,0,0,0.08); padding-left: 16px; }
-.bn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
-.bn-grid-compact { grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 0; }
-.bn-grid-compact .bn-card { padding: 6px 10px; }
-.bn-grid-compact .bn-value { font-size: 20px; }
-.bn-grid-compact .bn-card.secondary .bn-value { font-size: 17px; }
-.bn-grid-compact .bn-card.docs .bn-value { font-size: 15px; }
-.bn-grid-compact .bn-label { font-size: 7.5px; }
-.bn-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 999px; padding: 10px 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.bn-card.primary   { border-left: 4px solid #F8006A; }
-.bn-card.secondary { border-left: 4px solid #F6926F; }
-.bn-card.docs      { border-left: 4px solid #122454; }
-.bn-value { font-size: 26px; font-weight: 800; color: #122454; }
-.bn-card.secondary .bn-value { font-size: 21px; }
-.bn-card.docs .bn-value { font-size: 18px; }
-.bn-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: #5a6a7a; margin-top: 3px; line-height: 1.3; }
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0; border-radius: 8px; padding: 12px 14px; }
+.tile.pink   { border-left-color: #F8006A; }
+.tile.salmon { border-left-color: #c2552e; }
+.tile.navy   { border-left-color: #122454; }
+.tile.green  { border-left-color: #16a34a; }
+.tile-value { font-size: 26px; font-weight: 900; line-height: 1; color: #122454; }
+.tile-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #5a6a7a; margin-top: 5px; line-height: 1.3; }
 
 /* ── Tabelas ── */
 table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
@@ -186,9 +177,11 @@ th { background: #122454; color: #fff; padding: 7px 10px; text-align: left; font
 td { padding: 6px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; }
 tr:nth-child(even) td { background: #f9fbfd; }
 
-/* ── Kanban ── */
+/* ── Status das Tarefas (Kanban) - redesign aprovado em mockup: card mostra
+   so chave+nome; a lista de sub-tarefas daquele status fica num tooltip "i"
+   (hover/clique) em vez de um "[N subtasks]" sempre visivel. ── */
 .kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: start; margin-top: 8px; }
-.kanban-col { border-radius: 6px; overflow: hidden; }
+.kanban-col { background: #fff; border: 1px solid #dbe3f0; border-radius: 10px; }
 @media print {
   /* O Chrome nao pagina bem layouts CSS Grid na impressao - quando o board
      nao cabe inteiro no espaco restante da pagina, ele empurra o grid
@@ -200,11 +193,8 @@ tr:nth-child(even) td { background: #f9fbfd; }
   .kanban-col {
     display: inline-block; vertical-align: top;
     width: 19%; margin-right: 1%; font-size: 1rem;
-    /* overflow:hidden (usado na tela pra arredondar os cantos) impede o
-       navegador de dividir o elemento entre paginas na impressao - com
-       muitos itens (ex.: "Concluído" com 100+), isso forcava a coluna
-       INTEIRA pra uma pagina nova em vez de deixar o conteudo continuar
-       fluindo. "visible" so na impressao resolve, sem afetar a tela. */
+    /* overflow:hidden clicaria o conteudo que passa da borda - nunca usar
+       aqui (ja causou bug de pagina em branco no passado). */
     overflow: visible;
   }
   /* 5 colunas de 19% + 4 margens de 1% entre elas = 99% (cabe). Sem isto,
@@ -219,51 +209,168 @@ tr:nth-child(even) td { background: #f9fbfd; }
      Forca 1 linha por card (chave+contagem+resumo juntos, resumo truncado
      com reticencias) em vez de 2-3 linhas - precisa pra caber 100+ itens
      numa unica pagina. */
-  .kanban-col-header { padding: 3px 5px; gap: 1px; }
+  .kanban-col-head { padding: 3px 5px; gap: 1px; }
   .kanban-col-title { font-size: 7.5px; }
   .kanban-col-count { font-size: 6.5px; }
   .kanban-cards { display: block; padding: 2px; min-height: 0; }
-  /* .kanban-card vira flex, e seus 2 filhos diretos (.kanban-card-header e
-     .kanban-card-name) viram os 2 "itens" dessa linha unica - evita
-     "display:contents" (suporte inconsistente no motor de impressao do
-     Chrome, que em testes anteriores simplesmente ignorou a regra e manteve
-     o card em 2 linhas mesmo com fonte menor). */
+  /* .kanban-card vira flex de 1 linha so (chave+contagem+resumo juntos,
+     resumo truncado com reticencias) - evita "display:contents" (suporte
+     inconsistente no motor de impressao do Chrome, ja testado antes). */
   .kanban-card {
     display: flex; align-items: baseline; gap: 4px; flex-wrap: nowrap;
     padding: 1px 3px; margin-bottom: 1px; border-radius: 2px;
     white-space: nowrap; overflow: hidden;
   }
-  .kanban-card .progress-key { font-size: 6px; margin-right: 0; flex-shrink: 0; }
-  .kanban-card-header { margin-bottom: 0; gap: 2px; flex-shrink: 0; white-space: nowrap; }
-  .kanban-card-count { font-size: 6px; flex-shrink: 0; }
+  .kanban-card .kanban-card-key { font-size: 6px; margin-right: 0; flex-shrink: 0; }
+  .kanban-card-count-print { font-size: 6px; flex-shrink: 0; color: #5a6a7a; }
   .kanban-card-name {
     font-size: 6px; line-height: 1.1; flex: 1; min-width: 0;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .kanban-empty { padding: 3px 0; font-size: 7px; }
 }
-.kanban-col-header { padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
-.kanban-col-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-.kanban-col-count { font-size: 9px; opacity: 0.85; }
-.kanban-cards { background: #f7f7fb; padding: 6px; display: flex; flex-direction: column; gap: 5px; min-height: 40px; }
-.kanban-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 4px; padding: 5px 7px; break-inside: avoid; page-break-inside: avoid; }
-.kanban-card-header { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 2px; }
-.kanban-card-name { font-size: 9px; color: #1a1a2e; line-height: 1.3; }
-.kanban-card-count { font-size: 9px; color: #5a6a7a; font-weight: 600; white-space: nowrap; }
+.kanban-col-head { padding: 10px 12px; border-top: 4px solid #dbe3f0; }
+.kanban-col-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: #122454; }
+.kanban-col-count { font-size: 10px; color: #5a6a7a; margin-top: 2px; }
+.kanban-cards { padding: 8px; display: flex; flex-direction: column; gap: 6px; background: #F6F9FF; min-height: 40px; border-radius: 0 0 9px 9px; }
+.kanban-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 6px; padding: 7px 9px; position: relative; break-inside: avoid; page-break-inside: avoid; }
+.kanban-card-key { font-family: monospace; font-size: 10px; color: #F8006A; font-weight: 700; }
+.kanban-card-name { font-size: 10.5px; color: #1a1a2e; margin-top: 2px; line-height: 1.3; padding-right: 16px; }
+.kanban-card-count-print { display: none; }
 .kanban-empty { color: #bbb; font-size: 11px; text-align: center; padding: 10px 0; }
 
-/* ── Blocos CR / Novas Demandas ── */
-.cr-block { border: 1px solid #dbe3f0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); break-inside: avoid; page-break-inside: avoid; }
-.cr-parent-header {
-  background: #fff; border-bottom: 1px solid #dbe3f0;
-  padding: 8px 14px; font-weight: 600; display: flex; gap: 16px; align-items: center;
+/* ── Tooltip de leitura (hover/"i") - so pra informacao que nao precisa ser
+   editada (lista de sub-tarefas no Kanban, detalhe extra nas barras de
+   Areas Beneficiadas). Nunca usar isto onde precisa de clique/edicao - ver
+   .expand-card mais abaixo (Painel de Impedimentos e Alteracao de Escopo). */
+.info-dot {
+  position: absolute; top: 6px; right: 6px; width: 15px; height: 15px;
+  border-radius: 50%; border: 1px solid #dbe3f0; background: #F6F9FF;
+  color: #8893a8; font-size: 9px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; cursor: help;
 }
-.cr-parent-key { font-family: monospace; color: #F8006A; font-size: 13px; flex-shrink: 0; }
-.cr-parent-meta { font-size: 11px; color: #5a6a7a; margin-left: auto; white-space: nowrap; }
-.cr-subtask { padding: 10px 14px 10px 28px; border-bottom: 1px solid #eef2f7; }
-.cr-subtask:last-child { border-bottom: none; }
-.cr-subtask-title { font-weight: 600; margin-bottom: 6px; }
+.bar-row .info-dot { top: 10px; right: 14px; }
+.info-tooltip {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; width: 220px;
+  background: #1a1a2e; color: #f3f5fa; border-radius: 8px; padding: 9px 11px;
+  font-size: 11px; line-height: 1.5; box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease; pointer-events: none;
+}
+.bar-row .info-tooltip { width: 230px; }
+.kanban-card:hover .info-tooltip, .kanban-card:focus-within .info-tooltip,
+.bar-row:hover .info-tooltip, .bar-row:focus-within .info-tooltip {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.info-tooltip ul { margin: 0; padding-left: 14px; }
+.info-tooltip li { margin-bottom: 3px; }
+.info-tooltip li:last-child { margin-bottom: 0; }
+@media print { .info-dot, .info-tooltip { display: none !important; } }
+
+/* ── Atividades da Semana - linhas em card com borda colorida por status
+   (no lugar da tabela antiga com badge a direita). ── */
+.activity-list { display: flex; flex-direction: column; gap: 8px; }
+.activity-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 7px; padding: 8px 12px; break-inside: avoid; page-break-inside: avoid;
+}
+.activity-row.st-backlog { border-left-color: #8a93a6; }
+.activity-row.st-progresso { border-left-color: #d97706; }
+.activity-row.st-revisao { border-left-color: #ea580c; }
+.activity-row.st-testes { border-left-color: #7c3aed; }
+.activity-row.st-concluido { border-left-color: #16a34a; }
+.activity-key { font-family: monospace; font-weight: 700; color: #F8006A; font-size: 11.5px; min-width: 62px; }
+.activity-summary { flex: 1; font-size: 12.5px; min-width: 180px; }
+.activity-parent { font-size: 10.5px; color: #8893a8; white-space: nowrap; }
+.activity-badge {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 3px 9px; border-radius: 999px; color: #fff; white-space: nowrap;
+}
+.activity-row.st-backlog .activity-badge { background: #8a93a6; }
+.activity-row.st-progresso .activity-badge { background: #d97706; }
+.activity-row.st-revisao .activity-badge { background: #ea580c; }
+.activity-row.st-testes .activity-badge { background: #7c3aed; }
+.activity-row.st-concluido .activity-badge { background: #16a34a; }
+
+/* ── Areas Beneficiadas - lista ranqueada de barras (troca a tabela) ── */
+.bar-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.bar-row {
+  background: #fff; border: 1px solid #dbe3f0; border-radius: 8px;
+  padding: 10px 14px; position: relative; break-inside: avoid; page-break-inside: avoid;
+}
+.bar-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.bar-row-area { font-weight: 700; font-size: 13px; color: #1a1a2e; }
+.bar-row-dash { font-size: 11px; color: #5a6a7a; }
+.bar-row-value { font-weight: 800; font-size: 14px; color: #122454; flex-shrink: 0; }
+.bar-track { height: 10px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; background: #F8006A; border-radius: 999px; }
+.kpi-grid-small { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+/* Linha-resumo "Colaboradores da empresa (X) já beneficiados..." no fim da
+   secao - generica, reaproveitada so aqui (nao faz parte do redesign dos
+   cards .progress-card acima, que e so pra "Progresso Geral das Tarefas"). */
+.progress-item { break-inside: avoid; page-break-inside: avoid; }
+.progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.progress-label { font-size: 13px; color: #1a1a2e; }
+.progress-meta { font-size: 12px; white-space: nowrap; margin-left: 12px; flex-shrink: 0; }
+
+/* ── Cards expansiveis <details>/<summary> (clique pra abrir) - usados onde
+   precisa de edicao: Alteracao de Escopo/Novas Demandas e Painel de
+   Impedimentos. Mantem data-key/data-comments/data-hidden/.editable-comments/
+   .impediment-header EXATAMENTE como nos cards antigos, pro JS existente
+   (renderCard/applyHiddenState) continuar funcionando sem mudanca. ── */
+.expand-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.expand-card.salmon { border-left-color: #c2552e; }
+.expand-card.navy { border-left-color: #122454; }
+.expand-card.pink { border-left-color: #F8006A; }
+.expand-card[data-hidden="true"] { display: none; }
+.expand-card.curation-hidden { display: block; opacity: 0.55; border-style: dashed; }
+@media print { .expand-card[data-hidden="true"] { display: none !important; } }
+.expand-card > summary {
+  list-style: none; cursor: pointer; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.expand-card > summary::-webkit-details-marker { display: none; }
+.expand-card > summary::before {
+  content: '▸'; color: #8893a8; font-size: 11px; flex-shrink: 0;
+  transition: transform .15s ease;
+}
+.expand-card[open] > summary::before { transform: rotate(90deg); }
+@media print {
+  /* <details> fechado nao imprime o conteudo (comportamento nativo do
+     navegador) - forca aberto so na impressao, independente do estado na
+     tela, senao comentarios/sub-itens somem do PDF. */
+  .expand-card > summary::before { display: none; }
+  .expand-card .expand-body { display: block !important; }
+}
+.expand-key { font-family: monospace; font-weight: 800; font-size: 13px; }
+.expand-card.salmon .expand-key { color: #c2552e; }
+.expand-card.navy .expand-key { color: #122454; }
+.expand-card.pink .expand-key { color: #F8006A; }
+.expand-summary { flex: 1; font-weight: 600; min-width: 150px; }
+.expand-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+}
+.expand-card.salmon .expand-badge { background: #fdf1ec; color: #c2552e; border: 1px solid #f3cdb9; }
+.expand-card.navy .expand-badge { background: #f6f9ff; color: #122454; border: 1px solid #dbe3f0; }
+.expand-card.pink .expand-badge { background: #fff0f8; color: #F8006A; border: 1px solid #fbc9e0; }
+.expand-days {
+  font-size: 10px; color: #b91c1c; font-style: italic; white-space: nowrap; flex-shrink: 0;
+  background: #fdecec; padding: 2px 8px; border-radius: 10px;
+}
+.expand-resp { font-size: 11px; font-weight: 700; color: #122454; white-space: nowrap; }
+.expand-body { padding: 0 14px 14px 32px; }
+.expand-subitem { padding: 8px 0; border-top: 1px solid #eef2f7; }
+.expand-subitem:first-child { border-top: none; }
+.expand-subitem-title { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cr-description { color: #5a6a7a; font-size: 12px; margin: 4px 0 8px; white-space: pre-wrap; }
+/* Comentarios - mesmas classes que o JS compartilhado (buildCommentEl em
+   Template.gs) cria em qualquer card com .editable-comments, independente
+   da cor do card onde aparecem. */
 .cr-comment { background: #fff0f8; border-left: 3px solid #F8006A; padding: 6px 10px; margin-bottom: 6px; border-radius: 0 4px 4px 0; }
 .cr-comment-meta { font-size: 11px; color: #5a6a7a; margin-bottom: 3px; }
 .cr-comment-body { white-space: pre-wrap; }
@@ -327,11 +434,10 @@ a.jira-link:hover { text-decoration: underline; }
   transition: opacity 0.3s;
 }
 
-/* ── Subsecções do Painel de Impedimentos ── */
-.subsection-aguardando { background: #d97706; }
-.subsection-validacao  { background: #122454; }
-.subsection-standby    { background: #ea580c; }
-.subsection-divider    { height: 1px; background: rgba(0,0,0,0.08); margin: 28px 0 0; }
+/* ── Subsecções do Painel de Impedimentos - .subsection-title agora é um
+   rotulo simples (ver regra acima), sem mais faixa colorida de fundo por
+   subsecao (a cor ja vem da borda esquerda de cada .expand-card). ── */
+.subsection-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 28px 0 0; }
 
 /* ── Cards de impedimento ── */
 .impediment-card {
@@ -340,10 +446,10 @@ a.jira-link:hover { text-decoration: underline; }
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   break-inside: avoid; page-break-inside: avoid;
 }
-.impediment-header {
-  background: #fff; border-bottom: 1px solid #edd8d8;
-  padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-}
+/* .impediment-header SEM regra visual propria de proposito: a classe so
+   continua existindo como "gancho" pro JS (applyHiddenState faz
+   card.querySelector('.impediment-header')) - o visual de verdade agora vem
+   de ".expand-card > summary" (ver bloco acima), pra nao haver conflito. */
 .impediment-summary { flex: 1; font-weight: 600; min-width: 150px; }
 .impediment-meta { font-size: 11px; color: #5a6a7a; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .impediment-days {
@@ -375,28 +481,41 @@ a.jira-link:hover { text-decoration: underline; }
   color: #fff; font-size: 11px; cursor: pointer; margin-left: auto;
 }
 
-/* ── Seção de Progresso ── */
+/* ── Seção de Progresso - cards com borda colorida por faixa de avanço
+   (3 niveis) + card "Total Geral" destacado, no lugar das barras antigas. ── */
 .section-progress { background: #F6F9FF; }
-.progress-item { margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
-.progress-item:last-child { margin-bottom: 0; }
-.progress-header {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 6px;
+.progress-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.progress-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 8px; padding: 12px 16px; break-inside: avoid; page-break-inside: avoid;
 }
-.progress-key   { font-family: monospace; color: #F8006A; font-size: 12px; margin-right: 6px; }
-.progress-label { font-size: 13px; color: #1a1a2e; }
-.progress-meta  { font-size: 12px; white-space: nowrap; margin-left: 12px; flex-shrink: 0; }
-.progress-bar-track { height: 12px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
-.progress-bar-fill  { height: 100%; border-radius: 999px; }
+.progress-card.tier-high { border-left-color: #16a34a; }
+.progress-card.tier-mid { border-left-color: #c2552e; }
+.progress-card.tier-low { border-left-color: #F8006A; }
+.progress-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.progress-card-name { font-size: 13px; font-weight: 600; }
+.progress-card-name .pkey { font-family: monospace; color: #F8006A; font-weight: 700; margin-right: 6px; }
+.progress-card-meta { font-size: 12px; font-weight: 700; color: #5a6a7a; white-space: nowrap; }
+.progress-track { height: 11px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; }
+.tier-high .progress-fill { background: #16a34a; }
+.tier-mid .progress-fill { background: #c2552e; }
+.tier-low .progress-fill { background: #F8006A; }
 .progress-total {
-  margin-top: 24px; padding-top: 18px;
-  border-top: 2px solid #6b7280;
+  background: #122454; color: #fff; border-radius: 10px; padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  break-inside: avoid; page-break-inside: avoid;
 }
-.progress-total .progress-label { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-.progress-total .progress-bar-track { height: 16px; margin-top: 8px; }
-.progress-total .progress-meta { font-size: 13px; font-weight: 700; }
+.progress-total-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.progress-total-value { font-size: 24px; font-weight: 900; }
+.progress-total-track { flex: 1; min-width: 160px; height: 14px; background: rgba(255,255,255,0.2); border-radius: 999px; overflow: hidden; }
+.progress-total-fill { height: 100%; background: #F8006A; border-radius: 999px; }
 
-/* ── Produtividade Mensal (só na última semana do mês) ── */
+/* ── Produtividade Mensal (só na última semana do mês) - reaproveita
+   .progress-bar-track/.progress-bar-fill (NAO sao as mesmas classes do
+   Progresso Geral acima, que usa .progress-track/.progress-fill). ── */
+.progress-bar-track { height: 12px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-bar-fill  { height: 100%; border-radius: 999px; }
 .monthly-legend { font-size: 11px; color: #5a6a7a; margin-bottom: 16px; }
 .monthly-chart { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
 .monthly-bar-item { display: flex; align-items: center; gap: 12px; break-inside: avoid; page-break-inside: avoid; }
@@ -435,6 +554,7 @@ a.jira-link:hover { text-decoration: underline; }
    semanal. Continua reaproveitando o mesmo <style>/<script>. */
 .rg-section { padding: 32px 40px; background: #fff; }
 .rg-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.section-subtitle { font-size: 11.5px; color: #5a6a7a; margin-top: 4px; }
 .rg-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-top: 2px; flex-wrap: wrap; }
 .rg-no-print-flag {
   font-size: 10.5px; color: #92400e; background: #FFF9E9; border: 1px solid #f3d98f;
@@ -634,91 +754,91 @@ a.jira-link:hover { text-decoration: underline; }
   <div class="section-title">Status das Tarefas</div>
 <div class="kanban-board">
   <div class="kanban-col">
-    <div class="kanban-col-header" style="background:#9e9e9e;color:#fff"><span class="kanban-col-title">EM BACKLOG</span><span class="kanban-col-count">29 subtasks</span></div>
+    <div class="kanban-col-head" style="border-top-color:#9e9e9e"><div class="kanban-col-title">EM BACKLOG</div><div class="kanban-col-count">29 subtasks</div></div>
     <div class="kanban-cards">
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Dashboard - Operações</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">Dados - Estratégia</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Projeto - Manutenção</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">Validaçao de Cadastro</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">CONECTIVIDADE GIS </div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">CONECTIVIDADE LAKE X XCONN</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">Vinculaçao de Fontes de Dados - Modelo BI</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">Integração Salesforce + Metric Views</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">Federação com Base XCONN</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a><span class="kanban-card-count">[4 subtasks]</span></div><div class="kanban-card-name">Comunicação Interna — Pílulas de Conhecimento</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">Criação de domínio &quot;C-Level&quot;</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">CONECTIVIDADE GLPI </div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">Programa de Descontos Necta (Atendimento/Marketing)</div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Dashboard - Operações</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-242 — [Operações] Mudanças de escopo no campo de TAE </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Dados - Estratégia</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-41 — Normalização - dados endereço</li><li>NDAV-42 — Disponibilização de dados normalizados</li><li>NDAV-51 — Documentação Funcional</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-216 — Adição do Centro de Custo (Dashboard)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Manutenção</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-69 — Mapeamento de Regras de Negócio</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-241 — Danos - Criação do campo de Quantidade de solicitações de  cadastro de rede. (controle de acesso de terceiros na plataforma GIS) </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-144 — Disponilização de Fontes de Dados (Blob)</li><li>NDAV-145 — Publicação do Painel</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Validaçao de Cadastro</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-142 — Publicação do Painel </li><li>NDAV-143 — Disponibilização de fontes de Dados no Blob</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-168 — Validar dashboard e coletar sugestões de melhoria</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">CONECTIVIDADE GIS </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-201 — Ambiente de PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">CONECTIVIDADE LAKE X XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-202 — Configuração Lake x XCONN - PRD</li><li>NDAV-203 — Acessos ao Banco - PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Vinculaçao de Fontes de Dados - Modelo BI</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-146 — Publicação do Painel</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Integração Salesforce + Metric Views</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-153 — Definir quais métricas do Salesforce serão expostas nas Metric Views</li><li>NDAV-154 — Gerar tópicos - visão executiva</li><li>NDAV-155 — Revisar e validar conteúdo gerado antes da apresentação</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Federação com Base XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-165 — Criar métricas iniciais sobre a base XCONN</li><li>NDAV-208 — Habilitar federação Databricks ↔ sql server/XCONN (prd)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a><span class="kanban-card-count-print">[4]</span><div class="kanban-card-name">Comunicação Interna — Pílulas de Conhecimento</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-177 — Estruturar comunicação interna sobre jornada de dados</li><li>NDAV-178 — Alinhar formato e periodicidade </li><li>NDAV-179 — Criar 1ª edição da pílula de conhecimento Databricks</li><li>NDAV-180 — Publicar e avaliar engajamento da 1ª edição</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Criação de domínio &quot;C-Level&quot;</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-188 — Inclusão de dashboard com visão de consumo dos clientes industriais de alto consumo em d-1.</li><li>NDAV-189 — Homologação </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">CONECTIVIDADE GLPI </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-206 — Configuração GLPI - PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Programa de Descontos Necta (Atendimento/Marketing)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-212 — Follow-up para obter essas regras antes de fechar o mapeamento.</li></ul></div></div>
     </div>
   </div>
   <div class="kanban-col">
-    <div class="kanban-col-header" style="background:#f59e0b;color:#1a1a2e"><span class="kanban-col-title">EM PROGRESSO</span><span class="kanban-col-count">32 subtasks</span></div>
+    <div class="kanban-col-head" style="border-top-color:#f59e0b"><div class="kanban-col-title">EM PROGRESSO</div><div class="kanban-col-count">32 subtasks</div></div>
     <div class="kanban-cards">
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Dashboard - Operações</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count">[4 subtasks]</span></div><div class="kanban-card-name">Dados - Estratégia</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Projeto - Manutenção</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count">[6 subtasks]</span></div><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">Validaçao de Cadastro</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[Ingestão de tabelas] - SAP x Databricks</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count">[9 subtasks]</span></div><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-127" target="_blank">NDAV-127</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">Task - Atividades IICS</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">Vinculaçao de Fontes de Dados - Modelo BI</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">Integração Salesforce + Metric Views</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">Programa de Descontos Necta (Atendimento/Marketing)</div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Dashboard - Operações</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-231 — Ingestão de dados manuais (PMRUN)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count-print">[4]</span><div class="kanban-card-name">Dados - Estratégia</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-40 — Análise de dados endereço</li><li>NDAV-50 — Refinamento de Requisitos</li><li>NDAV-95 — Reunião de Alinhamento : Especificação Funcional/Técnica</li><li>NDAV-240 — [DASH][Estratégia] - Adição de campos e regras </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Manutenção</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-70 — Investigação de Fontes de Dados</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count-print">[6]</span><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-99 — KPIs - Pressão de Saída</li><li>NDAV-100 — KPIs - Danos  e Ocorrencia de Danos</li><li>NDAV-236 — Homologação do Painel - Aba Qualidade do Gás</li><li>NDAV-237 — Homologação do Painel - Aba Pressão de Saída</li><li>NDAV-238 — Homologação do Painel - Aba Danos</li><li>NDAV-239 — Homologação do Painel - Aba Ocorrência de Danos</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-140 — Atualização da origem de dados</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Validaçao de Cadastro</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-141 — Atualização de Origem de Fontes (Blob)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[Ingestão de tabelas] - SAP x Databricks</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-223 — Ingestão das Tabelas - Transação SAP em PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count-print">[9]</span><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-116 — Refinamento e Levantammento das Regras de Negócio</li><li>NDAV-117 — Emergência - Vazamento de gas</li><li>NDAV-118 — Emergência - Falta de Gas</li><li>NDAV-119 — Corte Devido - Religação 4Hs</li><li>NDAV-120 — Corte Devido - Religação 1DU</li><li>NDAV-121 — Corte Devido - Religação Insegurança</li><li>NDAV-122 — Corte Devido - Religação Bloqueio Temp.</li><li>NDAV-123 — Corte Indevido - Religação</li><li>+ 1 outra</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-127" target="_blank">NDAV-127</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Task - Atividades IICS</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-128 — Criacao e ajustes de jobs no IICS</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Vinculaçao de Fontes de Dados - Modelo BI</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-130 — Validaçao de Cadastro </li><li>NDAV-131 — Projeto - Dashboard de Atendimento  (PBI)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Integração Salesforce + Metric Views</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-151 — Validar leitura dos dados do Salesforce no Databricks</li><li>NDAV-152 — Criar tópicos/métricas nas Metric Views (IA) </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-186 — Deploy em DEV</li><li>NDAV-198 — Validação Time de Atendimento Necta</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Programa de Descontos Necta (Atendimento/Marketing)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-211 — Investigação de Fonte de Dados (ZSDZU21 | ZCONTRATOS2)</li></ul></div></div>
     </div>
   </div>
   <div class="kanban-col">
-    <div class="kanban-col-header" style="background:#f97316;color:#fff"><span class="kanban-col-title">EM REVISÃO</span><span class="kanban-col-count">4 subtasks</span></div>
+    <div class="kanban-col-head" style="border-top-color:#f97316"><div class="kanban-col-title">EM REVISÃO</div><div class="kanban-col-count">4 subtasks</div></div>
     <div class="kanban-cards">
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-65 — Mapeamento de Regras de Negócio</li><li>NDAV-66 — Investigação de Fontes de Dados</li><li>NDAV-209 — Criação do Painel de Gestão de Contratos (Dashboard) </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-219 — Criação do campo de média (API GIS)</li></ul></div></div>
     </div>
   </div>
   <div class="kanban-col">
-    <div class="kanban-col-header" style="background:#8b5cf6;color:#fff"><span class="kanban-col-title">EM TESTES</span><span class="kanban-col-count">0 subtasks</span></div>
+    <div class="kanban-col-head" style="border-top-color:#8b5cf6"><div class="kanban-col-title">EM TESTES</div><div class="kanban-col-count">0 subtasks</div></div>
     <div class="kanban-cards">
       <div class="kanban-empty">—</div>
     </div>
   </div>
   <div class="kanban-col">
-    <div class="kanban-col-header" style="background:#22c55e;color:#fff"><span class="kanban-col-title">CONCLUÍDO</span><span class="kanban-col-count">107 subtasks</span></div>
+    <div class="kanban-col-head" style="border-top-color:#22c55e"><div class="kanban-col-title">CONCLUÍDO</div><div class="kanban-col-count">107 subtasks</div></div>
     <div class="kanban-cards">
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count">[16 subtasks]</span></div><div class="kanban-card-name">[DASH] Dashboard - Operações</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count">[5 subtasks]</span></div><div class="kanban-card-name">Dados - Estratégia</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a><span class="kanban-card-count">[5 subtasks]</span></div><div class="kanban-card-name">Pipeline de Medição e Volume - Medição</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">Projeto de Integração Fiscal</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-31" target="_blank">NDAV-31</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">Projeto RH – Desligamentos</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a><span class="kanban-card-count">[11 subtasks]</span></div><div class="kanban-card-name">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH] Projeto - Manutenção</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count">[10 subtasks]</span></div><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a><span class="kanban-card-count">[8 subtasks]</span></div><div class="kanban-card-name">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count">[4 subtasks]</span></div><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">Validaçao de Cadastro</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[Ingestão de tabelas] - SAP x Databricks</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">Task - Subida do job XConn IICS para PRD</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">CONECTIVIDADE GIS </div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">CONECTIVIDADE LAKE X XCONN</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">Datalake Arquitetura</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">Refactor Jobs Informática Cloud</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">Integração Salesforce + Metric Views</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">App Mobile Databricks</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a><span class="kanban-card-count">[5 subtasks]</span></div><div class="kanban-card-name">Federação com Base XCONN</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a><span class="kanban-card-count">[4 subtasks]</span></div><div class="kanban-card-name">Medição : Mapeamento de Cenários de Inconsistência</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">Refactor Dashboard - Pessoas &amp; Cultura </div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">Dados Medição - XCONN</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">CONECTIVIDADE GLPI </div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a><span class="kanban-card-count">[2 subtasks]</span></div><div class="kanban-card-name">Ingestão de Planilha de Dados - PM RUN</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="kanban-card-count">[3 subtasks]</span></div><div class="kanban-card-name">[DASH] Medição</div></div>
-      <div class="kanban-card"><div class="kanban-card-header"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="kanban-card-count">[1 subtask]</span></div><div class="kanban-card-name">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count-print">[16]</span><div class="kanban-card-name">[DASH] Dashboard - Operações</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-37 — Investigação de Fontes de Dados</li><li>NDAV-38 — Extração das informações do SAP pelo Informatica Cloud</li><li>NDAV-39 — Desenvolvimento do Dashboard</li><li>NDAV-48 — Refinamento de Requisitos </li><li>NDAV-49 — Documentação Funcional/Técnica</li><li>NDAV-89 — [CR-DASH-OPS-001] Inclusão do Indicador de Religação 4h no Dashboard de Operações</li><li>NDAV-90 — [CR-DASH-OPS-001] Investigação de Fonte de Dados</li><li>NDAV-91 — [CR-DASH-OPS-001] Implementação da Lógica de Cálculo de SLA</li><li>+ 8 outras</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count-print">[5]</span><div class="kanban-card-name">Dados - Estratégia</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-175 — Elaboração de Plano de trabalho — (Estratégia / Visão Analítica) </li><li>NDAV-225 — Entendimento da base e demanda</li><li>NDAV-229 — [SAP -&gt; Databricks] Ingestão de tabelas necessárias. (Estratégia)</li><li>NDAV-230 — Criação de KPIs no Dashboard  - Estratégia</li><li>NDAV-243 — [DASH][Estratégia] - Ingestão de Excel para tabela no Databricks</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a><span class="kanban-card-count-print">[5]</span><div class="kanban-card-name">Pipeline de Medição e Volume - Medição</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-43 — Ingestao  de Fontes do XCONN</li><li>NDAV-44 — Processo para validação de medição</li><li>NDAV-45 — Desenvolvimento de painel para validação de medição</li><li>NDAV-47 — Refinamento de Requisitos</li><li>NDAV-52 — Documentação Funcional</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Projeto de Integração Fiscal</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-32 — Investigação do problema de integração</li><li>NDAV-33 — Validaçao</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-31" target="_blank">NDAV-31</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Projeto RH – Desligamentos</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-34 — Desenvolvimento </li><li>NDAV-35 — Homologaçao - Necta</li><li>NDAV-36 — Deploy</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a><span class="kanban-card-count-print">[11]</span><div class="kanban-card-name">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-55 — Mapeamento de Fontes</li><li>NDAV-56 — Criação de Queries/ETL</li><li>NDAV-57 — Cálculo de Medidas (DAX)</li><li>NDAV-58 — [DASH] Desenvolvimento da Aba: Turnover</li><li>NDAV-59 — [DASH] Desenvolvimento da Aba: Diversidade</li><li>NDAV-60 — [DASH] Desenvolvimento da Aba: Horas Extras</li><li>NDAV-61 — [DASH] Desenvolvimento da Aba: Banco de Horas</li><li>NDAV-62 — Adequação de Layout do BI</li><li>+ 3 outras</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-64 — Kick-off e Definição de KPIs </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Manutenção</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-68 — Kick-off e Definição de KPIs </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count-print">[10]</span><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-82 — Refinamento - Levantamento de Requisitos</li><li>NDAV-83 — Investigação das Fontes de Dados</li><li>NDAV-84 — Criação de nova página para inclusão e visualização dos indicadores TAE</li><li>NDAV-96 — Reuniões com os OWNERs de cada KPI </li><li>NDAV-97 — KPIs - Emergências</li><li>NDAV-98 — KPIs - Qualidade do Gás</li><li>NDAV-136 — Ingestão de Fonte de Dados ZSDT023 - Clientes Ligados</li><li>NDAV-137 — Ingestão de Fonte de Dados ZSDT008 - PCS</li><li>+ 2 outras</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a><span class="kanban-card-count-print">[8]</span><div class="kanban-card-name">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-76 — Homologação e Deploy aba:  Interjornada</li><li>NDAV-77 — Homologação e Deploy aba: HEADCOUNT</li><li>NDAV-78 — Homologação e Deploy aba : Atração e Seleção</li><li>NDAV-79 — Criação de Queries/ETL</li><li>NDAV-80 — Cálculo de Medidas (DAX)</li><li>NDAV-81 — Adequação de Layout do BI</li><li>NDAV-101 — Desenvolvimento e Entrega para Homologação do Cliente</li><li>NDAV-102 — Documentação Funcional/Técnica</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count-print">[4]</span><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-86 — Kick-off e Definição de KPIs </li><li>NDAV-87 — Mapeamento de Regras de Negócio</li><li>NDAV-88 — Investigação de Fontes de Dados</li><li>NDAV-109 — Engenharia Reversa do Painel</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Validaçao de Cadastro</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-107 — Engenharia Reversa do Painel</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[Ingestão de tabelas] - SAP x Databricks</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-222 — Ingestão das Tabelas - Transação SAP em DEV</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Task - Subida do job XConn IICS para PRD</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-113 — Deploy PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-166 — Agendar reunião de levantamento de necessidades com Marina Oliveira</li><li>NDAV-167 — Liberar acesso ao dashboard de atendimento</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">CONECTIVIDADE GIS </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-200 — Ambiente de DEV </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">CONECTIVIDADE LAKE X XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-193 — Configuração Lake x XCONN - DEV</li><li>NDAV-194 — Acessos ao Banco - DEV</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Datalake Arquitetura</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-133 — Processo de Governança de LGPD</li><li>NDAV-134 — Processo de Ingestão refactor (raw)</li><li>NDAV-135 — Criação de Sandbox em ambiente produtivo (areas: mediçcao, operações e estrategia)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Refactor Jobs Informática Cloud</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-139 — Implementação de parâmetros in-out para controle de datas de execução </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Integração Salesforce + Metric Views</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-148 — Habilitar conexão Databricks ↔ Salesforce</li><li>NDAV-149 — criar usuário somente leitura no Salesforce</li><li>NDAV-150 — Configurar conexão no Databricks após credenciais disponíveis</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">App Mobile Databricks</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-157 — Verificar configuração necessária no account Databricks</li><li>NDAV-158 — Executar habilitação do app mobile</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a><span class="kanban-card-count-print">[5]</span><div class="kanban-card-name">Federação com Base XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-161 — Habilitar federação Databricks ↔ Postgres/XCONN</li><li>NDAV-162 — Verificar viabilidade técnica da federação com XCONN</li><li>NDAV-163 — Obter credenciais/acesso ao Postgres</li><li>NDAV-164 — Configurar federação e validar conectividade</li><li>NDAV-207 — Habilitar federação Databricks ↔ sql server/XCONN (dev)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a><span class="kanban-card-count-print">[4]</span><div class="kanban-card-name">Medição : Mapeamento de Cenários de Inconsistência</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-171 — Alinhar agenda com Walter para início de julho</li><li>NDAV-172 — Mapear e Criar 1º cenário de inconsistência no Databricks</li><li>NDAV-173 — Validação cenário vs. processo manual atual</li><li>NDAV-174 — Iterar: adicionar novos cenários a cada validação</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-183 — Criação de Volume Docs</li><li>NDAV-184 — Pipeline Processamento Docs</li><li>NDAV-185 — Criação Genie - Consultar documentos</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Refactor Dashboard - Pessoas &amp; Cultura </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-191 — Restruração do tratamento de dados dos Dashboards - Pessoas &amp; Cultura </li><li>NDAV-192 — Reafactor das Métricas de Calculo : Dashboard - Pessoas &amp; Cultura </li><li>NDAV-221 — Homologação de Entrega a Equipe de P&amp;C</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Dados Medição - XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-196 — Extração dados medição - XCONN</li><li>NDAV-197 — Ingestão dados medição datalake - XCONN</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">CONECTIVIDADE GLPI </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-205 — Configuração GLPI - DEV</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Ingestão de Planilha de Dados - PM RUN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-215 — Criação dos indicadores pendentes no Painel de Operações</li><li>NDAV-218 — Mudança de script para Leitura da PMRUN</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">[DASH] Medição</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-233 — [Medição] - Ingestão da tabela ZSDT011</li><li>NDAV-234 — [Medição] - Ajustes de campos no Dashboard com regras levantadas</li><li>NDAV-235 — [Medição] - Ajustes de campos no Dashboard após reunião</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-247 — Criação de Dashboard e ambiente</li></ul></div></div>
     </div>
   </div>
 </div>
@@ -727,25 +847,25 @@ a.jira-link:hover { text-decoration: underline; }
 <!-- SEÇÃO 3: ATIVIDADES DA SEMANA -->
 <div class="section section-priority">
   <div class="section-title">Atividades da Semana (12/10–16/10)</div>
-  <div class="subtask-list">
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="subtask-summary">Dados - Estratégia</span><span class="badge" style="background:#f59e0b">EM DESENVOLVIMENTO</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="subtask-summary">[DASH] Projeto - Painel ARSESP</span><span class="badge" style="background:#f59e0b">EM DESENVOLVIMENTO</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="subtask-summary">[Ingestão de tabelas] - SAP x Databricks</span><span class="badge" style="background:#22c55e">História concluída</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="subtask-summary">[DASH] Medição</span><span class="badge" style="background:#f59e0b">EM DESENVOLVIMENTO</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="subtask-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="badge" style="background:#8b5cf6">EM TESTES</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-246" target="_blank">NDAV-246</a><span class="subtask-summary">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="badge" style="background:#f59e0b">EM DESENVOLVIMENTO</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-248" target="_blank">NDAV-248</a><span class="subtask-summary">[TABELAS] Ingestão SAP x DATABRICKS</span><span class="badge" style="background:#f59e0b">EM DESENVOLVIMENTO</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-240" target="_blank">NDAV-240</a><span class="subtask-summary">[DASH][Estratégia] - Adição de campos e regras </span><span class="badge" style="background:#f59e0b">EM PROGRESSO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a> Dados - Estratégia</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-243" target="_blank">NDAV-243</a><span class="subtask-summary">[DASH][Estratégia] - Ingestão de Excel para tabela no Databricks</span><span class="badge" style="background:#22c55e">CONCLUÍDO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a> Dados - Estratégia</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-241" target="_blank">NDAV-241</a><span class="subtask-summary">Danos - Criação do campo de Quantidade de solicitações de  cadastro de rede. (controle de acesso de terceiros na plataforma GIS) </span><span class="badge" style="background:#9e9e9e">EM BACKLOG</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a> [DASH] Projeto - Painel ARSESP</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-242" target="_blank">NDAV-242</a><span class="subtask-summary">[Operações] Mudanças de escopo no campo de TAE </span><span class="badge" style="background:#9e9e9e">EM BACKLOG</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a> [DASH] Dashboard - Operações</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-229" target="_blank">NDAV-229</a><span class="subtask-summary">[SAP -&gt; Databricks] Ingestão de tabelas necessárias. (Estratégia)</span><span class="badge" style="background:#22c55e">CONCLUÍDO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a> Dados - Estratégia</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-230" target="_blank">NDAV-230</a><span class="subtask-summary">Criação de KPIs no Dashboard  - Estratégia</span><span class="badge" style="background:#22c55e">CONCLUÍDO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a> Dados - Estratégia</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-199" target="_blank">NDAV-199</a><span class="subtask-summary">Homologação do Painel - Aba Emergência</span><span class="badge" style="background:#22c55e">CONCLUÍDO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a> [DASH] Projeto - Painel ARSESP</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-231" target="_blank">NDAV-231</a><span class="subtask-summary">Ingestão de dados manuais (PMRUN)</span><span class="badge" style="background:#f59e0b">EM PROGRESSO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a> [DASH] Dashboard - Operações</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-235" target="_blank">NDAV-235</a><span class="subtask-summary">[Medição] - Ajustes de campos no Dashboard após reunião</span><span class="badge" style="background:#22c55e">CONCLUÍDO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a> [DASH] Medição</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-234" target="_blank">NDAV-234</a><span class="subtask-summary">[Medição] - Ajustes de campos no Dashboard com regras levantadas</span><span class="badge" style="background:#22c55e">CONCLUÍDO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a> [DASH] Medição</span></div>
-    <div class="subtask-row"><a class="jira-link subtask-key" href="https://digiage.atlassian.net/browse/NDAV-233" target="_blank">NDAV-233</a><span class="subtask-summary">[Medição] - Ingestão da tabela ZSDT011</span><span class="badge" style="background:#22c55e">CONCLUÍDO</span><span class="subtask-parent"><a class="jira-link" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a> [DASH] Medição</span></div>
+  <div class="activity-list">
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="activity-summary">Dados - Estratégia</span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="activity-summary">[DASH] Projeto - Painel ARSESP</span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="activity-summary">[Ingestão de tabelas] - SAP x Databricks</span><span class="activity-badge">História concluída</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="activity-summary">[DASH] Medição</span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-testes"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="activity-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="activity-badge">EM TESTES</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-246" target="_blank">NDAV-246</a><span class="activity-summary">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-248" target="_blank">NDAV-248</a><span class="activity-summary">[TABELAS] Ingestão SAP x DATABRICKS</span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-progresso"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-240" target="_blank">NDAV-240</a><span class="activity-summary">[DASH][Estratégia] - Adição de campos e regras </span><span class="activity-parent">NDAV-28 · Dados - Estratégia</span><span class="activity-badge">EM PROGRESSO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-243" target="_blank">NDAV-243</a><span class="activity-summary">[DASH][Estratégia] - Ingestão de Excel para tabela no Databricks</span><span class="activity-parent">NDAV-28 · Dados - Estratégia</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-241" target="_blank">NDAV-241</a><span class="activity-summary">Danos - Criação do campo de Quantidade de solicitações de  cadastro de rede. (controle de acesso de terceiros na plataforma GIS) </span><span class="activity-parent">NDAV-71 · [DASH] Projeto - Painel ARSESP</span><span class="activity-badge">EM BACKLOG</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-242" target="_blank">NDAV-242</a><span class="activity-summary">[Operações] Mudanças de escopo no campo de TAE </span><span class="activity-parent">NDAV-26 · [DASH] Dashboard - Operações</span><span class="activity-badge">EM BACKLOG</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-229" target="_blank">NDAV-229</a><span class="activity-summary">[SAP -&gt; Databricks] Ingestão de tabelas necessárias. (Estratégia)</span><span class="activity-parent">NDAV-28 · Dados - Estratégia</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-230" target="_blank">NDAV-230</a><span class="activity-summary">Criação de KPIs no Dashboard  - Estratégia</span><span class="activity-parent">NDAV-28 · Dados - Estratégia</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-199" target="_blank">NDAV-199</a><span class="activity-summary">Homologação do Painel - Aba Emergência</span><span class="activity-parent">NDAV-71 · [DASH] Projeto - Painel ARSESP</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-progresso"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-231" target="_blank">NDAV-231</a><span class="activity-summary">Ingestão de dados manuais (PMRUN)</span><span class="activity-parent">NDAV-26 · [DASH] Dashboard - Operações</span><span class="activity-badge">EM PROGRESSO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-235" target="_blank">NDAV-235</a><span class="activity-summary">[Medição] - Ajustes de campos no Dashboard após reunião</span><span class="activity-parent">NDAV-232 · [DASH] Medição</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-234" target="_blank">NDAV-234</a><span class="activity-summary">[Medição] - Ajustes de campos no Dashboard com regras levantadas</span><span class="activity-parent">NDAV-232 · [DASH] Medição</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-233" target="_blank">NDAV-233</a><span class="activity-summary">[Medição] - Ingestão da tabela ZSDT011</span><span class="activity-parent">NDAV-232 · [DASH] Medição</span><span class="activity-badge">CONCLUÍDO</span></div>
   </div>
 </div>
 
@@ -756,32 +876,32 @@ a.jira-link:hover { text-decoration: underline; }
   <div class="bn-columns">
     <div class="bn-subsection">
       <div class="subsection-title">Indicadores de Entrega</div>
-      <div class="bn-grid bn-grid-compact">
-        <div class="bn-card primary"><div class="bn-value">18</div><div class="bn-label">Fontes de Dados Produtivos Disponíveis</div></div>
-        <div class="bn-card primary"><div class="bn-value">23</div><div class="bn-label">Dashboards Totais Entregues</div></div>
-        <div class="bn-card primary"><div class="bn-value">12</div><div class="bn-label">Dashboards em Produção</div></div>
-        <div class="bn-card primary"><div class="bn-value">6</div><div class="bn-label">Dashboards em Validação</div></div>
-        <div class="bn-card primary"><div class="bn-value">14</div><div class="bn-label">Projetos Finalizados</div></div>
-        <div class="bn-card primary"><div class="bn-value">0</div><div class="bn-label">Projetos Rework</div></div>
+      <div class="tile-grid">
+        <div class="tile pink"><div class="tile-value">18</div><div class="tile-label">Fontes de Dados Produtivos Disponíveis</div></div>
+        <div class="tile pink"><div class="tile-value">23</div><div class="tile-label">Dashboards Totais Entregues</div></div>
+        <div class="tile pink"><div class="tile-value">12</div><div class="tile-label">Dashboards em Produção</div></div>
+        <div class="tile pink"><div class="tile-value">6</div><div class="tile-label">Dashboards em Validação</div></div>
+        <div class="tile pink"><div class="tile-value">14</div><div class="tile-label">Projetos Finalizados</div></div>
+        <div class="tile pink"><div class="tile-value">0</div><div class="tile-label">Projetos Rework</div></div>
       </div>
     </div>
 
     <div class="bn-subsection">
       <div class="subsection-title">Cerimônias e Alinhamentos</div>
-      <div class="bn-grid bn-grid-compact">
-        <div class="bn-card secondary"><div class="bn-value">117</div><div class="bn-label">Dailys Realizadas</div></div>
-        <div class="bn-card secondary"><div class="bn-value">32</div><div class="bn-label">Cadências Semanais</div></div>
-        <div class="bn-card secondary"><div class="bn-value">11</div><div class="bn-label">Alinhamentos ARSESP</div></div>
+      <div class="tile-grid">
+        <div class="tile salmon"><div class="tile-value">117</div><div class="tile-label">Dailys Realizadas</div></div>
+        <div class="tile salmon"><div class="tile-value">32</div><div class="tile-label">Cadências Semanais</div></div>
+        <div class="tile salmon"><div class="tile-value">11</div><div class="tile-label">Alinhamentos ARSESP</div></div>
       </div>
     </div>
 
     <div class="bn-subsection">
       <div class="subsection-title">Documentação</div>
-      <div class="bn-grid bn-grid-compact">
-        <div class="bn-card docs"><div class="bn-value">16</div><div class="bn-label">Atas de Reunião</div></div>
-        <div class="bn-card docs"><div class="bn-value">20</div><div class="bn-label">Documentação Funcional/Técnica</div></div>
-        <div class="bn-card docs"><div class="bn-value">12</div><div class="bn-label">Planilhas / Detalhamentos</div></div>
-        <div class="bn-card docs"><div class="bn-value">8</div><div class="bn-label">Documentos Complementares</div></div>
+      <div class="tile-grid">
+        <div class="tile navy"><div class="tile-value">16</div><div class="tile-label">Atas de Reunião</div></div>
+        <div class="tile navy"><div class="tile-value">20</div><div class="tile-label">Documentação Funcional/Técnica</div></div>
+        <div class="tile navy"><div class="tile-value">12</div><div class="tile-label">Planilhas / Detalhamentos</div></div>
+        <div class="tile navy"><div class="tile-value">8</div><div class="tile-label">Documentos Complementares</div></div>
       </div>
     </div>
   </div>
@@ -790,22 +910,18 @@ a.jira-link:hover { text-decoration: underline; }
 <!-- SEÇÃO 5: ÁREAS BENEFICIADAS PELAS ENTREGAS -->
 <div class="section section-areas">
   <div class="section-title">Áreas Beneficiadas pelas Entregas</div>
-<table>
-<thead><tr><th>Área</th><th>Dashboard(s) Entregue(s)</th><th>Nº de Painéis</th><th>Colaboradores Beneficiados</th><th>% do Total Impactado</th><th>% da Empresa</th></tr></thead><tbody>
-<tr><td>OPERAÇÕES</td><td>Dash de Operações</td><td>5</td><td>18</td><td>46.2%</td><td>14.5%</td></tr>
-<tr><td>SUPRIMENTOS E FACILITIES</td><td>Gestão de Contratos</td><td>1</td><td>9</td><td>23.1%</td><td>7.3%</td></tr>
-<tr><td>PESSOAS E CULTURA</td><td>Pessoas &amp; Cultura (Partes 1 e 2)</td><td>7</td><td>5</td><td>12.8%</td><td>4.0%</td></tr>
-<tr><td>MARKETING</td><td>Painel Atendimento</td><td>5</td><td>4</td><td>10.3%</td><td>3.2%</td></tr>
-<tr><td>DIRETORIA-PRESIDÊNCIA</td><td>Painel Estratégia Diretoria</td><td>3</td><td>7</td><td>10.3%</td><td>3.2%</td></tr>
-<tr><td>DIR-FINANCEIRA</td><td>Painel Estratégia Diretoria</td><td>3</td><td>5</td><td>10.3%</td><td>3.2%</td></tr>
-<tr><td>DIRETORIA DE ASSUNTOS REGULATÓRIOS</td><td>Painel Estratégia Diretoria</td><td>3</td><td>1</td><td>10.3%</td><td>3.2%</td></tr>
-<tr><td>ESTRATÉGIA</td><td>Painel Estratégia
-</td><td>10</td><td>5</td><td>10.3%</td><td>3.2%</td></tr>
-<tr><td>REGULATÓRIO</td><td>Painel ARSESP</td><td>5</td><td>3</td><td>10.3%</td><td>3.2%</td></tr>
-<tr style="font-weight:800;background:#f3f0f8"><td>Total</td><td></td><td>23</td><td>57</td><td></td><td>—</td></tr>
-</tbody></table>
-<div class="bn-grid" style="max-width:420px;margin-top:20px"><div class="bn-card primary"><div class="bn-value">57</div><div class="bn-label">Colaboradores Beneficiados</div></div><div class="bn-card secondary"><div class="bn-value">67</div><div class="bn-label">Ainda Não Beneficiados</div></div></div><div class="progress-item" style="max-width:620px;margin-top:16px"><div class="progress-header"><div class="progress-label">Colaboradores da empresa (124) já beneficiados por alguma entrega</div><div class="progress-meta" style="color:#22c55e"><strong>46%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:46%;background:#22c55e"></div></div></div>
-<div class="bn-grid" style="max-width:420px;margin-top:20px"><div class="bn-card primary"><div class="bn-value">9</div><div class="bn-label">Áreas Beneficiadas</div></div><div class="bn-card secondary"><div class="bn-value">17</div><div class="bn-label">Áreas Ainda Não Beneficiadas</div></div></div><div class="progress-item" style="max-width:620px;margin-top:16px"><div class="progress-header"><div class="progress-label">Áreas da empresa (26) já beneficiadas por alguma entrega</div><div class="progress-meta" style="color:#22c55e"><strong>35%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:35%;background:#22c55e"></div></div></div>
+<div class="bar-list">  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">OPERAÇÕES</span> · <span class="bar-row-dash">Dash de Operações</span></div><div class="bar-row-value">18</div></div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 46.2% do total impactado · 14.5% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">SUPRIMENTOS E FACILITIES</span> · <span class="bar-row-dash">Gestão de Contratos</span></div><div class="bar-row-value">9</div></div><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">1 painéis · 23.1% do total impactado · 7.3% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIRETORIA-PRESIDÊNCIA</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">7</div></div><div class="bar-track"><div class="bar-fill" style="width:39%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">PESSOAS E CULTURA</span> · <span class="bar-row-dash">Pessoas &amp; Cultura (Partes 1 e 2)</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">7 painéis · 12.8% do total impactado · 4.0% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIR-FINANCEIRA</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">ESTRATÉGIA</span> · <span class="bar-row-dash">Painel Estratégia
+</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">10 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">MARKETING</span> · <span class="bar-row-dash">Painel Atendimento</span></div><div class="bar-row-value">4</div></div><div class="bar-track"><div class="bar-fill" style="width:22%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">REGULATÓRIO</span> · <span class="bar-row-dash">Painel ARSESP</span></div><div class="bar-row-value">3</div></div><div class="bar-track"><div class="bar-fill" style="width:17%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIRETORIA DE ASSUNTOS REGULATÓRIOS</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">1</div></div><div class="bar-track"><div class="bar-fill" style="width:6%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div></div>
+<div class="kpi-grid-small"><div class="tile green"><div class="tile-value">57</div><div class="tile-label">Colaboradores Beneficiados</div></div><div class="tile salmon"><div class="tile-value">67</div><div class="tile-label">Ainda Não Beneficiados</div></div><div class="tile green"><div class="tile-value">9</div><div class="tile-label">Áreas Beneficiadas</div></div><div class="tile salmon"><div class="tile-value">17</div><div class="tile-label">Áreas Ainda Não Beneficiadas</div></div></div>
+<div class="progress-item" style="max-width:620px;margin-top:16px"><div class="progress-header"><div class="progress-label">Colaboradores da empresa (124) já beneficiados por alguma entrega</div><div class="progress-meta" style="color:#22c55e"><strong>46%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:46%;background:#22c55e"></div></div></div>
 </div>
 
 <!-- SEÇÃO 6: ALTERAÇÃO DE ESCOPO E NOVAS DEMANDAS -->
@@ -819,273 +935,172 @@ a.jira-link:hover { text-decoration: underline; }
   <p class="no-items">Nenhum item identificado neste período.</p>
 
   <div class="subsection-title">Novas Demandas</div>
-  <div class="cr-block">
-    <div class="cr-parent-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span>[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="cr-parent-meta">EM TESTES</span></div>
-    <div class="cr-subtask" data-key="NDAV-247" data-comments='[]'>
-      <div class="cr-subtask-title"><a class="jira-link cr-subtask-key" href="https://digiage.atlassian.net/browse/NDAV-247" target="_blank">NDAV-247</a> Criação de Dashboard e ambiente <span class="badge" style="background:#22c55e">CONCLUÍDO</span></div>
-      <div class="editable-comments">
+  <details class="expand-card navy">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="expand-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="expand-badge">1 novo item · EM TESTES</span></summary>
+    <div class="expand-body">
+      <div class="expand-subitem" data-key="NDAV-247" data-comments='[]'>
+        <div class="expand-subitem-title"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-247" target="_blank">NDAV-247</a> Criação de Dashboard e ambiente <span class="badge" style="background:#22c55e">CONCLUÍDO</span></div>
+        <div class="editable-comments"></div>
       </div>
     </div>
-  </div>
-  <div class="cr-block">
-    <div class="cr-parent-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-244" target="_blank">NDAV-244</a><span>[DASH][Estratégia][Diretoria] - Criação do Dashboard de Estratégia para a Diretoria</span><span class="cr-parent-meta">EM DESENVOLVIMENTO</span></div>
-  </div>
+  </details>
+  <details class="expand-card navy">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-244" target="_blank">NDAV-244</a><span class="expand-summary">[DASH][Estratégia][Diretoria] - Criação do Dashboard de Estratégia para a Diretoria</span><span class="expand-badge">0 novos itens · EM DESENVOLVIMENTO</span></summary>
+    <div class="expand-body">
+    </div>
+  </details>
 </div>
 
 <!-- SEÇÃO 7: PAINEL DE IMPEDIMENTOS -->
 <div class="section section-impediments">
   <div class="section-title">Painel de Impedimentos e Riscos de Entrega</div>
 
-  <div class="subsection-title subsection-aguardando">Aguardando Cliente</div>
-  <div class="impediment-card" data-key="NDAV-85" data-comments='[{"source":"manual","body":"Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa."},{"source":"manual","body":"Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno."}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="impediment-summary">[DASH] Projeto - Atendimento (PBI)</span><span class="impediment-days">125 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa.</div>
-      </div>
-      <div class="cr-comment">
-        <div class="cr-comment-body">Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno.</div>
-      </div>
+  <div class="subsection-title">Aguardando Cliente</div>
+  <details class="expand-card pink" data-key="NDAV-85" data-comments='[{"source":"manual","body":"Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa."},{"source":"manual","body":"Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno."}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="expand-summary">[DASH] Projeto - Atendimento (PBI)</span><span class="expand-days">126 dias neste status</span><span class="expand-resp">👤 Jeysson Armas</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-124" data-comments='[{"body":"Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve","source":"manual"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="impediment-summary">CONECTIVIDADE GIS </span><span class="impediment-days">81 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
-      </div>
+  </details>
+  <details class="expand-card pink" data-key="NDAV-124" data-comments='[{"body":"Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="expand-summary">CONECTIVIDADE GIS </span><span class="expand-days">82 dias neste status</span><span class="expand-resp">👤 Gilson</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-125" data-comments='[{"source":"manual","body":"Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="impediment-summary">CONECTIVIDADE LAKE X XCONN</span><span class="impediment-days">81 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve</div>
-      </div>
+  </details>
+  <details class="expand-card pink" data-key="NDAV-125" data-comments='[{"source":"manual","body":"Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="expand-summary">CONECTIVIDADE LAKE X XCONN</span><span class="expand-days">82 dias neste status</span><span class="expand-resp">👤 Gilson</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-147" data-comments='[{"source":"manual","body":"Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="impediment-summary">Integração Salesforce + Metric Views</span><span class="impediment-days">81 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas</div>
-      </div>
+  </details>
+  <details class="expand-card pink" data-key="NDAV-147" data-comments='[{"source":"manual","body":"Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="expand-summary">Integração Salesforce + Metric Views</span><span class="expand-days">82 dias neste status</span><span class="expand-resp">👤 Andre Yamada</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
+  </details>
 
   <div class="subsection-divider"></div>
-  <div class="subsection-title subsection-validacao">Em Validação pelo Cliente</div>
-  <div class="impediment-card" data-key="NDAV-54" data-comments='[{"body":"Pendente retorno do Time de Contratos para darmos sequencia a demanda","source":"manual"},{"body":"Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos","source":"manual"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="impediment-summary">[DASH] Projeto - Gestão de Contratos | Frotas</span><span class="impediment-days">74 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Pendente retorno do Time de Contratos para darmos sequencia a demanda</div>
-      </div>
-      <div class="cr-comment">
-        <div class="cr-comment-body">Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos</div>
-      </div>
+  <div class="subsection-title">Em Validação pelo Cliente</div>
+  <details class="expand-card navy" data-key="NDAV-54" data-comments='[{"body":"Pendente retorno do Time de Contratos para darmos sequencia a demanda","source":"manual"},{"body":"Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="expand-summary">[DASH] Projeto - Gestão de Contratos | Frotas</span><span class="expand-days">75 dias neste status</span><span class="expand-resp">👤 Andre Yamada</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-71" data-comments='[{"body":"Para esta demanda, temos ainda as Pendencias listadas abaixo:","source":"manual"},{"body":"Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.","source":"manual"},{"body":"Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.","source":"manual"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="impediment-summary">[DASH] Projeto - Painel ARSESP</span><span class="impediment-days">46 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Para esta demanda, temos ainda as Pendencias listadas abaixo:</div>
-      </div>
-      <div class="cr-comment">
-        <div class="cr-comment-body">Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)
-
-DETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.
-
-SISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN
-
-STATUS: PENDENTE
-
-RESPONSÁVEL | TIME: Josemir | Douglas
-
-OBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.
-
-------------------------------
-
-Indicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)
-
-DETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.
-
-SISTEMA DE ORIGEM: GIS* (Contador)
-
-STATUS: PENDENTE
-
-RESPONSÁVEL | TIME: Leandro Zei
-
-OBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado
- 
-------------------------------
-Indicador: Mapa com visão da última medição de saída de gás de cada City Gate.
-
-DETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.
-
-SISTEMA DE ORIGEM: (Vazio)
-
-STATUS: EM ANÁLISE
-
-RESPONSÁVEL | TIME: Leando Zei e Douglas
-
-OBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE
-------------------------------
-
-Indicador: Tabela com visão da última medição de saída de gás de cada City Gate.
-
-DETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.
-
-SISTEMA DE ORIGEM: (Vazio)
-
-STATUS: EM ANÁLISE
-
-RESPONSÁVEL | TIME: Leando Zei e Douglas
-
-OBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.</div>
-      </div>
-      <div class="cr-comment">
-        <div class="cr-comment-body">Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.</div>
-      </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-71" data-comments='[{"body":"Para esta demanda, temos ainda as Pendencias listadas abaixo:","source":"manual"},{"body":"Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.","source":"manual"},{"body":"Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="expand-summary">[DASH] Projeto - Painel ARSESP</span><span class="expand-days">47 dias neste status</span><span class="expand-resp">👤 Alexandro Feltrin</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-115" data-comments='[{"body":"1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.","source":"manual"},{"body":"Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash","source":"manual"},{"source":"manual","body":"Pendente Retorno por parte da equipe de Atendimento"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="impediment-summary">[DASH] Painel de SLAs de Atendimento e Encerramento</span><span class="impediment-days">104 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">1. Reunião de Validação realizada em 24/09
-2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.</div>
-      </div>
-      <div class="cr-comment">
-        <div class="cr-comment-body">Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash</div>
-      </div>
-      <div class="cr-comment">
-        <div class="cr-comment-body">Pendente Retorno por parte da equipe de Atendimento</div>
-      </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-115" data-comments='[{"body":"1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.","source":"manual"},{"body":"Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash","source":"manual"},{"source":"manual","body":"Pendente Retorno por parte da equipe de Atendimento"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="expand-summary">[DASH] Painel de SLAs de Atendimento e Encerramento</span><span class="expand-days">105 dias neste status</span><span class="expand-resp">👤 Alexandro Feltrin</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-181" data-comments='[{"body":"Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter","source":"manual"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="impediment-summary">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</span><span class="impediment-days">67 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter</div>
-      </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-181" data-comments='[{"body":"Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="expand-summary">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</span><span class="expand-days">68 dias neste status</span><span class="expand-resp">👤 Alexandro Feltrin</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-232" data-comments='[{"source":"manual","body":"Aguardando validação e retorno do Walter/Alex"},{"source":"manual","body":"Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback"},{"source":"manual","body":"O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="impediment-summary">[DASH] Medição</span><span class="impediment-days">18 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Aguardando validação e retorno do Walter/Alex</div>
-      </div>
-      <div class="cr-comment">
-        <div class="cr-comment-body">Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback</div>
-      </div>
-      <div class="cr-comment">
-        <div class="cr-comment-body">O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10</div>
-      </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-232" data-comments='[{"source":"manual","body":"Aguardando validação e retorno do Walter/Alex"},{"source":"manual","body":"Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback"},{"source":"manual","body":"O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="expand-summary">[DASH] Medição</span><span class="expand-days">19 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-245" data-comments='[]' data-hidden="true">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="impediment-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="impediment-days">11 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
+  </details>
+  <details class="expand-card navy" data-key="NDAV-245" data-comments='[]' data-hidden="true">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="expand-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="expand-days">12 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-246" data-comments='[{"source":"manual","body":"A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-246" target="_blank">NDAV-246</a><span class="impediment-summary">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="impediment-days">6 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.
-Vamos apresentar tudo na reunião (Agendada 20/10 as 15hs)
-✕</div>
-      </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-246" data-comments='[{"source":"manual","body":"A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-246" target="_blank">NDAV-246</a><span class="expand-summary">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="expand-days">7 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
+  </details>
 
   <div class="subsection-divider"></div>
-  <div class="subsection-title subsection-standby">Pontos de Atenção (Stand-By)</div>
-  <div class="impediment-card" data-key="NDAV-67" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="impediment-summary">[DASH] Projeto - Manutenção</span><span class="impediment-days">139 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-      </div>
+  <div class="subsection-title">Pontos de Atenção (Stand-By)</div>
+  <details class="expand-card salmon" data-key="NDAV-67" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="expand-summary">[DASH] Projeto - Manutenção</span><span class="expand-days">140 dias neste status</span><span class="expand-resp">👤 Andre Yamada</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-105" data-comments='[{"body":"Aguardando Priorização | Definições","source":"manual"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="impediment-summary">Validaçao de Cadastro</span><span class="impediment-days">60 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-      </div>
+  </details>
+  <details class="expand-card salmon" data-key="NDAV-105" data-comments='[{"body":"Aguardando Priorização | Definições","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="expand-summary">Validaçao de Cadastro</span><span class="expand-days">61 dias neste status</span><span class="expand-resp">👤 JEYSSON LEONCIO ZERPA ARMAS</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-176" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a><span class="impediment-summary">Comunicação Interna — Pílulas de Conhecimento</span><span class="impediment-days">60 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-      </div>
+  </details>
+  <details class="expand-card salmon" data-key="NDAV-176" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a><span class="expand-summary">Comunicação Interna — Pílulas de Conhecimento</span><span class="expand-days">61 dias neste status</span><span class="expand-resp">👤 TATIANA DE OLIVEIRA PRADO</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-187" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a><span class="impediment-summary">Criação de domínio &quot;C-Level&quot;</span><span class="impediment-days">60 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Aguardando Priorização | Definições</div>
-      </div>
+  </details>
+  <details class="expand-card salmon" data-key="NDAV-187" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a><span class="expand-summary">Criação de domínio &quot;C-Level&quot;</span><span class="expand-days">61 dias neste status</span><span class="expand-resp">👤 Alexandro Feltrin</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
-  <div class="impediment-card" data-key="NDAV-210" data-comments='[{"body":"Pendente: indicação do responsável pelas regras de negócio e definições da demanda.","source":"manual"}]' data-hidden="false">
-    <div class="impediment-header"><a class="jira-link cr-parent-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="impediment-summary">Programa de Descontos Necta (Atendimento/Marketing)</span><span class="impediment-days">60 dias neste status</span></div>
-    <div class="impediment-comments editable-comments">
-      <div class="cr-comment">
-        <div class="cr-comment-body">Pendente: indicação do responsável pelas regras de negócio e definições da demanda.</div>
-      </div>
+  </details>
+  <details class="expand-card salmon" data-key="NDAV-210" data-comments='[{"body":"Pendente: indicação do responsável pelas regras de negócio e definições da demanda.","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="expand-summary">Programa de Descontos Necta (Atendimento/Marketing)</span><span class="expand-days">61 dias neste status</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
     </div>
-  </div>
+  </details>
 </div>
 
 <!-- SEÇÃO 8: PROGRESSO POR TAREFA -->
 <div class="section section-progress">
   <div class="section-title">Progresso Geral das Tarefas</div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a> Pipeline de Medição e Volume - Medição</div><div class="progress-meta" style="color:#22c55e">5&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a> Projeto de Integração Fiscal</div><div class="progress-meta" style="color:#22c55e">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-31" target="_blank">NDAV-31</a> Projeto RH – Desligamentos</div><div class="progress-meta" style="color:#22c55e">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a> [DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</div><div class="progress-meta" style="color:#22c55e">11&thinsp;/&thinsp;11 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a> [DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</div><div class="progress-meta" style="color:#22c55e">8&thinsp;/&thinsp;8 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a> Task - Subida do job XConn IICS para PRD</div><div class="progress-meta" style="color:#22c55e">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a> Datalake Arquitetura</div><div class="progress-meta" style="color:#22c55e">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a> Refactor Jobs Informática Cloud</div><div class="progress-meta" style="color:#22c55e">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a> App Mobile Databricks</div><div class="progress-meta" style="color:#22c55e">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a> Medição : Mapeamento de Cenários de Inconsistência</div><div class="progress-meta" style="color:#22c55e">4&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a> Refactor Dashboard - Pessoas &amp; Cultura </div><div class="progress-meta" style="color:#22c55e">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a> Dados Medição - XCONN</div><div class="progress-meta" style="color:#22c55e">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a> Ingestão de Planilha de Dados - PM RUN</div><div class="progress-meta" style="color:#22c55e">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a> [DASH] Medição</div><div class="progress-meta" style="color:#22c55e">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a> [DASH][Controles Internos (Riscos)] - Criação do Dashboard</div><div class="progress-meta" style="color:#22c55e">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>100%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:100%;background:#22c55e"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a> [DASH] Dashboard - Operações</div><div class="progress-meta" style="color:#84cc16">16&thinsp;/&thinsp;18 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>89%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:89%;background:#84cc16"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a> Federação com Base XCONN</div><div class="progress-meta" style="color:#84cc16">5&thinsp;/&thinsp;7 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>71%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:71%;background:#84cc16"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a> MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><div class="progress-meta" style="color:#f59e0b">3&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>60%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:60%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a> [DASH] Projeto - Atendimento (PBI)</div><div class="progress-meta" style="color:#f59e0b">4&thinsp;/&thinsp;7 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>57%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:57%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a> [DASH] Projeto - Painel ARSESP</div><div class="progress-meta" style="color:#f59e0b">10&thinsp;/&thinsp;18 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>56%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:56%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a> [Ingestão de tabelas] - SAP x Databricks</div><div class="progress-meta" style="color:#f59e0b">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>50%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:50%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a> CONECTIVIDADE GIS </div><div class="progress-meta" style="color:#f59e0b">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>50%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:50%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a> CONECTIVIDADE LAKE X XCONN</div><div class="progress-meta" style="color:#f59e0b">2&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>50%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:50%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a> CONECTIVIDADE GLPI </div><div class="progress-meta" style="color:#f59e0b">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>50%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:50%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a> Dados - Estratégia</div><div class="progress-meta" style="color:#f59e0b">5&thinsp;/&thinsp;12 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>42%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:42%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a> Integração Salesforce + Metric Views</div><div class="progress-meta" style="color:#f59e0b">3&thinsp;/&thinsp;8 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>38%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:38%;background:#f59e0b"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a> [DASH] Projeto - Manutenção</div><div class="progress-meta" style="color:#ef4444">1&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>33%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:33%;background:#ef4444"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a> Validaçao de Cadastro</div><div class="progress-meta" style="color:#ef4444">1&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>25%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:25%;background:#ef4444"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a> [DASH] Projeto - Gestão de Contratos | Frotas</div><div class="progress-meta" style="color:#ef4444">1&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>20%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:20%;background:#ef4444"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a> [DASH] Painel de SLAs de Atendimento e Encerramento</div><div class="progress-meta" style="color:#ef4444">2&thinsp;/&thinsp;12 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>17%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:17%;background:#ef4444"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-127" target="_blank">NDAV-127</a> Task - Atividades IICS</div><div class="progress-meta" style="color:#ef4444">0&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>0%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:#ef4444"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a> Vinculaçao de Fontes de Dados - Modelo BI</div><div class="progress-meta" style="color:#ef4444">0&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>0%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:#ef4444"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a> Comunicação Interna — Pílulas de Conhecimento</div><div class="progress-meta" style="color:#ef4444">0&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>0%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:#ef4444"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a> Criação de domínio &quot;C-Level&quot;</div><div class="progress-meta" style="color:#ef4444">0&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>0%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:#ef4444"></div></div></div>
-<div class="progress-item"><div class="progress-header"><div class="progress-label"><a class="jira-link progress-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a> Programa de Descontos Necta (Atendimento/Marketing)</div><div class="progress-meta" style="color:#ef4444">0&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>0%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:0%;background:#ef4444"></div></div></div>
-<div class="progress-item progress-total"><div class="progress-header"><div class="progress-label">Total Geral do Projeto</div><div class="progress-meta" style="color:#f59e0b">107&thinsp;/&thinsp;172 conclu&iacute;das &nbsp;&middot;&nbsp; <strong>62%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:62%;background:#f59e0b"></div></div></div>
+<div class="progress-list">
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a>Pipeline de Medição e Volume - Medição</div><div class="progress-card-meta">5&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a>Projeto de Integração Fiscal</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-31" target="_blank">NDAV-31</a>Projeto RH – Desligamentos</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a>[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</div><div class="progress-card-meta">11&thinsp;/&thinsp;11 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a>[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</div><div class="progress-card-meta">8&thinsp;/&thinsp;8 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a>Task - Subida do job XConn IICS para PRD</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a>Datalake Arquitetura</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a>Refactor Jobs Informática Cloud</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a>App Mobile Databricks</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a>Medição : Mapeamento de Cenários de Inconsistência</div><div class="progress-card-meta">4&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a>Refactor Dashboard - Pessoas &amp; Cultura </div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a>Dados Medição - XCONN</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a>Ingestão de Planilha de Dados - PM RUN</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a>[DASH] Medição</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a>[DASH][Controles Internos (Riscos)] - Criação do Dashboard</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a>[DASH] Dashboard - Operações</div><div class="progress-card-meta">16&thinsp;/&thinsp;18 conclu&iacute;das &nbsp;&middot;&nbsp; 89%</div></div><div class="progress-track"><div class="progress-fill" style="width:89%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a>Federação com Base XCONN</div><div class="progress-card-meta">5&thinsp;/&thinsp;7 conclu&iacute;das &nbsp;&middot;&nbsp; 71%</div></div><div class="progress-track"><div class="progress-fill" style="width:71%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a>MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><div class="progress-card-meta">3&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 60%</div></div><div class="progress-track"><div class="progress-fill" style="width:60%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a>[DASH] Projeto - Atendimento (PBI)</div><div class="progress-card-meta">4&thinsp;/&thinsp;7 conclu&iacute;das &nbsp;&middot;&nbsp; 57%</div></div><div class="progress-track"><div class="progress-fill" style="width:57%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a>[DASH] Projeto - Painel ARSESP</div><div class="progress-card-meta">10&thinsp;/&thinsp;18 conclu&iacute;das &nbsp;&middot;&nbsp; 56%</div></div><div class="progress-track"><div class="progress-fill" style="width:56%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a>[Ingestão de tabelas] - SAP x Databricks</div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a>CONECTIVIDADE GIS </div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a>CONECTIVIDADE LAKE X XCONN</div><div class="progress-card-meta">2&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a>CONECTIVIDADE GLPI </div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a>Dados - Estratégia</div><div class="progress-card-meta">5&thinsp;/&thinsp;12 conclu&iacute;das &nbsp;&middot;&nbsp; 42%</div></div><div class="progress-track"><div class="progress-fill" style="width:42%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a>Integração Salesforce + Metric Views</div><div class="progress-card-meta">3&thinsp;/&thinsp;8 conclu&iacute;das &nbsp;&middot;&nbsp; 38%</div></div><div class="progress-track"><div class="progress-fill" style="width:38%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a>[DASH] Projeto - Manutenção</div><div class="progress-card-meta">1&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 33%</div></div><div class="progress-track"><div class="progress-fill" style="width:33%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a>Validaçao de Cadastro</div><div class="progress-card-meta">1&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 25%</div></div><div class="progress-track"><div class="progress-fill" style="width:25%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a>[DASH] Projeto - Gestão de Contratos | Frotas</div><div class="progress-card-meta">1&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 20%</div></div><div class="progress-track"><div class="progress-fill" style="width:20%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a>[DASH] Painel de SLAs de Atendimento e Encerramento</div><div class="progress-card-meta">2&thinsp;/&thinsp;12 conclu&iacute;das &nbsp;&middot;&nbsp; 17%</div></div><div class="progress-track"><div class="progress-fill" style="width:17%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-127" target="_blank">NDAV-127</a>Task - Atividades IICS</div><div class="progress-card-meta">0&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a>Vinculaçao de Fontes de Dados - Modelo BI</div><div class="progress-card-meta">0&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a>Comunicação Interna — Pílulas de Conhecimento</div><div class="progress-card-meta">0&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a>Criação de domínio &quot;C-Level&quot;</div><div class="progress-card-meta">0&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a>Programa de Descontos Necta (Atendimento/Marketing)</div><div class="progress-card-meta">0&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+</div>
+<div class="progress-total"><div class="progress-total-label">Total Geral</div><div class="progress-total-track"><div class="progress-total-fill" style="width:62%"></div></div><div class="progress-total-value">107 / 172 concluídas &nbsp;·&nbsp; 62%</div></div>
 </div>
 
 <!-- SEÇÃO 9: PRODUTIVIDADE MENSAL (gerada apenas na última semana do mês; vazia nas demais) -->
@@ -1302,14 +1317,17 @@ Vamos apresentar tudo na reunião (Agendada 20/10 as 15hs)
       var restoreBtn = document.createElement('button');
       restoreBtn.className = 'btn-restore no-print';
       restoreBtn.textContent = 'Restaurar';
-      restoreBtn.onclick = function() { setHidden(key, false, card); };
+      // header agora pode ser um <summary> (cards expansiveis clique-pra-abrir) -
+      // sem isto, clicar no botao tambem expandiria/recolheria o card, ja que
+      // qualquer clique dentro de <summary> alterna o <details> por padrao.
+      restoreBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); setHidden(key, false, card); };
       header.appendChild(restoreBtn);
     } else if (!isHidden && IS_OWNER) {
       card.classList.remove('curation-hidden');
       var hideBtn = document.createElement('button');
       hideBtn.className = 'btn-hide no-print';
       hideBtn.textContent = 'Ocultar esta semana';
-      hideBtn.onclick = function() { setHidden(key, true, card); };
+      hideBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); setHidden(key, true, card); };
       header.appendChild(hideBtn);
     } else {
       card.classList.remove('curation-hidden');
