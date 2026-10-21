@@ -98,10 +98,8 @@ body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 13px; col
   break-after: avoid; page-break-after: avoid;
 }
 .subsection-title {
-  font-size: 13px; font-weight: 800; color: #fff;
-  margin: 20px 0 14px; padding: 10px 16px; border-radius: 4px;
-  text-transform: uppercase; letter-spacing: 1px;
-  background: #122454;
+  font-size: 11.5px; font-weight: 800; color: #5a6a7a;
+  margin: 22px 0 10px; text-transform: uppercase; letter-spacing: 0.6px;
   break-after: avoid; page-break-after: avoid;
 }
 
@@ -164,21 +162,14 @@ body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 13px; col
 .bn-columns { display: flex; align-items: flex-start; gap: 16px; }
 .bn-subsection { break-inside: avoid; page-break-inside: avoid; flex: 1; min-width: 0; }
 .bn-subsection + .bn-subsection { border-left: 1px solid rgba(0,0,0,0.08); padding-left: 16px; }
-.bn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
-.bn-grid-compact { grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 0; }
-.bn-grid-compact .bn-card { padding: 6px 10px; }
-.bn-grid-compact .bn-value { font-size: 20px; }
-.bn-grid-compact .bn-card.secondary .bn-value { font-size: 17px; }
-.bn-grid-compact .bn-card.docs .bn-value { font-size: 15px; }
-.bn-grid-compact .bn-label { font-size: 7.5px; }
-.bn-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 999px; padding: 10px 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.bn-card.primary   { border-left: 4px solid #F8006A; }
-.bn-card.secondary { border-left: 4px solid #F6926F; }
-.bn-card.docs      { border-left: 4px solid #122454; }
-.bn-value { font-size: 26px; font-weight: 800; color: #122454; }
-.bn-card.secondary .bn-value { font-size: 21px; }
-.bn-card.docs .bn-value { font-size: 18px; }
-.bn-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.6px; color: #5a6a7a; margin-top: 3px; line-height: 1.3; }
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0; border-radius: 8px; padding: 12px 14px; }
+.tile.pink   { border-left-color: #F8006A; }
+.tile.salmon { border-left-color: #c2552e; }
+.tile.navy   { border-left-color: #122454; }
+.tile.green  { border-left-color: #16a34a; }
+.tile-value { font-size: 26px; font-weight: 900; line-height: 1; color: #122454; }
+.tile-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #5a6a7a; margin-top: 5px; line-height: 1.3; }
 
 /* ── Tabelas ── */
 table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
@@ -186,9 +177,11 @@ th { background: #122454; color: #fff; padding: 7px 10px; text-align: left; font
 td { padding: 6px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; }
 tr:nth-child(even) td { background: #f9fbfd; }
 
-/* ── Kanban ── */
+/* ── Status das Tarefas (Kanban) - redesign aprovado em mockup: card mostra
+   so chave+nome; a lista de sub-tarefas daquele status fica num tooltip "i"
+   (hover/clique) em vez de um "[N subtasks]" sempre visivel. ── */
 .kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: start; margin-top: 8px; }
-.kanban-col { border-radius: 6px; overflow: hidden; }
+.kanban-col { background: #fff; border: 1px solid #dbe3f0; border-radius: 10px; }
 @media print {
   /* O Chrome nao pagina bem layouts CSS Grid na impressao - quando o board
      nao cabe inteiro no espaco restante da pagina, ele empurra o grid
@@ -200,11 +193,8 @@ tr:nth-child(even) td { background: #f9fbfd; }
   .kanban-col {
     display: inline-block; vertical-align: top;
     width: 19%; margin-right: 1%; font-size: 1rem;
-    /* overflow:hidden (usado na tela pra arredondar os cantos) impede o
-       navegador de dividir o elemento entre paginas na impressao - com
-       muitos itens (ex.: "Concluído" com 100+), isso forcava a coluna
-       INTEIRA pra uma pagina nova em vez de deixar o conteudo continuar
-       fluindo. "visible" so na impressao resolve, sem afetar a tela. */
+    /* overflow:hidden clicaria o conteudo que passa da borda - nunca usar
+       aqui (ja causou bug de pagina em branco no passado). */
     overflow: visible;
   }
   /* 5 colunas de 19% + 4 margens de 1% entre elas = 99% (cabe). Sem isto,
@@ -219,51 +209,168 @@ tr:nth-child(even) td { background: #f9fbfd; }
      Forca 1 linha por card (chave+contagem+resumo juntos, resumo truncado
      com reticencias) em vez de 2-3 linhas - precisa pra caber 100+ itens
      numa unica pagina. */
-  .kanban-col-header { padding: 3px 5px; gap: 1px; }
+  .kanban-col-head { padding: 3px 5px; gap: 1px; }
   .kanban-col-title { font-size: 7.5px; }
   .kanban-col-count { font-size: 6.5px; }
   .kanban-cards { display: block; padding: 2px; min-height: 0; }
-  /* .kanban-card vira flex, e seus 2 filhos diretos (.kanban-card-header e
-     .kanban-card-name) viram os 2 "itens" dessa linha unica - evita
-     "display:contents" (suporte inconsistente no motor de impressao do
-     Chrome, que em testes anteriores simplesmente ignorou a regra e manteve
-     o card em 2 linhas mesmo com fonte menor). */
+  /* .kanban-card vira flex de 1 linha so (chave+contagem+resumo juntos,
+     resumo truncado com reticencias) - evita "display:contents" (suporte
+     inconsistente no motor de impressao do Chrome, ja testado antes). */
   .kanban-card {
     display: flex; align-items: baseline; gap: 4px; flex-wrap: nowrap;
     padding: 1px 3px; margin-bottom: 1px; border-radius: 2px;
     white-space: nowrap; overflow: hidden;
   }
-  .kanban-card .progress-key { font-size: 6px; margin-right: 0; flex-shrink: 0; }
-  .kanban-card-header { margin-bottom: 0; gap: 2px; flex-shrink: 0; white-space: nowrap; }
-  .kanban-card-count { font-size: 6px; flex-shrink: 0; }
+  .kanban-card .kanban-card-key { font-size: 6px; margin-right: 0; flex-shrink: 0; }
+  .kanban-card-count-print { font-size: 6px; flex-shrink: 0; color: #5a6a7a; }
   .kanban-card-name {
     font-size: 6px; line-height: 1.1; flex: 1; min-width: 0;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .kanban-empty { padding: 3px 0; font-size: 7px; }
 }
-.kanban-col-header { padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
-.kanban-col-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-.kanban-col-count { font-size: 9px; opacity: 0.85; }
-.kanban-cards { background: #f7f7fb; padding: 6px; display: flex; flex-direction: column; gap: 5px; min-height: 40px; }
-.kanban-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 4px; padding: 5px 7px; break-inside: avoid; page-break-inside: avoid; }
-.kanban-card-header { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 2px; }
-.kanban-card-name { font-size: 9px; color: #1a1a2e; line-height: 1.3; }
-.kanban-card-count { font-size: 9px; color: #5a6a7a; font-weight: 600; white-space: nowrap; }
+.kanban-col-head { padding: 10px 12px; border-top: 4px solid #dbe3f0; }
+.kanban-col-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: #122454; }
+.kanban-col-count { font-size: 10px; color: #5a6a7a; margin-top: 2px; }
+.kanban-cards { padding: 8px; display: flex; flex-direction: column; gap: 6px; background: #F6F9FF; min-height: 40px; border-radius: 0 0 9px 9px; }
+.kanban-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 6px; padding: 7px 9px; position: relative; break-inside: avoid; page-break-inside: avoid; }
+.kanban-card-key { font-family: monospace; font-size: 10px; color: #F8006A; font-weight: 700; }
+.kanban-card-name { font-size: 10.5px; color: #1a1a2e; margin-top: 2px; line-height: 1.3; padding-right: 16px; }
+.kanban-card-count-print { display: none; }
 .kanban-empty { color: #bbb; font-size: 11px; text-align: center; padding: 10px 0; }
 
-/* ── Blocos CR / Novas Demandas ── */
-.cr-block { border: 1px solid #dbe3f0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); break-inside: avoid; page-break-inside: avoid; }
-.cr-parent-header {
-  background: #fff; border-bottom: 1px solid #dbe3f0;
-  padding: 8px 14px; font-weight: 600; display: flex; gap: 16px; align-items: center;
+/* ── Tooltip de leitura (hover/"i") - so pra informacao que nao precisa ser
+   editada (lista de sub-tarefas no Kanban, detalhe extra nas barras de
+   Areas Beneficiadas). Nunca usar isto onde precisa de clique/edicao - ver
+   .expand-card mais abaixo (Painel de Impedimentos e Alteracao de Escopo). */
+.info-dot {
+  position: absolute; top: 6px; right: 6px; width: 15px; height: 15px;
+  border-radius: 50%; border: 1px solid #dbe3f0; background: #F6F9FF;
+  color: #8893a8; font-size: 9px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; cursor: help;
 }
-.cr-parent-key { font-family: monospace; color: #F8006A; font-size: 13px; flex-shrink: 0; }
-.cr-parent-meta { font-size: 11px; color: #5a6a7a; margin-left: auto; white-space: nowrap; }
-.cr-subtask { padding: 10px 14px 10px 28px; border-bottom: 1px solid #eef2f7; }
-.cr-subtask:last-child { border-bottom: none; }
-.cr-subtask-title { font-weight: 600; margin-bottom: 6px; }
+.bar-row .info-dot { top: 10px; right: 14px; }
+.info-tooltip {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; width: 220px;
+  background: #1a1a2e; color: #f3f5fa; border-radius: 8px; padding: 9px 11px;
+  font-size: 11px; line-height: 1.5; box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease; pointer-events: none;
+}
+.bar-row .info-tooltip { width: 230px; }
+.kanban-card:hover .info-tooltip, .kanban-card:focus-within .info-tooltip,
+.bar-row:hover .info-tooltip, .bar-row:focus-within .info-tooltip {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.info-tooltip ul { margin: 0; padding-left: 14px; }
+.info-tooltip li { margin-bottom: 3px; }
+.info-tooltip li:last-child { margin-bottom: 0; }
+@media print { .info-dot, .info-tooltip { display: none !important; } }
+
+/* ── Atividades da Semana - linhas em card com borda colorida por status
+   (no lugar da tabela antiga com badge a direita). ── */
+.activity-list { display: flex; flex-direction: column; gap: 8px; }
+.activity-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 7px; padding: 8px 12px; break-inside: avoid; page-break-inside: avoid;
+}
+.activity-row.st-backlog { border-left-color: #8a93a6; }
+.activity-row.st-progresso { border-left-color: #d97706; }
+.activity-row.st-revisao { border-left-color: #ea580c; }
+.activity-row.st-testes { border-left-color: #7c3aed; }
+.activity-row.st-concluido { border-left-color: #16a34a; }
+.activity-key { font-family: monospace; font-weight: 700; color: #F8006A; font-size: 11.5px; min-width: 62px; }
+.activity-summary { flex: 1; font-size: 12.5px; min-width: 180px; }
+.activity-parent { font-size: 10.5px; color: #8893a8; white-space: nowrap; }
+.activity-badge {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 3px 9px; border-radius: 999px; color: #fff; white-space: nowrap;
+}
+.activity-row.st-backlog .activity-badge { background: #8a93a6; }
+.activity-row.st-progresso .activity-badge { background: #d97706; }
+.activity-row.st-revisao .activity-badge { background: #ea580c; }
+.activity-row.st-testes .activity-badge { background: #7c3aed; }
+.activity-row.st-concluido .activity-badge { background: #16a34a; }
+
+/* ── Areas Beneficiadas - lista ranqueada de barras (troca a tabela) ── */
+.bar-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.bar-row {
+  background: #fff; border: 1px solid #dbe3f0; border-radius: 8px;
+  padding: 10px 14px; position: relative; break-inside: avoid; page-break-inside: avoid;
+}
+.bar-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.bar-row-area { font-weight: 700; font-size: 13px; color: #1a1a2e; }
+.bar-row-dash { font-size: 11px; color: #5a6a7a; }
+.bar-row-value { font-weight: 800; font-size: 14px; color: #122454; flex-shrink: 0; }
+.bar-track { height: 10px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; background: #F8006A; border-radius: 999px; }
+.kpi-grid-small { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+/* Linha-resumo "Colaboradores da empresa (X) já beneficiados..." no fim da
+   secao - generica, reaproveitada so aqui (nao faz parte do redesign dos
+   cards .progress-card acima, que e so pra "Progresso Geral das Tarefas"). */
+.progress-item { break-inside: avoid; page-break-inside: avoid; }
+.progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.progress-label { font-size: 13px; color: #1a1a2e; }
+.progress-meta { font-size: 12px; white-space: nowrap; margin-left: 12px; flex-shrink: 0; }
+
+/* ── Cards expansiveis <details>/<summary> (clique pra abrir) - usados onde
+   precisa de edicao: Alteracao de Escopo/Novas Demandas e Painel de
+   Impedimentos. Mantem data-key/data-comments/data-hidden/.editable-comments/
+   .impediment-header EXATAMENTE como nos cards antigos, pro JS existente
+   (renderCard/applyHiddenState) continuar funcionando sem mudanca. ── */
+.expand-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.expand-card.salmon { border-left-color: #c2552e; }
+.expand-card.navy { border-left-color: #122454; }
+.expand-card.pink { border-left-color: #F8006A; }
+.expand-card[data-hidden="true"] { display: none; }
+.expand-card.curation-hidden { display: block; opacity: 0.55; border-style: dashed; }
+@media print { .expand-card[data-hidden="true"] { display: none !important; } }
+.expand-card > summary {
+  list-style: none; cursor: pointer; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.expand-card > summary::-webkit-details-marker { display: none; }
+.expand-card > summary::before {
+  content: '▸'; color: #8893a8; font-size: 11px; flex-shrink: 0;
+  transition: transform .15s ease;
+}
+.expand-card[open] > summary::before { transform: rotate(90deg); }
+@media print {
+  /* <details> fechado nao imprime o conteudo (comportamento nativo do
+     navegador) - forca aberto so na impressao, independente do estado na
+     tela, senao comentarios/sub-itens somem do PDF. */
+  .expand-card > summary::before { display: none; }
+  .expand-card .expand-body { display: block !important; }
+}
+.expand-key { font-family: monospace; font-weight: 800; font-size: 13px; }
+.expand-card.salmon .expand-key { color: #c2552e; }
+.expand-card.navy .expand-key { color: #122454; }
+.expand-card.pink .expand-key { color: #F8006A; }
+.expand-summary { flex: 1; font-weight: 600; min-width: 150px; }
+.expand-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+}
+.expand-card.salmon .expand-badge { background: #fdf1ec; color: #c2552e; border: 1px solid #f3cdb9; }
+.expand-card.navy .expand-badge { background: #f6f9ff; color: #122454; border: 1px solid #dbe3f0; }
+.expand-card.pink .expand-badge { background: #fff0f8; color: #F8006A; border: 1px solid #fbc9e0; }
+.expand-days {
+  font-size: 10px; color: #b91c1c; font-style: italic; white-space: nowrap; flex-shrink: 0;
+  background: #fdecec; padding: 2px 8px; border-radius: 10px;
+}
+.expand-resp { font-size: 11px; font-weight: 700; color: #122454; white-space: nowrap; }
+.expand-body { padding: 0 14px 14px 32px; }
+.expand-subitem { padding: 8px 0; border-top: 1px solid #eef2f7; }
+.expand-subitem:first-child { border-top: none; }
+.expand-subitem-title { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cr-description { color: #5a6a7a; font-size: 12px; margin: 4px 0 8px; white-space: pre-wrap; }
+/* Comentarios - mesmas classes que o JS compartilhado (buildCommentEl em
+   Template.gs) cria em qualquer card com .editable-comments, independente
+   da cor do card onde aparecem. */
 .cr-comment { background: #fff0f8; border-left: 3px solid #F8006A; padding: 6px 10px; margin-bottom: 6px; border-radius: 0 4px 4px 0; }
 .cr-comment-meta { font-size: 11px; color: #5a6a7a; margin-bottom: 3px; }
 .cr-comment-body { white-space: pre-wrap; }
@@ -327,11 +434,10 @@ a.jira-link:hover { text-decoration: underline; }
   transition: opacity 0.3s;
 }
 
-/* ── Subsecções do Painel de Impedimentos ── */
-.subsection-aguardando { background: #d97706; }
-.subsection-validacao  { background: #122454; }
-.subsection-standby    { background: #ea580c; }
-.subsection-divider    { height: 1px; background: rgba(0,0,0,0.08); margin: 28px 0 0; }
+/* ── Subsecções do Painel de Impedimentos - .subsection-title agora é um
+   rotulo simples (ver regra acima), sem mais faixa colorida de fundo por
+   subsecao (a cor ja vem da borda esquerda de cada .expand-card). ── */
+.subsection-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 28px 0 0; }
 
 /* ── Cards de impedimento ── */
 .impediment-card {
@@ -340,10 +446,10 @@ a.jira-link:hover { text-decoration: underline; }
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   break-inside: avoid; page-break-inside: avoid;
 }
-.impediment-header {
-  background: #fff; border-bottom: 1px solid #edd8d8;
-  padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-}
+/* .impediment-header SEM regra visual propria de proposito: a classe so
+   continua existindo como "gancho" pro JS (applyHiddenState faz
+   card.querySelector('.impediment-header')) - o visual de verdade agora vem
+   de ".expand-card > summary" (ver bloco acima), pra nao haver conflito. */
 .impediment-summary { flex: 1; font-weight: 600; min-width: 150px; }
 .impediment-meta { font-size: 11px; color: #5a6a7a; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .impediment-days {
@@ -375,28 +481,41 @@ a.jira-link:hover { text-decoration: underline; }
   color: #fff; font-size: 11px; cursor: pointer; margin-left: auto;
 }
 
-/* ── Seção de Progresso ── */
+/* ── Seção de Progresso - cards com borda colorida por faixa de avanço
+   (3 niveis) + card "Total Geral" destacado, no lugar das barras antigas. ── */
 .section-progress { background: #F6F9FF; }
-.progress-item { margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
-.progress-item:last-child { margin-bottom: 0; }
-.progress-header {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 6px;
+.progress-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.progress-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 8px; padding: 12px 16px; break-inside: avoid; page-break-inside: avoid;
 }
-.progress-key   { font-family: monospace; color: #F8006A; font-size: 12px; margin-right: 6px; }
-.progress-label { font-size: 13px; color: #1a1a2e; }
-.progress-meta  { font-size: 12px; white-space: nowrap; margin-left: 12px; flex-shrink: 0; }
-.progress-bar-track { height: 12px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
-.progress-bar-fill  { height: 100%; border-radius: 999px; }
+.progress-card.tier-high { border-left-color: #16a34a; }
+.progress-card.tier-mid { border-left-color: #c2552e; }
+.progress-card.tier-low { border-left-color: #F8006A; }
+.progress-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.progress-card-name { font-size: 13px; font-weight: 600; }
+.progress-card-name .pkey { font-family: monospace; color: #F8006A; font-weight: 700; margin-right: 6px; }
+.progress-card-meta { font-size: 12px; font-weight: 700; color: #5a6a7a; white-space: nowrap; }
+.progress-track { height: 11px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; }
+.tier-high .progress-fill { background: #16a34a; }
+.tier-mid .progress-fill { background: #c2552e; }
+.tier-low .progress-fill { background: #F8006A; }
 .progress-total {
-  margin-top: 24px; padding-top: 18px;
-  border-top: 2px solid #6b7280;
+  background: #122454; color: #fff; border-radius: 10px; padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  break-inside: avoid; page-break-inside: avoid;
 }
-.progress-total .progress-label { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-.progress-total .progress-bar-track { height: 16px; margin-top: 8px; }
-.progress-total .progress-meta { font-size: 13px; font-weight: 700; }
+.progress-total-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.progress-total-value { font-size: 24px; font-weight: 900; }
+.progress-total-track { flex: 1; min-width: 160px; height: 14px; background: rgba(255,255,255,0.2); border-radius: 999px; overflow: hidden; }
+.progress-total-fill { height: 100%; background: #F8006A; border-radius: 999px; }
 
-/* ── Produtividade Mensal (só na última semana do mês) ── */
+/* ── Produtividade Mensal (só na última semana do mês) - reaproveita
+   .progress-bar-track/.progress-bar-fill (NAO sao as mesmas classes do
+   Progresso Geral acima, que usa .progress-track/.progress-fill). ── */
+.progress-bar-track { height: 12px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-bar-fill  { height: 100%; border-radius: 999px; }
 .monthly-legend { font-size: 11px; color: #5a6a7a; margin-bottom: 16px; }
 .monthly-chart { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
 .monthly-bar-item { display: flex; align-items: center; gap: 12px; break-inside: avoid; page-break-inside: avoid; }
@@ -435,6 +554,7 @@ a.jira-link:hover { text-decoration: underline; }
    semanal. Continua reaproveitando o mesmo <style>/<script>. */
 .rg-section { padding: 32px 40px; background: #fff; }
 .rg-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.section-subtitle { font-size: 11.5px; color: #5a6a7a; margin-top: 4px; }
 .rg-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-top: 2px; flex-wrap: wrap; }
 .rg-no-print-flag {
   font-size: 10.5px; color: #92400e; background: #FFF9E9; border: 1px solid #f3d98f;
@@ -622,8 +742,8 @@ a.jira-link:hover { text-decoration: underline; }
   </div>
 
   <div class="kpi-grid">
-<div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 125 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 81 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 81 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 81 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">4</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>92 dias</strong> (pico de <strong>125 dias</strong>)</div><div>Afeta <strong>4 entregáveis</strong> do projeto</div></div></div>
-<div class="kpi-card navy"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-115 — [DASH] Painel de SLAs de Atendimento e Encerramento · 104 dias</li><li>NDAV-54 — [DASH] Projeto - Gestão de Contratos | Frotas · 74 dias</li><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 67 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 46 dias</li><li>NDAV-232 — [DASH] Medição · 18 dias</li><li>NDAV-245 — [DASH][Controles Internos (Riscos)] - Criação do Dashboard · 11 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">7</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>47 dias</strong> (pico de <strong>104 dias</strong>)</div><div>Afeta <strong>7 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 126 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 82 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 82 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 82 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">4</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>93 dias</strong> (pico de <strong>126 dias</strong>)</div><div>Afeta <strong>4 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card navy"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-115 — [DASH] Painel de SLAs de Atendimento e Encerramento · 105 dias</li><li>NDAV-54 — [DASH] Projeto - Gestão de Contratos | Frotas · 75 dias</li><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 68 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 47 dias</li><li>NDAV-232 — [DASH] Medição · 19 dias</li><li>NDAV-245 — [DASH][Controles Internos (Riscos)] - Criação do Dashboard · 12 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">7</span><span class="kpi-unit">itens</span></div><div class="kpi-stats"><div>Parado em média há <strong>48 dias</strong> (pico de <strong>105 dias</strong>)</div><div>Afeta <strong>7 entregáveis</strong> do projeto</div></div></div>
 <div class="kpi-card green"><div class="kpi-top"><div class="kpi-title">Entregas da Semana</div><div class="kpi-pill">Concluído</div></div><div><span class="kpi-number">0</span><span class="kpi-unit">entregas</span></div><div class="kpi-stats"><div><strong>14</strong> entregas acumuladas no projeto</div></div></div>
   </div>
 
@@ -861,14 +981,17 @@ a.jira-link:hover { text-decoration: underline; }
       var restoreBtn = document.createElement('button');
       restoreBtn.className = 'btn-restore no-print';
       restoreBtn.textContent = 'Restaurar';
-      restoreBtn.onclick = function() { setHidden(key, false, card); };
+      // header agora pode ser um <summary> (cards expansiveis clique-pra-abrir) -
+      // sem isto, clicar no botao tambem expandiria/recolheria o card, ja que
+      // qualquer clique dentro de <summary> alterna o <details> por padrao.
+      restoreBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); setHidden(key, false, card); };
       header.appendChild(restoreBtn);
     } else if (!isHidden && IS_OWNER) {
       card.classList.remove('curation-hidden');
       var hideBtn = document.createElement('button');
       hideBtn.className = 'btn-hide no-print';
       hideBtn.textContent = 'Ocultar esta semana';
-      hideBtn.onclick = function() { setHidden(key, true, card); };
+      hideBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); setHidden(key, true, card); };
       header.appendChild(hideBtn);
     } else {
       card.classList.remove('curation-hidden');
