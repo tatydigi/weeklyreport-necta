@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Report Semanal - NECTA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a2e; background: #fff; }
+
+.page-break { page-break-after: always; }
+/* Tamanho de página fixado em A3 sem margens — mesma configuração usada no
+   Ctrl+P (Destino: Salvar como PDF, Papel: A3, Margens: Nenhumas, Escala: 101).
+   Declarar aqui evita depender do que ficou selecionado da última vez no diálogo. */
+@page { size: A3; margin: 0; }
+@media print {
+  /* O relatório roda dentro do iframe sandbox do Apps Script
+     (*.googleusercontent.com), que por padrão trata o conteúdo como uma área
+     com rolagem própria. Sem isto, a impressão via Ctrl+P captura só o que
+     está "visível" nesse scroll em vez do documento inteiro, virando 1
+     página só com conteúdo cortado/duplicado. */
+  html, body {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  .page-break { page-break-after: always; }
+  /* A3 tem o dobro da área de uma A4 — mantém o mesmo tamanho de fonte da tela
+     em vez de reduzir, para aproveitar o espaço extra em vez de deixá-lo vazio. */
+  body { font-size: 13px; }
+  .section { padding: 40px 56px; }
+  a.jira-link { color: inherit; text-decoration: none; }
+  /* Sem isso, o Chrome aplica "economia de tinta" no PDF e escurece/dessatura
+     fundos e degradês mesmo com "Imagens em segundo plano" marcado — força as
+     cores exatas da tela na impressão. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+
+/* ── Capa ──
+   Marca Digiage: uma cor dominante por tela (Navy) + Pink só como detalhe
+   de canto — nunca atravessando o texto, seguindo o guia de marca.
+   Na TELA a capa fica compacta (não faz sentido ocupar 100vh num relatório
+   que rola); na IMPRESSÃO (@media print, mais abaixo) ela volta a ocupar a
+   página inteira, exatamente como antes. */
+.cover {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  background:
+    radial-gradient(circle at 100% 100%, rgba(248,0,106,0.35) 0%, transparent 25%),
+    #122454;
+  color: #fff; text-align: center; padding: 20px 40px;
+}
+.cover-logos {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+}
+.logo-digiage { height: 28px; object-fit: contain; }
+.logo-necta { height: 28px; object-fit: contain; }
+.cover-logos-divider {
+  width: 1px; height: 22px; background: rgba(255,255,255,0.4);
+}
+.cover h1 { font-size: 20px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 6px; }
+.cover h2 { font-size: 12px; font-weight: 400; opacity: 0.85; margin-bottom: 10px; }
+.cover .date-badge {
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);
+  padding: 6px 18px; border-radius: 4px; font-size: 11px; letter-spacing: 0.5px;
+}
+.cover .last-updated {
+  font-size: 10px; opacity: 0.7; margin-top: 10px;
+}
+@media print {
+  /* Restaura o tamanho de capa de página inteira só na impressão/PDF - a
+     regra .cover acima (fora de @media) já roda também ao imprimir, então
+     este bloco precisa vir DEPOIS dela no arquivo para ganhar no empate de
+     especificidade (CSS decide por ordem quando a especificidade é igual). */
+  .cover { min-height: 100vh; padding: 40px; }
+  .cover-logos { gap: 28px; margin-bottom: 60px; }
+  .logo-digiage, .logo-necta { height: 56px; }
+  .cover-logos-divider { height: 48px; }
+  .cover h1 { font-size: 42px; letter-spacing: 2px; margin-bottom: 16px; }
+  .cover h2 { font-size: 18px; margin-bottom: 40px; }
+  .cover .date-badge { padding: 10px 28px; font-size: 14px; letter-spacing: 1px; }
+  .cover .last-updated { font-size: 11px; margin-top: 16px; }
+}
+
+/* ── Seções ── */
+.section { padding: 32px 40px; border-bottom: 2px solid #dbe3f0; }
+/* Nenhum título (de seção ou subseção) pode ficar "sozinho" no fim de uma
+   página com o conteúdo inteiro pulando pra próxima — isso deixava um vão em
+   branco embaixo do título (visto no Painel de Impedimentos: "Aguardando
+   Cliente" ficava numa página e os cards de NDAV-71/115/181 na seguinte). */
+.section-title {
+  font-size: 17px; font-weight: 700; color: #122454;
+  border-left: 5px solid #F8006A; padding-left: 12px;
+  margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;
+  break-after: avoid; page-break-after: avoid;
+}
+.subsection-title {
+  font-size: 11.5px; font-weight: 800; color: #5a6a7a;
+  margin: 22px 0 10px; text-transform: uppercase; letter-spacing: 0.6px;
+  break-after: avoid; page-break-after: avoid;
+}
+
+/* ── Cores de fundo por seção ──
+   Off-white único da marca (#F6F9FF), alternado com branco puro só pra
+   separar visualmente uma seção da outra — em vez de um arco-íris pastel
+   fora da paleta oficial. */
+.section-status      { background: #fff; }
+.section-priority    { background: #F6F9FF; }
+.section-bignumbers  { background: #fff; }
+.section-areas       { background: #F6F9FF; }
+.section-changes     { background: #fff; }
+.section-impediments { background: #F6F9FF; }
+.section-monthly     { background: #fff; }
+
+/* ── Totalizador de status ── */
+.status-summary { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.status-card {
+  flex: 1; min-width: 110px;
+  background: #fff; border: 1px solid #dbe3f0; border-radius: 6px;
+  padding: 12px 16px; text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.status-card .count { font-size: 30px; font-weight: 800; }
+.status-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #5a6a7a; margin-top: 4px; }
+
+/* ── Lista de tarefas ── */
+.task-item { margin-bottom: 14px; border: 1px solid #dbe3f0; border-radius: 6px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+.task-header { background: #122454; color: #fff; padding: 8px 14px; font-weight: 600; font-size: 13px; }
+.task-header .jira-link { color: #F6926F; margin-right: 6px; font-family: monospace; }
+.subtask-list { padding: 4px 0; background: #fff; }
+/* Seção "Atividades da Semana" costuma ser curta — mantém a lista inteira
+   junta na impressão em vez de deixar o último item sozinho na página seguinte. */
+.section-priority .subtask-list { break-inside: avoid; page-break-inside: avoid; }
+/* O título nunca pode ficar "sozinho" no fim de uma página com a lista inteira
+   pulando pra próxima — isso deixava um vão em branco embaixo do título. */
+.section-priority .section-title { break-after: avoid; page-break-after: avoid; }
+/* Compacta as linhas desta seção especificamente, pra maximizar a chance de
+   título + lista caberem juntos na mesma página em vez de pular de página. */
+.section-priority .subtask-row { padding: 3px 14px 3px 28px; font-size: 12px; }
+.section-priority .badge { font-size: 9px; padding: 1px 7px; }
+.section-priority .section-title { margin-bottom: 10px; }
+.subtask-row {
+  display: flex; align-items: center; padding: 5px 14px 5px 28px;
+  border-bottom: 1px solid #eef2f7; gap: 10px; break-inside: avoid; page-break-inside: avoid;
+}
+.subtask-row:last-child { border-bottom: none; }
+.subtask-key { font-family: monospace; font-size: 12px; color: #F8006A; min-width: 80px; flex-shrink: 0; }
+.subtask-summary { flex: 1; }
+.subtask-parent { font-size: 11px; color: #5a6a7a; flex-shrink: 0; }
+
+/* ── Badge de status ── */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; white-space: nowrap; color: #fff;
+}
+
+/* ── Big Numbers ── */
+.bn-columns { display: flex; align-items: flex-start; gap: 16px; }
+.bn-subsection { break-inside: avoid; page-break-inside: avoid; flex: 1; min-width: 0; }
+.bn-subsection + .bn-subsection { border-left: 1px solid rgba(0,0,0,0.08); padding-left: 16px; }
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0; border-radius: 8px; padding: 12px 14px; }
+.tile.pink   { border-left-color: #F8006A; }
+.tile.salmon { border-left-color: #c2552e; }
+.tile.navy   { border-left-color: #122454; }
+.tile.green  { border-left-color: #16a34a; }
+.tile-value { font-size: 26px; font-weight: 900; line-height: 1; color: #122454; }
+.tile-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #5a6a7a; margin-top: 5px; line-height: 1.3; }
+
+/* ── Tabelas ── */
+table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
+th { background: #122454; color: #fff; padding: 7px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 6px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; }
+tr:nth-child(even) td { background: #f9fbfd; }
+
+/* ── Status das Tarefas (Kanban) - redesign aprovado em mockup: card mostra
+   so chave+nome; a lista de sub-tarefas daquele status fica num tooltip "i"
+   (hover/clique) em vez de um "[N subtasks]" sempre visivel. ── */
+.kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-items: start; margin-top: 8px; }
+.kanban-col { background: #fff; border: 1px solid #dbe3f0; border-radius: 10px; }
+@media print {
+  /* O Chrome nao pagina bem layouts CSS Grid na impressao - quando o board
+     nao cabe inteiro no espaco restante da pagina, ele empurra o grid
+     INTEIRO pra proxima pagina, deixando so o titulo da secao numa folha em
+     branco. Troca pra colunas inline-block so na impressao, que o motor de
+     paginacao do Chrome consegue quebrar entre paginas normalmente (igual
+     já funciona com <table>, mantendo a mesma aparencia lado a lado. */
+  .kanban-board { display: block; margin-top: 8px; font-size: 0; }
+  .kanban-col {
+    display: inline-block; vertical-align: top;
+    width: 19%; margin-right: 1%; font-size: 1rem;
+    /* overflow:hidden clicaria o conteudo que passa da borda - nunca usar
+       aqui (ja causou bug de pagina em branco no passado). */
+    overflow: visible;
+  }
+  /* 5 colunas de 19% + 4 margens de 1% entre elas = 99% (cabe). Sem isto,
+     19.2%+1% de margem x 5 colunas passava de 100% e a 5a coluna
+     ("Concluído", a com mais itens) quebrava pra uma linha nova ABAIXO das
+     outras 4 - desperdicando toda a altura que sobrava ao lado delas. */
+  .kanban-col:last-child { margin-right: 0; }
+  /* Colunas com muitos itens (ex.: "Concluído" com 100+) nao cabem numa
+     unica pagina com o tamanho de tela normal - encolhe bastante tudo
+     dentro do card so na impressao, e troca .kanban-cards de flex pra
+     block (flex tambem nao pagina bem no Chrome, mesmo problema do grid).
+     Forca 1 linha por card (chave+contagem+resumo juntos, resumo truncado
+     com reticencias) em vez de 2-3 linhas - precisa pra caber 100+ itens
+     numa unica pagina. */
+  .kanban-col-head { padding: 3px 5px; gap: 1px; }
+  .kanban-col-title { font-size: 7.5px; }
+  .kanban-col-count { font-size: 6.5px; }
+  .kanban-cards { display: block; padding: 2px; min-height: 0; }
+  /* .kanban-card vira flex de 1 linha so (chave+contagem+resumo juntos,
+     resumo truncado com reticencias) - evita "display:contents" (suporte
+     inconsistente no motor de impressao do Chrome, ja testado antes). */
+  .kanban-card {
+    display: flex; align-items: baseline; gap: 4px; flex-wrap: nowrap;
+    padding: 1px 3px; margin-bottom: 1px; border-radius: 2px;
+    white-space: nowrap; overflow: hidden;
+  }
+  .kanban-card .kanban-card-key { font-size: 6px; margin-right: 0; flex-shrink: 0; }
+  .kanban-card-count-print { font-size: 6px; flex-shrink: 0; color: #5a6a7a; }
+  .kanban-card-name {
+    font-size: 6px; line-height: 1.1; flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .kanban-empty { padding: 3px 0; font-size: 7px; }
+}
+.kanban-col-head { padding: 10px 12px; border-top: 4px solid #dbe3f0; }
+.kanban-col-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: #122454; }
+.kanban-col-count { font-size: 10px; color: #5a6a7a; margin-top: 2px; }
+.kanban-cards { padding: 8px; display: flex; flex-direction: column; gap: 6px; background: #F6F9FF; min-height: 40px; border-radius: 0 0 9px 9px; }
+.kanban-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 6px; padding: 7px 9px; position: relative; break-inside: avoid; page-break-inside: avoid; }
+.kanban-card-key { font-family: monospace; font-size: 10px; color: #F8006A; font-weight: 700; }
+.kanban-card-name { font-size: 10.5px; color: #1a1a2e; margin-top: 2px; line-height: 1.3; padding-right: 16px; }
+.kanban-card-count-print { display: none; }
+.kanban-empty { color: #bbb; font-size: 11px; text-align: center; padding: 10px 0; }
+
+/* ── Tooltip de leitura (hover/"i") - so pra informacao que nao precisa ser
+   editada (lista de sub-tarefas no Kanban, detalhe extra nas barras de
+   Areas Beneficiadas). Nunca usar isto onde precisa de clique/edicao - ver
+   .expand-card mais abaixo (Painel de Impedimentos e Alteracao de Escopo). */
+.info-dot {
+  position: absolute; top: 6px; right: 6px; width: 15px; height: 15px;
+  border-radius: 50%; border: 1px solid #dbe3f0; background: #F6F9FF;
+  color: #8893a8; font-size: 9px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; cursor: help;
+}
+.bar-row .info-dot { top: 10px; right: 14px; }
+.info-tooltip {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 20; width: 220px;
+  background: #1a1a2e; color: #f3f5fa; border-radius: 8px; padding: 9px 11px;
+  font-size: 11px; line-height: 1.5; box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease; pointer-events: none;
+}
+.bar-row .info-tooltip { width: 230px; }
+.kanban-card:hover .info-tooltip, .kanban-card:focus-within .info-tooltip,
+.bar-row:hover .info-tooltip, .bar-row:focus-within .info-tooltip {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.info-tooltip ul { margin: 0; padding-left: 14px; }
+.info-tooltip li { margin-bottom: 3px; }
+.info-tooltip li:last-child { margin-bottom: 0; }
+@media print { .info-dot, .info-tooltip { display: none !important; } }
+
+/* ── Atividades da Semana - linhas em card com borda colorida por status
+   (no lugar da tabela antiga com badge a direita). ── */
+.activity-list { display: flex; flex-direction: column; gap: 8px; }
+.activity-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 7px; padding: 8px 12px; break-inside: avoid; page-break-inside: avoid;
+}
+.activity-row.st-backlog { border-left-color: #8a93a6; }
+.activity-row.st-progresso { border-left-color: #d97706; }
+.activity-row.st-revisao { border-left-color: #ea580c; }
+.activity-row.st-testes { border-left-color: #7c3aed; }
+.activity-row.st-concluido { border-left-color: #16a34a; }
+.activity-key { font-family: monospace; font-weight: 700; color: #F8006A; font-size: 11.5px; min-width: 62px; }
+.activity-summary { flex: 1; font-size: 12.5px; min-width: 180px; }
+.activity-parent { font-size: 10.5px; color: #8893a8; white-space: nowrap; }
+.activity-badge {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  padding: 3px 9px; border-radius: 999px; color: #fff; white-space: nowrap;
+}
+.activity-row.st-backlog .activity-badge { background: #8a93a6; }
+.activity-row.st-progresso .activity-badge { background: #d97706; }
+.activity-row.st-revisao .activity-badge { background: #ea580c; }
+.activity-row.st-testes .activity-badge { background: #7c3aed; }
+.activity-row.st-concluido .activity-badge { background: #16a34a; }
+
+/* ── Areas Beneficiadas - lista ranqueada de barras (troca a tabela) ── */
+.bar-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.bar-row {
+  background: #fff; border: 1px solid #dbe3f0; border-radius: 8px;
+  padding: 10px 14px; position: relative; break-inside: avoid; page-break-inside: avoid;
+}
+.bar-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.bar-row-area { font-weight: 700; font-size: 13px; color: #1a1a2e; }
+.bar-row-dash { font-size: 11px; color: #5a6a7a; }
+.bar-row-value { font-weight: 800; font-size: 14px; color: #122454; flex-shrink: 0; }
+.bar-track { height: 10px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; background: #F8006A; border-radius: 999px; }
+.kpi-grid-small { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+/* Linha-resumo "Colaboradores da empresa (X) já beneficiados..." no fim da
+   secao - generica, reaproveitada so aqui (nao faz parte do redesign dos
+   cards .progress-card acima, que e so pra "Progresso Geral das Tarefas"). */
+.progress-item { break-inside: avoid; page-break-inside: avoid; }
+.progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.progress-label { font-size: 13px; color: #1a1a2e; }
+.progress-meta { font-size: 12px; white-space: nowrap; margin-left: 12px; flex-shrink: 0; }
+
+/* ── Cards expansiveis <details>/<summary> (clique pra abrir) - usados onde
+   precisa de edicao: Alteracao de Escopo/Novas Demandas e Painel de
+   Impedimentos. Mantem data-key/data-comments/data-hidden/.editable-comments/
+   .impediment-header EXATAMENTE como nos cards antigos, pro JS existente
+   (renderCard/applyHiddenState) continuar funcionando sem mudanca. ── */
+.expand-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.expand-card.salmon { border-left-color: #c2552e; }
+.expand-card.navy { border-left-color: #122454; }
+.expand-card.pink { border-left-color: #F8006A; }
+.expand-card[data-hidden="true"] { display: none; }
+.expand-card.curation-hidden { display: block; opacity: 0.55; border-style: dashed; }
+@media print { .expand-card[data-hidden="true"] { display: none !important; } }
+.expand-card > summary {
+  list-style: none; cursor: pointer; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.expand-card > summary::-webkit-details-marker { display: none; }
+.expand-card > summary::before {
+  content: '▸'; color: #8893a8; font-size: 11px; flex-shrink: 0;
+  transition: transform .15s ease;
+}
+.expand-card[open] > summary::before { transform: rotate(90deg); }
+@media print {
+  /* <details> fechado nao imprime o conteudo (comportamento nativo do
+     navegador) - forca aberto so na impressao, independente do estado na
+     tela, senao comentarios/sub-itens somem do PDF. */
+  .expand-card > summary::before { display: none; }
+  .expand-card .expand-body { display: block !important; }
+}
+.expand-key { font-family: monospace; font-weight: 800; font-size: 13px; }
+.expand-card.salmon .expand-key { color: #c2552e; }
+.expand-card.navy .expand-key { color: #122454; }
+.expand-card.pink .expand-key { color: #F8006A; }
+.expand-summary { flex: 1; font-weight: 600; min-width: 150px; }
+.expand-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+}
+.expand-card.salmon .expand-badge { background: #fdf1ec; color: #c2552e; border: 1px solid #f3cdb9; }
+.expand-card.navy .expand-badge { background: #f6f9ff; color: #122454; border: 1px solid #dbe3f0; }
+.expand-card.pink .expand-badge { background: #fff0f8; color: #F8006A; border: 1px solid #fbc9e0; }
+.expand-days {
+  font-size: 10px; color: #b91c1c; font-style: italic; white-space: nowrap; flex-shrink: 0;
+  background: #fdecec; padding: 2px 8px; border-radius: 10px;
+}
+.expand-resp { font-size: 11px; font-weight: 700; color: #122454; white-space: nowrap; }
+.expand-body { padding: 0 14px 14px 32px; }
+.expand-subitem { padding: 8px 0; border-top: 1px solid #eef2f7; }
+.expand-subitem:first-child { border-top: none; }
+.expand-subitem-title { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cr-description { color: #5a6a7a; font-size: 12px; margin: 4px 0 8px; white-space: pre-wrap; }
+/* Comentarios - mesmas classes que o JS compartilhado (buildCommentEl em
+   Template.gs) cria em qualquer card com .editable-comments, independente
+   da cor do card onde aparecem. */
+.cr-comment { background: #fff0f8; border-left: 3px solid #F8006A; padding: 6px 10px; margin-bottom: 6px; border-radius: 0 4px 4px 0; }
+.cr-comment-meta { font-size: 11px; color: #5a6a7a; margin-bottom: 3px; }
+.cr-comment-body { white-space: pre-wrap; }
+.no-items { color: #5a6a7a; font-style: italic; padding: 8px 0; font-size: 12px; }
+.td-key { font-family: monospace; color: #F8006A; }
+.td-date { color: #5a6a7a; font-size: 11px; }
+
+/* ── Links Jira ── */
+a.jira-link { color: #122454; text-decoration: none; font-weight: 600; }
+a.jira-link:hover { text-decoration: underline; }
+
+/* ── Agrupamento por status ── */
+.status-group { margin-bottom: 14px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.10); }
+.status-group-header {
+  padding: 10px 16px; display: flex; align-items: center;
+  justify-content: space-between; font-weight: 700;
+}
+.status-label { text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+.status-count { opacity: 0.9; font-size: 12px; }
+.parent-group { border-bottom: 1px solid #eef2f7; }
+.parent-group:last-child { border-bottom: none; }
+.parent-group-header {
+  background: #f3f0f8; padding: 6px 14px;
+  font-weight: 600; color: #122454;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid #dbe3f0;
+}
+.parent-group .subtask-row { padding-left: 42px; }
+
+/* ── Botões de edição (ocultos na impressão) ── */
+.no-print { display: inline-block; }
+@media print { .no-print { display: none !important; } }
+.btn-remove {
+  background: none; border: none; cursor: pointer; color: #c0392b;
+  font-size: 11px; padding: 0 4px; margin-left: 8px; opacity: 0.6;
+  vertical-align: middle;
+}
+.btn-remove:hover { opacity: 1; }
+.btn-add-comment {
+  display: inline-block; margin-top: 8px; padding: 4px 10px;
+  background: none; border: 1px dashed #F8006A; border-radius: 4px;
+  color: #F8006A; font-size: 11px; cursor: pointer;
+}
+.btn-add-comment:hover { background: #fff0f8; }
+.add-comment-form { margin-top: 8px; }
+.add-comment-form .comment-input {
+  width: 100%; padding: 6px 8px; border: 1px solid #dbe3f0; border-radius: 4px;
+  font-family: inherit; font-size: 12px; resize: vertical;
+}
+.add-comment-form .form-actions { margin-top: 6px; display: flex; gap: 8px; }
+.btn-confirm {
+  padding: 4px 12px; background: #122454; color: #fff;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.btn-cancel {
+  padding: 4px 12px; background: #eee; color: #333;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.save-indicator {
+  font-size: 10px; color: #22c55e; margin-left: 8px; opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* ── Subsecções do Painel de Impedimentos - .subsection-title agora é um
+   rotulo simples (ver regra acima), sem mais faixa colorida de fundo por
+   subsecao (a cor ja vem da borda esquerda de cada .expand-card). ── */
+.subsection-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 28px 0 0; }
+
+/* ── Cards de impedimento ── */
+.impediment-card {
+  margin-bottom: 16px; border-radius: 6px; overflow: hidden;
+  background: #fff; border: 1px solid #dbe3f0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  break-inside: avoid; page-break-inside: avoid;
+}
+/* .impediment-header SEM regra visual propria de proposito: a classe so
+   continua existindo como "gancho" pro JS (applyHiddenState faz
+   card.querySelector('.impediment-header')) - o visual de verdade agora vem
+   de ".expand-card > summary" (ver bloco acima), pra nao haver conflito. */
+.impediment-summary { flex: 1; font-weight: 600; min-width: 150px; }
+.impediment-meta { font-size: 11px; color: #5a6a7a; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.impediment-days {
+  font-size: 10px; color: #b91c1c; font-style: italic; white-space: nowrap; flex-shrink: 0;
+  background: #fdecec; padding: 2px 8px; border-radius: 10px;
+}
+.impediment-comments { padding: 10px 16px; }
+.impediment-card[data-hidden="true"] { display: none; }
+.impediment-card.curation-hidden {
+  display: block; opacity: 0.55; border-style: dashed;
+}
+@media print {
+  /* Oculto nesta semana nunca aparece impresso, mesmo que esteja
+     visível na tela em modo de curadoria (--serve). */
+  .impediment-card[data-hidden="true"] { display: none !important; }
+}
+.impediment-hidden-tag {
+  display: inline-block; background: #6b7280; color: #fff; font-size: 10px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+}
+.btn-hide {
+  padding: 3px 10px; background: none; border: 1px solid #c0392b; border-radius: 4px;
+  color: #c0392b; font-size: 11px; cursor: pointer; margin-left: auto;
+}
+.btn-hide:hover { background: #fdf0f0; }
+.btn-restore {
+  padding: 3px 10px; background: #122454; border: none; border-radius: 4px;
+  color: #fff; font-size: 11px; cursor: pointer; margin-left: auto;
+}
+
+/* ── Seção de Progresso - cards com borda colorida por faixa de avanço
+   (3 niveis) + card "Total Geral" destacado, no lugar das barras antigas. ── */
+.section-progress { background: #F6F9FF; }
+.progress-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.progress-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 8px; padding: 12px 16px; break-inside: avoid; page-break-inside: avoid;
+}
+.progress-card.tier-high { border-left-color: #16a34a; }
+.progress-card.tier-mid { border-left-color: #c2552e; }
+.progress-card.tier-low { border-left-color: #F8006A; }
+.progress-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.progress-card-name { font-size: 13px; font-weight: 600; }
+.progress-card-name .pkey { font-family: monospace; color: #F8006A; font-weight: 700; margin-right: 6px; }
+.progress-card-meta { font-size: 12px; font-weight: 700; color: #5a6a7a; white-space: nowrap; }
+.progress-track { height: 11px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; }
+.tier-high .progress-fill { background: #16a34a; }
+.tier-mid .progress-fill { background: #c2552e; }
+.tier-low .progress-fill { background: #F8006A; }
+.progress-total {
+  background: #122454; color: #fff; border-radius: 10px; padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.progress-total-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.progress-total-value { font-size: 24px; font-weight: 900; }
+.progress-total-track { flex: 1; min-width: 160px; height: 14px; background: rgba(255,255,255,0.2); border-radius: 999px; overflow: hidden; }
+.progress-total-fill { height: 100%; background: #F8006A; border-radius: 999px; }
+
+/* ── Produtividade Mensal (só na última semana do mês) - reaproveita
+   .progress-bar-track/.progress-bar-fill (NAO sao as mesmas classes do
+   Progresso Geral acima, que usa .progress-track/.progress-fill). ── */
+.progress-bar-track { height: 12px; background: #F6F9FF; border-radius: 999px; overflow: hidden; }
+.progress-bar-fill  { height: 100%; border-radius: 999px; }
+.monthly-legend { font-size: 11px; color: #5a6a7a; margin-bottom: 16px; }
+.monthly-chart { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+.monthly-bar-item { display: flex; align-items: center; gap: 12px; break-inside: avoid; page-break-inside: avoid; }
+.monthly-bar-label { width: 170px; flex-shrink: 0; font-size: 12px; color: #1a1a2e; }
+.monthly-chart .progress-bar-track { flex: 1; }
+.monthly-bar-count { width: 30px; text-align: right; font-weight: 700; color: #122454; flex-shrink: 0; }
+.monthly-bar-item.monthly-total {
+  margin-top: 10px; padding-top: 14px; border-top: 2px solid #6b7280;
+}
+.monthly-total .monthly-bar-label { font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.monthly-total .progress-bar-track { height: 16px; }
+.monthly-total .monthly-bar-count { font-size: 14px; }
+.owner-bar {
+  display: none; align-items: center; gap: 12px;
+  background: #122454; color: #fff; padding: 8px 16px; font-size: 12px;
+}
+.owner-bar button {
+  padding: 5px 14px; background: #F8006A; color: #fff; border: none;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.owner-bar button:disabled { opacity: 0.6; cursor: default; }
+.owner-bar .owner-bar-status { opacity: 0.85; }
+.print-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 8px 16px; background: #F6F9FF; border-bottom: 1px solid #dbe3f0;
+}
+.print-bar button {
+  padding: 5px 14px; background: #fff; color: #122454; border: 1px solid #122454;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.print-bar button:hover { background: #eef2fb; }
+
+/* ── Resumo Gerencial ──
+   Agora vive em pagina PROPRIA (RG_PAGE_TEMPLATE, servida em
+   "?view=resumo") - nao faz mais parte do HTML_TEMPLATE do relatorio
+   semanal. Continua reaproveitando o mesmo <style>/<script>. */
+.rg-section { padding: 32px 40px; background: #fff; }
+.rg-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.section-subtitle { font-size: 11.5px; color: #5a6a7a; margin-top: 4px; }
+.rg-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-top: 2px; flex-wrap: wrap; }
+.rg-no-print-flag {
+  font-size: 10.5px; color: #92400e; background: #FFF9E9; border: 1px solid #f3d98f;
+  padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+}
+.btn-rg-export {
+  padding: 8px 16px; background: #F8006A; color: #fff; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.btn-rg-refresh {
+  padding: 8px 16px; background: #fff; color: #122454; border: 1px solid #122454; border-radius: 6px;
+  font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+}
+.rg-refresh-status { font-size: 11px; color: #22c55e; white-space: nowrap; }
+
+.chart-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.chart-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 8px; padding: 16px 18px; flex: 1; min-width: 260px; }
+.chart-card-title { font-size: 11.5px; font-weight: 800; color: #122454; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
+.chart-card-hint { font-size: 10px; color: #94a3b8; margin-bottom: 10px; }
+.status-stack-wrap { margin-top: 4px; }
+.status-stack { display: flex; gap: 2px; height: 26px; border-radius: 6px; overflow: hidden; }
+.status-seg { display: flex; align-items: center; justify-content: center; }
+.status-seg-label { font-size: 10px; font-weight: 800; color: #fff; }
+.status-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
+.status-legend-item { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #334155; }
+.status-legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.status-panel-pct { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+.status-panel-pct span { font-size: 11px; font-weight: 700; color: #5a6a7a; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px; }
+
+/* ── Resumo Gerencial: blocos executivos (KPIs com borda colorida +
+   tooltip de detalhe ao passar o mouse) - paleta oficial Digiage (Navy/
+   Pink/Salmao), com Verde reservado pro significado de "Concluido" (ja
+   usado em todo o resto do relatorio) e Vermelho so pro alerta de risco. ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 18px 0; }
+.kpi-card {
+  background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #dbe3f0;
+  border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
+  min-width: 0; position: relative;
+}
+.kpi-card.pink { border-left-color: #F8006A; }
+.kpi-card.navy { border-left-color: #122454; }
+.kpi-card.salmon { border-left-color: #c2552e; }
+.kpi-card.green { border-left-color: #16a34a; }
+.kpi-card.critical { border-left-color: #dc2626; }
+.kpi-card .kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.kpi-title { font-size: 12px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; }
+.kpi-card.pink .kpi-title { color: #F8006A; }
+.kpi-card.navy .kpi-title { color: #122454; }
+.kpi-card.salmon .kpi-title { color: #c2552e; }
+.kpi-card.green .kpi-title { color: #16a34a; }
+.kpi-card.critical .kpi-title { color: #dc2626; }
+.kpi-pill { font-size: 10.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.kpi-card.pink .kpi-pill { background: #fff0f8; color: #F8006A; border: 1px solid #fbc9e0; }
+.kpi-card.navy .kpi-pill { background: #f6f9ff; color: #122454; border: 1px solid #dbe3f0; }
+.kpi-card.salmon .kpi-pill { background: #fdf1ec; color: #c2552e; border: 1px solid #f3cdb9; }
+.kpi-card.green .kpi-pill { background: #eefbf3; color: #16a34a; border: 1px solid #bdebd1; }
+.kpi-card.critical .kpi-pill { background: #fef2f2; color: #dc2626; border: 1px solid #fac9c9; }
+.kpi-number { font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -0.02em; color: #15192b; }
+.kpi-unit { font-size: 13px; font-weight: 600; color: #5a6a7a; margin-left: 6px; }
+.kpi-stats { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5a6a7a; }
+.kpi-stats strong { color: #15192b; font-weight: 700; }
+.kpi-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.kpi-chip {
+  font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+  background: #eefbf3; color: #16a34a; border: 1px solid #bdebd1;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.kpi-info {
+  position: absolute; top: 16px; right: 18px; width: 18px; height: 18px;
+  border-radius: 50%; border: 1px solid #dbe3f0; background: #F6F9FF;
+  color: #8893a8; font-size: 10.5px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; cursor: help;
+}
+.kpi-tooltip {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 20;
+  background: #15192b; color: #f3f5fa; border-radius: 10px; padding: 12px 14px;
+  font-size: 12px; line-height: 1.55; box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease; pointer-events: none;
+}
+.kpi-card:hover .kpi-tooltip, .kpi-card:focus-within .kpi-tooltip,
+.analyst-row:hover .kpi-tooltip, .analyst-row:focus-within .kpi-tooltip {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.kpi-tooltip-title { font-weight: 800; margin-bottom: 7px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.75; }
+.kpi-tooltip ul { margin: 0; padding-left: 16px; }
+.kpi-tooltip li { margin-bottom: 4px; }
+.kpi-tooltip li:last-child { margin-bottom: 0; }
+@media print { .kpi-tooltip, .kpi-info { display: none !important; } }
+
+.analyst-list { display: flex; flex-direction: column; gap: 10px; }
+.analyst-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; border: 1px solid #dbe3f0; border-radius: 8px; background: #F6F9FF;
+  position: relative;
+}
+.analyst-row .kpi-info { position: static; flex-shrink: 0; }
+.analyst-row .kpi-tooltip { left: auto; right: 0; width: 280px; }
+.analyst-name { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; }
+.analyst-avatar {
+  width: 26px; height: 26px; border-radius: 50%; background: #122454; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;
+  flex-shrink: 0;
+}
+.analyst-stats { font-size: 12px; color: #5a6a7a; text-align: right; }
+.analyst-stats strong { color: #15192b; }
+
+/* Demandas da Semana (planilha Controle de Demandas) - substitui o antigo
+   card "Motivos de Bloqueio"; a coluna Observacao/Bloqueio traz o motivo. */
+.dw-table-wrap { overflow-x: auto; margin-top: 10px; }
+.dw-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.dw-table th {
+  background: #122454; color: #fff; font-size: 10.5px; font-weight: 700; text-align: left;
+  padding: 8px 10px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.dw-table td { padding: 8px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; color: #15192b; }
+.dw-table tbody tr:nth-child(even) td { background: #f6f9ff; }
+.dw-table .dw-key { font-family: monospace; font-weight: 800; color: #F8006A; white-space: nowrap; }
+.dw-table .dw-date { white-space: nowrap; }
+.dw-table .dw-obs { color: #5a6a7a; }
+.dw-status {
+  display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 10px; font-weight: 700;
+  white-space: nowrap; background: #eef1f6; color: #5a6a7a;
+}
+.dw-status.dw-st-nao-iniciada { background: #eef1f6; color: #5a6a7a; }
+.dw-status.dw-st-andamento { background: #fff4e0; color: #b45309; }
+.dw-status.dw-st-concluida { background: #eefbf3; color: #16a34a; }
+.dw-status.dw-st-bloqueada { background: #fef2f2; color: #dc2626; }
+.dw-status.dw-st-recorrente { background: #eef2ff; color: #122454; }
+
+/* Pilula do responsavel (assignee), totalmente arredondada (999px) igual
+   ao resto das pilulas/badges do relatorio. */
+.owner-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #eef2ff; color: #122454; border: 1px solid #c7d2f0;
+  font-size: 10.5px; font-weight: 700; padding: 2px 10px 2px 4px; border-radius: 999px;
+}
+.owner-avatar {
+  width: 16px; height: 16px; border-radius: 50%; background: #122454; color: #fff;
+  font-size: 8.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+/* Pilula do responsavel: editavel pelo dono (redireciona a demanda no
+   relatorio - ex.: para o cliente - sem alterar nada no Jira). */
+.owner-pill-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.owner-pill-empty { background: #f3f4f6; color: #9aa5b1; border-style: dashed; font-weight: 600; }
+.btn-edit-responsavel {
+  background: none; border: none; cursor: pointer; color: #122454;
+  font-size: 11px; padding: 0 2px; opacity: 0.55; vertical-align: middle;
+}
+.btn-edit-responsavel:hover { opacity: 1; }
+.resp-edit-form { display: inline-flex; align-items: center; gap: 6px; }
+.resp-input {
+  padding: 3px 8px; border: 1px solid #dbe3f0; border-radius: 4px;
+  font-family: inherit; font-size: 11.5px; min-width: 150px;
+}
+.btn-resp-confirm {
+  padding: 3px 10px; background: #122454; color: #fff;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 11px;
+}
+.btn-resp-cancel {
+  padding: 3px 10px; background: #eee; color: #333;
+  border: none; border-radius: 4px; cursor: pointer; font-size: 11px;
+}
+/* Some so na impressao/exportacao PROPRIA do Resumo Gerencial (a aba
+   separada aberta pelo botao de exportar) - nunca aparece em nenhum PDF. */
+@media print { .rg-only-screen { display: none !important; } }
+
+/* Link "Ver Resumo Gerencial" no relatorio semanal - abre a pagina separada
+   numa aba nova. */
+.print-bar a.btn-view-rg {
+  padding: 5px 14px; background: #122454; color: #fff; border: none;
+  border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;
+  text-decoration: none; margin-right: auto;
+}
+.print-bar a.btn-view-rg:hover { background: #0d1b3f; }
+
+/* Seletor de semana (arquivo semanal) - escondido ate initWeekNav() achar
+   alguma semana. */
+.week-nav {
+  display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 16px; background: #fff; border-bottom: 1px solid #dbe3f0; font-size: 12px;
+}
+.week-nav label { font-weight: 700; color: #122454; }
+.week-nav select {
+  padding: 4px 8px; border: 1px solid #c7d2f0; border-radius: 4px; font-size: 12px;
+  color: #122454; background: #f6f9ff; font-family: inherit;
+}
+.week-nav .week-nav-archived {
+  background: #fff4e0; color: #b45309; border: 1px solid #f3d98f; border-radius: 999px;
+  padding: 2px 10px; font-weight: 700; font-size: 11px;
+}
+.week-nav a.week-nav-latest { color: #F8006A; font-weight: 700; text-decoration: none; }
+.week-nav a.week-nav-latest:hover { text-decoration: underline; }
+
+/* Comparativo com a semana anterior */
+.week-compare-card { margin-bottom: 16px; }
+.wc-ref { font-size: 11.5px; color: #5a6a7a; margin: 4px 0 12px; }
+.wc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.wc-tile { background: #fff; border: 1px solid #dbe3f0; border-left: 4px solid #122454; border-radius: 8px; padding: 10px 12px; }
+.wc-value { font-size: 22px; font-weight: 900; color: #15192b; line-height: 1; }
+.wc-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #5a6a7a; margin: 5px 0 6px; line-height: 1.3; }
+.wc-delta { display: inline-block; font-size: 11px; font-weight: 800; padding: 1px 8px; border-radius: 999px; margin-right: 6px; }
+.wc-delta.wc-good { background: #eefbf3; color: #16a34a; }
+.wc-delta.wc-bad { background: #fef2f2; color: #dc2626; }
+.wc-delta.wc-neutral { background: #eef1f6; color: #5a6a7a; }
+.wc-prev { font-size: 10.5px; color: #8893a8; }
+</style>
+</head>
+<body>
+
+<!-- Botao de impressao visivel pra todo mundo, e o link pra abrir o Resumo
+     Gerencial (pagina separada) numa aba nova. O relatorio roda dentro do
+     iframe sandbox do Apps Script (*.googleusercontent.com), que tem altura
+     fixa igual a da tela visivel - window.print() direto so imprime o que
+     coube dentro dessa caixa fixa, cortando o resto do documento. A solucao
+     e abrir o HTML inteiro numa aba nova via Blob (fora do iframe do Google,
+     sem limite de altura nenhum) e imprimir a partir de la. -->
+<div class="print-bar no-print">
+  <a class="btn-view-rg" href="resumo-gerencial/" target="_blank" rel="noopener">📊 Ver Resumo Gerencial</a>
+  <button id="btn-print">Imprimir / Exportar PDF</button>
+</div>
+
+<!-- Seletor de semana (arquivo semanal) - montado no cliente por initWeekNav(). -->
+<div class="week-nav no-print" id="week-nav"></div>
+
+<!-- Barra de atualizacao manual do Jira - so aparece para o dono (IS_OWNER),
+     nunca impressa. A checagem real de permissao e sempre no servidor. -->
+<div class="owner-bar no-print" id="owner-bar">
+  <button id="btn-refresh-jira">Atualizar dados do Jira</button>
+  <span class="owner-bar-status" id="owner-bar-status"></span>
+</div>
+
+<!-- CAPA -->
+<div class="cover page-break">
+  <div class="cover-logos">
+    <img src="data:image/png;base64,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" class="logo-digiage" alt="Digiage">
+    <div class="cover-logos-divider"></div>
+    <img src="data:image/png;base64,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" class="logo-necta" alt="NECTA">
+  </div>
+  <h1>REPORT SEMANAL</h1>
+  <h2>[DGGNCT002] Squad Dados &nbsp;·&nbsp; NECTA</h2>
+  <div class="date-badge">Semana de referência: 12/10/2026 a 16/10/2026</div>
+  <div class="last-updated">Dados do Jira atualizados em: 20/10/2026 às 16:55</div>
+</div>
+
+<!-- COMPARATIVO COM A SEMANA ANTERIOR (ver WeeklyArchive.gs) -->
+<div class="section section-week-compare">
+  <div class="section-title">Comparativo com a Semana Anterior</div>
+<div class="wc-ref">Comparado com: <strong>registro de 09/10/2026</strong></div><div class="wc-grid"><div class="wc-tile"><div class="wc-value">62%</div><div class="wc-label">Progresso Geral</div><span class="wc-delta wc-neutral">= 0%</span><span class="wc-prev">antes: 62%</span></div><div class="wc-tile"><div class="wc-value">107</div><div class="wc-label">Subtarefas Concluídas</div><span class="wc-delta wc-good">▲ +1</span><span class="wc-prev">antes: 106</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Entregas na Semana</div><span class="wc-delta wc-neutral">= 0</span><span class="wc-prev">antes: 0</span></div><div class="wc-tile"><div class="wc-value">4</div><div class="wc-label">Aguardando Cliente</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">7</div><div class="wc-label">Em Validação pelo Cliente</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">1</div><div class="wc-label">Novas Demandas</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Itens Atrasados</div><span class="wc-delta wc-neutral">sem dado anterior</span></div><div class="wc-tile"><div class="wc-value">8h</div><div class="wc-label">Horas em Aberto</div><span class="wc-delta wc-neutral">sem dado anterior</span></div></div>
+</div>
+
+<!-- SEÇÃO 2: STATUS DAS TAREFAS -->
+<div class="section section-status">
+  <div class="section-title">Status das Tarefas</div>
+<div class="kanban-board">
+  <div class="kanban-col">
+    <div class="kanban-col-head" style="border-top-color:#9e9e9e"><div class="kanban-col-title">EM BACKLOG</div><div class="kanban-col-count">29 subtasks</div></div>
+    <div class="kanban-cards">
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Dashboard - Operações</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-242 — [Operações] Mudanças de escopo no campo de TAE </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Dados - Estratégia</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-41 — Normalização - dados endereço</li><li>NDAV-42 — Disponibilização de dados normalizados</li><li>NDAV-51 — Documentação Funcional</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-216 — Adição do Centro de Custo (Dashboard)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Manutenção</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-69 — Mapeamento de Regras de Negócio</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-241 — Danos - Criação do campo de Quantidade de solicitações de  cadastro de rede. (controle de acesso de terceiros na plataforma GIS) </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-144 — Disponilização de Fontes de Dados (Blob)</li><li>NDAV-145 — Publicação do Painel</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Validaçao de Cadastro</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-142 — Publicação do Painel </li><li>NDAV-143 — Disponibilização de fontes de Dados no Blob</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-168 — Validar dashboard e coletar sugestões de melhoria</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">CONECTIVIDADE GIS </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-201 — Ambiente de PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">CONECTIVIDADE LAKE X XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-202 — Configuração Lake x XCONN - PRD</li><li>NDAV-203 — Acessos ao Banco - PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Vinculaçao de Fontes de Dados - Modelo BI</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-146 — Publicação do Painel</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Integração Salesforce + Metric Views</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-153 — Definir quais métricas do Salesforce serão expostas nas Metric Views</li><li>NDAV-154 — Gerar tópicos - visão executiva</li><li>NDAV-155 — Revisar e validar conteúdo gerado antes da apresentação</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Federação com Base XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-165 — Criar métricas iniciais sobre a base XCONN</li><li>NDAV-208 — Habilitar federação Databricks ↔ sql server/XCONN (prd)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a><span class="kanban-card-count-print">[4]</span><div class="kanban-card-name">Comunicação Interna — Pílulas de Conhecimento</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-177 — Estruturar comunicação interna sobre jornada de dados</li><li>NDAV-178 — Alinhar formato e periodicidade </li><li>NDAV-179 — Criar 1ª edição da pílula de conhecimento Databricks</li><li>NDAV-180 — Publicar e avaliar engajamento da 1ª edição</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Criação de domínio &quot;C-Level&quot;</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-188 — Inclusão de dashboard com visão de consumo dos clientes industriais de alto consumo em d-1.</li><li>NDAV-189 — Homologação </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">CONECTIVIDADE GLPI </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-206 — Configuração GLPI - PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Programa de Descontos Necta (Atendimento/Marketing)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-212 — Follow-up para obter essas regras antes de fechar o mapeamento.</li></ul></div></div>
+    </div>
+  </div>
+  <div class="kanban-col">
+    <div class="kanban-col-head" style="border-top-color:#f59e0b"><div class="kanban-col-title">EM PROGRESSO</div><div class="kanban-col-count">32 subtasks</div></div>
+    <div class="kanban-cards">
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Dashboard - Operações</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-231 — Ingestão de dados manuais (PMRUN)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count-print">[4]</span><div class="kanban-card-name">Dados - Estratégia</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-40 — Análise de dados endereço</li><li>NDAV-50 — Refinamento de Requisitos</li><li>NDAV-95 — Reunião de Alinhamento : Especificação Funcional/Técnica</li><li>NDAV-240 — [DASH][Estratégia] - Adição de campos e regras </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Manutenção</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-70 — Investigação de Fontes de Dados</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count-print">[6]</span><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-99 — KPIs - Pressão de Saída</li><li>NDAV-100 — KPIs - Danos  e Ocorrencia de Danos</li><li>NDAV-236 — Homologação do Painel - Aba Qualidade do Gás</li><li>NDAV-237 — Homologação do Painel - Aba Pressão de Saída</li><li>NDAV-238 — Homologação do Painel - Aba Danos</li><li>NDAV-239 — Homologação do Painel - Aba Ocorrência de Danos</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-140 — Atualização da origem de dados</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Validaçao de Cadastro</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-141 — Atualização de Origem de Fontes (Blob)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[Ingestão de tabelas] - SAP x Databricks</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-223 — Ingestão das Tabelas - Transação SAP em PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count-print">[9]</span><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-116 — Refinamento e Levantammento das Regras de Negócio</li><li>NDAV-117 — Emergência - Vazamento de gas</li><li>NDAV-118 — Emergência - Falta de Gas</li><li>NDAV-119 — Corte Devido - Religação 4Hs</li><li>NDAV-120 — Corte Devido - Religação 1DU</li><li>NDAV-121 — Corte Devido - Religação Insegurança</li><li>NDAV-122 — Corte Devido - Religação Bloqueio Temp.</li><li>NDAV-123 — Corte Indevido - Religação</li><li>+ 1 outra</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-127" target="_blank">NDAV-127</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Task - Atividades IICS</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-128 — Criacao e ajustes de jobs no IICS</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Vinculaçao de Fontes de Dados - Modelo BI</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-130 — Validaçao de Cadastro </li><li>NDAV-131 — Projeto - Dashboard de Atendimento  (PBI)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Integração Salesforce + Metric Views</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-151 — Validar leitura dos dados do Salesforce no Databricks</li><li>NDAV-152 — Criar tópicos/métricas nas Metric Views (IA) </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-186 — Deploy em DEV</li><li>NDAV-198 — Validação Time de Atendimento Necta</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Programa de Descontos Necta (Atendimento/Marketing)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-211 — Investigação de Fonte de Dados (ZSDZU21 | ZCONTRATOS2)</li></ul></div></div>
+    </div>
+  </div>
+  <div class="kanban-col">
+    <div class="kanban-col-head" style="border-top-color:#f97316"><div class="kanban-col-title">EM REVISÃO</div><div class="kanban-col-count">4 subtasks</div></div>
+    <div class="kanban-cards">
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-65 — Mapeamento de Regras de Negócio</li><li>NDAV-66 — Investigação de Fontes de Dados</li><li>NDAV-209 — Criação do Painel de Gestão de Contratos (Dashboard) </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-219 — Criação do campo de média (API GIS)</li></ul></div></div>
+    </div>
+  </div>
+  <div class="kanban-col">
+    <div class="kanban-col-head" style="border-top-color:#8b5cf6"><div class="kanban-col-title">EM TESTES</div><div class="kanban-col-count">0 subtasks</div></div>
+    <div class="kanban-cards">
+      <div class="kanban-empty">—</div>
+    </div>
+  </div>
+  <div class="kanban-col">
+    <div class="kanban-col-head" style="border-top-color:#22c55e"><div class="kanban-col-title">CONCLUÍDO</div><div class="kanban-col-count">107 subtasks</div></div>
+    <div class="kanban-cards">
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="kanban-card-count-print">[16]</span><div class="kanban-card-name">[DASH] Dashboard - Operações</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-37 — Investigação de Fontes de Dados</li><li>NDAV-38 — Extração das informações do SAP pelo Informatica Cloud</li><li>NDAV-39 — Desenvolvimento do Dashboard</li><li>NDAV-48 — Refinamento de Requisitos </li><li>NDAV-49 — Documentação Funcional/Técnica</li><li>NDAV-89 — [CR-DASH-OPS-001] Inclusão do Indicador de Religação 4h no Dashboard de Operações</li><li>NDAV-90 — [CR-DASH-OPS-001] Investigação de Fonte de Dados</li><li>NDAV-91 — [CR-DASH-OPS-001] Implementação da Lógica de Cálculo de SLA</li><li>+ 8 outras</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="kanban-card-count-print">[5]</span><div class="kanban-card-name">Dados - Estratégia</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-175 — Elaboração de Plano de trabalho — (Estratégia / Visão Analítica) </li><li>NDAV-225 — Entendimento da base e demanda</li><li>NDAV-229 — [SAP -&gt; Databricks] Ingestão de tabelas necessárias. (Estratégia)</li><li>NDAV-230 — Criação de KPIs no Dashboard  - Estratégia</li><li>NDAV-243 — [DASH][Estratégia] - Ingestão de Excel para tabela no Databricks</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a><span class="kanban-card-count-print">[5]</span><div class="kanban-card-name">Pipeline de Medição e Volume - Medição</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-43 — Ingestao  de Fontes do XCONN</li><li>NDAV-44 — Processo para validação de medição</li><li>NDAV-45 — Desenvolvimento de painel para validação de medição</li><li>NDAV-47 — Refinamento de Requisitos</li><li>NDAV-52 — Documentação Funcional</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Projeto de Integração Fiscal</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-32 — Investigação do problema de integração</li><li>NDAV-33 — Validaçao</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-31" target="_blank">NDAV-31</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Projeto RH – Desligamentos</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-34 — Desenvolvimento </li><li>NDAV-35 — Homologaçao - Necta</li><li>NDAV-36 — Deploy</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a><span class="kanban-card-count-print">[11]</span><div class="kanban-card-name">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-55 — Mapeamento de Fontes</li><li>NDAV-56 — Criação de Queries/ETL</li><li>NDAV-57 — Cálculo de Medidas (DAX)</li><li>NDAV-58 — [DASH] Desenvolvimento da Aba: Turnover</li><li>NDAV-59 — [DASH] Desenvolvimento da Aba: Diversidade</li><li>NDAV-60 — [DASH] Desenvolvimento da Aba: Horas Extras</li><li>NDAV-61 — [DASH] Desenvolvimento da Aba: Banco de Horas</li><li>NDAV-62 — Adequação de Layout do BI</li><li>+ 3 outras</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Gestão de Contratos | Frotas</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-64 — Kick-off e Definição de KPIs </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH] Projeto - Manutenção</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-68 — Kick-off e Definição de KPIs </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="kanban-card-count-print">[10]</span><div class="kanban-card-name">[DASH] Projeto - Painel ARSESP</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-82 — Refinamento - Levantamento de Requisitos</li><li>NDAV-83 — Investigação das Fontes de Dados</li><li>NDAV-84 — Criação de nova página para inclusão e visualização dos indicadores TAE</li><li>NDAV-96 — Reuniões com os OWNERs de cada KPI </li><li>NDAV-97 — KPIs - Emergências</li><li>NDAV-98 — KPIs - Qualidade do Gás</li><li>NDAV-136 — Ingestão de Fonte de Dados ZSDT023 - Clientes Ligados</li><li>NDAV-137 — Ingestão de Fonte de Dados ZSDT008 - PCS</li><li>+ 2 outras</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a><span class="kanban-card-count-print">[8]</span><div class="kanban-card-name">[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-76 — Homologação e Deploy aba:  Interjornada</li><li>NDAV-77 — Homologação e Deploy aba: HEADCOUNT</li><li>NDAV-78 — Homologação e Deploy aba : Atração e Seleção</li><li>NDAV-79 — Criação de Queries/ETL</li><li>NDAV-80 — Cálculo de Medidas (DAX)</li><li>NDAV-81 — Adequação de Layout do BI</li><li>NDAV-101 — Desenvolvimento e Entrega para Homologação do Cliente</li><li>NDAV-102 — Documentação Funcional/Técnica</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="kanban-card-count-print">[4]</span><div class="kanban-card-name">[DASH] Projeto - Atendimento (PBI)</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-86 — Kick-off e Definição de KPIs </li><li>NDAV-87 — Mapeamento de Regras de Negócio</li><li>NDAV-88 — Investigação de Fontes de Dados</li><li>NDAV-109 — Engenharia Reversa do Painel</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Validaçao de Cadastro</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-107 — Engenharia Reversa do Painel</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[Ingestão de tabelas] - SAP x Databricks</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-222 — Ingestão das Tabelas - Transação SAP em DEV</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Task - Subida do job XConn IICS para PRD</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-113 — Deploy PRD</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">[DASH] Painel de SLAs de Atendimento e Encerramento</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-166 — Agendar reunião de levantamento de necessidades com Marina Oliveira</li><li>NDAV-167 — Liberar acesso ao dashboard de atendimento</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">CONECTIVIDADE GIS </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-200 — Ambiente de DEV </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">CONECTIVIDADE LAKE X XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-193 — Configuração Lake x XCONN - DEV</li><li>NDAV-194 — Acessos ao Banco - DEV</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Datalake Arquitetura</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-133 — Processo de Governança de LGPD</li><li>NDAV-134 — Processo de Ingestão refactor (raw)</li><li>NDAV-135 — Criação de Sandbox em ambiente produtivo (areas: mediçcao, operações e estrategia)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">Refactor Jobs Informática Cloud</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-139 — Implementação de parâmetros in-out para controle de datas de execução </li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Integração Salesforce + Metric Views</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-148 — Habilitar conexão Databricks ↔ Salesforce</li><li>NDAV-149 — criar usuário somente leitura no Salesforce</li><li>NDAV-150 — Configurar conexão no Databricks após credenciais disponíveis</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">App Mobile Databricks</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-157 — Verificar configuração necessária no account Databricks</li><li>NDAV-158 — Executar habilitação do app mobile</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a><span class="kanban-card-count-print">[5]</span><div class="kanban-card-name">Federação com Base XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-161 — Habilitar federação Databricks ↔ Postgres/XCONN</li><li>NDAV-162 — Verificar viabilidade técnica da federação com XCONN</li><li>NDAV-163 — Obter credenciais/acesso ao Postgres</li><li>NDAV-164 — Configurar federação e validar conectividade</li><li>NDAV-207 — Habilitar federação Databricks ↔ sql server/XCONN (dev)</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a><span class="kanban-card-count-print">[4]</span><div class="kanban-card-name">Medição : Mapeamento de Cenários de Inconsistência</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-171 — Alinhar agenda com Walter para início de julho</li><li>NDAV-172 — Mapear e Criar 1º cenário de inconsistência no Databricks</li><li>NDAV-173 — Validação cenário vs. processo manual atual</li><li>NDAV-174 — Iterar: adicionar novos cenários a cada validação</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-183 — Criação de Volume Docs</li><li>NDAV-184 — Pipeline Processamento Docs</li><li>NDAV-185 — Criação Genie - Consultar documentos</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">Refactor Dashboard - Pessoas &amp; Cultura </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-191 — Restruração do tratamento de dados dos Dashboards - Pessoas &amp; Cultura </li><li>NDAV-192 — Reafactor das Métricas de Calculo : Dashboard - Pessoas &amp; Cultura </li><li>NDAV-221 — Homologação de Entrega a Equipe de P&amp;C</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Dados Medição - XCONN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-196 — Extração dados medição - XCONN</li><li>NDAV-197 — Ingestão dados medição datalake - XCONN</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">CONECTIVIDADE GLPI </div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-205 — Configuração GLPI - DEV</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a><span class="kanban-card-count-print">[2]</span><div class="kanban-card-name">Ingestão de Planilha de Dados - PM RUN</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-215 — Criação dos indicadores pendentes no Painel de Operações</li><li>NDAV-218 — Mudança de script para Leitura da PMRUN</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="kanban-card-count-print">[3]</span><div class="kanban-card-name">[DASH] Medição</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-233 — [Medição] - Ingestão da tabela ZSDT011</li><li>NDAV-234 — [Medição] - Ajustes de campos no Dashboard com regras levantadas</li><li>NDAV-235 — [Medição] - Ajustes de campos no Dashboard após reunião</li></ul></div></div>
+      <div class="kanban-card" tabindex="0"><a class="jira-link kanban-card-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="kanban-card-count-print">[1]</span><div class="kanban-card-name">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip"><ul><li>NDAV-247 — Criação de Dashboard e ambiente</li></ul></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- SEÇÃO 3: ATIVIDADES DA SEMANA -->
+<div class="section section-priority">
+  <div class="section-title">Atividades da Semana (12/10–16/10)</div>
+  <div class="activity-list">
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a><span class="activity-summary">Dados - Estratégia</span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="activity-summary">[DASH] Projeto - Painel ARSESP</span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a><span class="activity-summary">[Ingestão de tabelas] - SAP x Databricks</span><span class="activity-badge">História concluída</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="activity-summary">[DASH] Medição</span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-testes"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="activity-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="activity-badge">EM TESTES</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-246" target="_blank">NDAV-246</a><span class="activity-summary">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-248" target="_blank">NDAV-248</a><span class="activity-summary">[TABELAS] Ingestão SAP x DATABRICKS</span><span class="activity-badge">EM DESENVOLVIMENTO</span></div>
+    <div class="activity-row st-progresso"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-240" target="_blank">NDAV-240</a><span class="activity-summary">[DASH][Estratégia] - Adição de campos e regras </span><span class="activity-parent">NDAV-28 · Dados - Estratégia</span><span class="activity-badge">EM PROGRESSO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-243" target="_blank">NDAV-243</a><span class="activity-summary">[DASH][Estratégia] - Ingestão de Excel para tabela no Databricks</span><span class="activity-parent">NDAV-28 · Dados - Estratégia</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-241" target="_blank">NDAV-241</a><span class="activity-summary">Danos - Criação do campo de Quantidade de solicitações de  cadastro de rede. (controle de acesso de terceiros na plataforma GIS) </span><span class="activity-parent">NDAV-71 · [DASH] Projeto - Painel ARSESP</span><span class="activity-badge">EM BACKLOG</span></div>
+    <div class="activity-row st-backlog"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-242" target="_blank">NDAV-242</a><span class="activity-summary">[Operações] Mudanças de escopo no campo de TAE </span><span class="activity-parent">NDAV-26 · [DASH] Dashboard - Operações</span><span class="activity-badge">EM BACKLOG</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-229" target="_blank">NDAV-229</a><span class="activity-summary">[SAP -&gt; Databricks] Ingestão de tabelas necessárias. (Estratégia)</span><span class="activity-parent">NDAV-28 · Dados - Estratégia</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-230" target="_blank">NDAV-230</a><span class="activity-summary">Criação de KPIs no Dashboard  - Estratégia</span><span class="activity-parent">NDAV-28 · Dados - Estratégia</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-199" target="_blank">NDAV-199</a><span class="activity-summary">Homologação do Painel - Aba Emergência</span><span class="activity-parent">NDAV-71 · [DASH] Projeto - Painel ARSESP</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-progresso"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-231" target="_blank">NDAV-231</a><span class="activity-summary">Ingestão de dados manuais (PMRUN)</span><span class="activity-parent">NDAV-26 · [DASH] Dashboard - Operações</span><span class="activity-badge">EM PROGRESSO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-235" target="_blank">NDAV-235</a><span class="activity-summary">[Medição] - Ajustes de campos no Dashboard após reunião</span><span class="activity-parent">NDAV-232 · [DASH] Medição</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-234" target="_blank">NDAV-234</a><span class="activity-summary">[Medição] - Ajustes de campos no Dashboard com regras levantadas</span><span class="activity-parent">NDAV-232 · [DASH] Medição</span><span class="activity-badge">CONCLUÍDO</span></div>
+    <div class="activity-row st-concluido"><a class="jira-link activity-key" href="https://digiage.atlassian.net/browse/NDAV-233" target="_blank">NDAV-233</a><span class="activity-summary">[Medição] - Ingestão da tabela ZSDT011</span><span class="activity-parent">NDAV-232 · [DASH] Medição</span><span class="activity-badge">CONCLUÍDO</span></div>
+  </div>
+</div>
+
+<!-- SEÇÃO 4: BIG NUMBERS -->
+<div class="section section-bignumbers">
+  <div class="section-title">Indicadores do Projeto</div>
+
+  <div class="bn-columns">
+    <div class="bn-subsection">
+      <div class="subsection-title">Indicadores de Entrega</div>
+      <div class="tile-grid">
+        <div class="tile pink"><div class="tile-value">18</div><div class="tile-label">Fontes de Dados Produtivos Disponíveis</div></div>
+        <div class="tile pink"><div class="tile-value">23</div><div class="tile-label">Dashboards Totais Entregues</div></div>
+        <div class="tile pink"><div class="tile-value">12</div><div class="tile-label">Dashboards em Produção</div></div>
+        <div class="tile pink"><div class="tile-value">6</div><div class="tile-label">Dashboards em Validação</div></div>
+        <div class="tile pink"><div class="tile-value">14</div><div class="tile-label">Projetos Finalizados</div></div>
+        <div class="tile pink"><div class="tile-value">0</div><div class="tile-label">Projetos Rework</div></div>
+      </div>
+    </div>
+
+    <div class="bn-subsection">
+      <div class="subsection-title">Cerimônias e Alinhamentos</div>
+      <div class="tile-grid">
+        <div class="tile salmon"><div class="tile-value">117</div><div class="tile-label">Dailys Realizadas</div></div>
+        <div class="tile salmon"><div class="tile-value">32</div><div class="tile-label">Cadências Semanais</div></div>
+        <div class="tile salmon"><div class="tile-value">11</div><div class="tile-label">Alinhamentos ARSESP</div></div>
+      </div>
+    </div>
+
+    <div class="bn-subsection">
+      <div class="subsection-title">Documentação</div>
+      <div class="tile-grid">
+        <div class="tile navy"><div class="tile-value">16</div><div class="tile-label">Atas de Reunião</div></div>
+        <div class="tile navy"><div class="tile-value">20</div><div class="tile-label">Documentação Funcional/Técnica</div></div>
+        <div class="tile navy"><div class="tile-value">12</div><div class="tile-label">Planilhas / Detalhamentos</div></div>
+        <div class="tile navy"><div class="tile-value">8</div><div class="tile-label">Documentos Complementares</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEÇÃO 5: ÁREAS BENEFICIADAS PELAS ENTREGAS -->
+<div class="section section-areas">
+  <div class="section-title">Áreas Beneficiadas pelas Entregas</div>
+<div class="bar-list">  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">OPERAÇÕES</span> · <span class="bar-row-dash">Dash de Operações</span></div><div class="bar-row-value">18</div></div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 46.2% do total impactado · 14.5% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">SUPRIMENTOS E FACILITIES</span> · <span class="bar-row-dash">Gestão de Contratos</span></div><div class="bar-row-value">9</div></div><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">1 painéis · 23.1% do total impactado · 7.3% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIRETORIA-PRESIDÊNCIA</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">7</div></div><div class="bar-track"><div class="bar-fill" style="width:39%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">PESSOAS E CULTURA</span> · <span class="bar-row-dash">Pessoas &amp; Cultura (Partes 1 e 2)</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">7 painéis · 12.8% do total impactado · 4.0% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIR-FINANCEIRA</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">ESTRATÉGIA</span> · <span class="bar-row-dash">Painel Estratégia
+</span></div><div class="bar-row-value">5</div></div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">10 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">MARKETING</span> · <span class="bar-row-dash">Painel Atendimento</span></div><div class="bar-row-value">4</div></div><div class="bar-track"><div class="bar-fill" style="width:22%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">REGULATÓRIO</span> · <span class="bar-row-dash">Painel ARSESP</span></div><div class="bar-row-value">3</div></div><div class="bar-track"><div class="bar-fill" style="width:17%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">5 painéis · 10.3% do total impactado · 3.2% da empresa</div></div>
+  <div class="bar-row" tabindex="0"><div class="bar-row-top"><div><span class="bar-row-area">DIRETORIA DE ASSUNTOS REGULATÓRIOS</span> · <span class="bar-row-dash">Painel Estratégia Diretoria</span></div><div class="bar-row-value">1</div></div><div class="bar-track"><div class="bar-fill" style="width:6%"></div></div><span class="info-dot no-print" tabindex="0">i</span><div class="info-tooltip">3 painéis · 10.3% do total impactado · 3.2% da empresa</div></div></div>
+<div class="kpi-grid-small"><div class="tile green"><div class="tile-value">57</div><div class="tile-label">Colaboradores Beneficiados</div></div><div class="tile salmon"><div class="tile-value">67</div><div class="tile-label">Ainda Não Beneficiados</div></div><div class="tile green"><div class="tile-value">9</div><div class="tile-label">Áreas Beneficiadas</div></div><div class="tile salmon"><div class="tile-value">17</div><div class="tile-label">Áreas Ainda Não Beneficiadas</div></div></div>
+<div class="progress-item" style="max-width:620px;margin-top:16px"><div class="progress-header"><div class="progress-label">Colaboradores da empresa (124) já beneficiados por alguma entrega</div><div class="progress-meta" style="color:#22c55e"><strong>46%</strong></div></div><div class="progress-bar-track"><div class="progress-bar-fill" style="width:46%;background:#22c55e"></div></div></div>
+</div>
+
+<!-- SEÇÃO 6: ALTERAÇÃO DE ESCOPO E NOVAS DEMANDAS -->
+<div class="section section-changes">
+  <div class="section-title">Alteração de Escopo e Novas Demandas</div>
+  <p style="font-size:10px;color:#5a6a7a;margin-bottom:16px;">
+    Itens criados após: <strong>12/10/2026</strong> (último report de quarta-feira)
+  </p>
+
+  <div class="subsection-title">Alteração de Escopo (Change Request)</div>
+  <p class="no-items">Nenhum item identificado neste período.</p>
+
+  <div class="subsection-title">Novas Demandas</div>
+  <details class="expand-card navy">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="expand-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="expand-badge">1 novo item · EM TESTES</span></summary>
+    <div class="expand-body">
+      <div class="expand-subitem" data-key="NDAV-247" data-comments='[]'>
+        <div class="expand-subitem-title"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-247" target="_blank">NDAV-247</a> Criação de Dashboard e ambiente <span class="badge" style="background:#22c55e">CONCLUÍDO</span></div>
+        <div class="editable-comments"></div>
+      </div>
+    </div>
+  </details>
+  <details class="expand-card navy">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-244" target="_blank">NDAV-244</a><span class="expand-summary">[DASH][Estratégia][Diretoria] - Criação do Dashboard de Estratégia para a Diretoria</span><span class="expand-badge">0 novos itens · EM DESENVOLVIMENTO</span></summary>
+    <div class="expand-body">
+    </div>
+  </details>
+</div>
+
+<!-- SEÇÃO 7: PAINEL DE IMPEDIMENTOS -->
+<div class="section section-impediments">
+  <div class="section-title">Painel de Impedimentos e Riscos de Entrega</div>
+
+  <div class="subsection-title">Aguardando Cliente</div>
+  <details class="expand-card pink" data-key="NDAV-85" data-comments='[{"source":"manual","body":"Acessos concedidos ao analista Jeysson em 09/10 - para 09/10 para inicio da estimativa."},{"source":"manual","body":"Foram solictadas informações referentes a estrutura dos dados para O Lucas , de forma que o Jeysson possa finalizar a estimativa - aguardando retorno."}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a><span class="expand-summary">[DASH] Projeto - Atendimento (PBI)</span><span class="expand-days">126 dias neste status</span><span class="expand-resp">👤 Jeysson Armas</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card pink" data-key="NDAV-124" data-comments='[{"body":"Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="expand-summary">CONECTIVIDADE GIS </span><span class="expand-days">82 dias neste status</span><span class="expand-resp">👤 Gilson</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card pink" data-key="NDAV-125" data-comments='[{"source":"manual","body":"Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="expand-summary">CONECTIVIDADE LAKE X XCONN</span><span class="expand-days">82 dias neste status</span><span class="expand-resp">👤 Gilson</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card pink" data-key="NDAV-147" data-comments='[{"source":"manual","body":"Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="expand-summary">Integração Salesforce + Metric Views</span><span class="expand-days">82 dias neste status</span><span class="expand-resp">👤 Andre Yamada</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+
+  <div class="subsection-divider"></div>
+  <div class="subsection-title">Em Validação pelo Cliente</div>
+  <details class="expand-card navy" data-key="NDAV-54" data-comments='[{"body":"Pendente retorno do Time de Contratos para darmos sequencia a demanda","source":"manual"},{"body":"Os dados e fontes de dados estão sendo reavaliados pelo time de Gestão de Contratos","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a><span class="expand-summary">[DASH] Projeto - Gestão de Contratos | Frotas</span><span class="expand-days">75 dias neste status</span><span class="expand-resp">👤 Andre Yamada</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-71" data-comments='[{"body":"Para esta demanda, temos ainda as Pendencias listadas abaixo:","source":"manual"},{"body":"Indicador: Valor médio das medições de PCS nos City Gates no período selecionado, segmentado por município. (pcs que vem do laboratorio, como é imputado no sap, verificar de onde vem as informações relacinadas a segmentação por municipio)\n\nDETALHAMENTO: Valor médio das medições de PCS das Estações de Transferência e Custódia (ETC) no período, segmentado por município, levando em consideração os dados advindos dos equipamentos de campo conectados no sistema SCADA. Ressaltamos que esses dados são anteriores ao processo de validação da qualidade do gás, emitido pelo laboratório da Necta. Portanto, o dado será apresentado com essa informação em destaque.\n\nSISTEMA DE ORIGEM: SUPERVISÓRIO/XCONN\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Josemir | Douglas\n\nOBSERVAÇÕES: RESPOSTA DO JOSEMIR : A medida não está segmentada por município, somente por City Gate. Não tem fonte de dados em que esta informação esteja segmentada por municipio.\n\n------------------------------\n\nIndicador: Quantidade de solicitações de cadastro de rede. (controle de acesso de terceiros na plataforma GIS)\n\nDETALHAMENTO: Quantidade de solicitações de cadastro enviadas por terceiros para acesso a plataforma que direciona aos documentos de rede.\n\nSISTEMA DE ORIGEM: GIS* (Contador)\n\nSTATUS: PENDENTE\n\nRESPONSÁVEL | TIME: Leandro Zei\n\nOBSERVAÇÕES: RESPOSTA DO LEANDRO ZEI : Os acessos GIS são solicitados via GLPI, talvez essa seja a fonte atual para coletar esse dado\n \n------------------------------\nIndicador: Mapa com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Mapa da área de concessão com marcações sinalizando a localização e código identificador de cada Estações deTransferência e Custódia (ETC) da rede Necta.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Mapa Fluxo do estado de São Paulo cim PINS de Marcação do CITY GATE\n------------------------------\n\nIndicador: Tabela com visão da última medição de saída de gás de cada City Gate.\n\nDETALHAMENTO: Tabela contendo todas as Estações de Transferência e Custódia (ETC) da rede Necta identificados pelo código apresentado no mapa, assim como sua última medição de saída de gás.\n\nSISTEMA DE ORIGEM: (Vazio)\n\nSTATUS: EM ANÁLISE\n\nRESPONSÁVEL | TIME: Leando Zei e Douglas\n\nOBSERVAÇÕES: Pendencia Douglas: Tabela com texto informando o que o mapa representa.","source":"manual"},{"body":"Reunião com o Leandro Zei  (segunda-feira 14/09) , foi realizada, ele fez o envio das informações e tabelas , estamos do aguardo dos permissionamentos do GIS para automatizar o retorno das informações relacionadas ao controle de acessos.","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a><span class="expand-summary">[DASH] Projeto - Painel ARSESP</span><span class="expand-days">47 dias neste status</span><span class="expand-resp">👤 Alexandro Feltrin</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-115" data-comments='[{"body":"1. Reunião de Validação realizada em 24/09\n2. Documentação contendo todas as regras de calculo foi encaminhada para avaliação da Renata e Marina,  o objetivo deste documento é apoiar a validação do dashboard. Nele detalhamos como cada indicador é calculado, para que vocês possam conferir os números exibidos no painel com as regras do negócio e com os dados de origem.","source":"manual"},{"body":"Fizemos um alinhamento rápido, em (02/10) com a Marina e ela irá prosseguir com o refinamento e envio das regras de negocio e alterções no dash","source":"manual"},{"source":"manual","body":"Pendente Retorno por parte da equipe de Atendimento"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a><span class="expand-summary">[DASH] Painel de SLAs de Atendimento e Encerramento</span><span class="expand-days">105 dias neste status</span><span class="expand-resp">👤 Alexandro Feltrin</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-181" data-comments='[{"body":"Por hora esta demanda foi desppriorizada até revisão da documentação da área de callcenter","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a><span class="expand-summary">MVP - Dgitalização de Documentos Regulatórios - Busca Genie</span><span class="expand-days">68 dias neste status</span><span class="expand-resp">👤 Alexandro Feltrin</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-232" data-comments='[{"source":"manual","body":"Aguardando validação e retorno do Walter/Alex"},{"source":"manual","body":"Conversei com o Walter e ele me informou que a partir da quarta-feira da próxima semana (14/10) irá iniciar a validação e me dar um feedback"},{"source":"manual","body":"O Walter me informou que conseguirá me retornar somente a aprtir do dia 20/10"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a><span class="expand-summary">[DASH] Medição</span><span class="expand-days">19 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-245" data-comments='[]' data-hidden="true">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a><span class="expand-summary">[DASH][Controles Internos (Riscos)] - Criação do Dashboard</span><span class="expand-days">12 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card navy" data-key="NDAV-246" data-comments='[{"source":"manual","body":"A equipe está finalizando os ajustes, principalmente no mapa de calor, para deixá-lo mais interativo.\nVamos apresentar tudo na reunião (Agendada 20/10 as 15hs)\n✕"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-246" target="_blank">NDAV-246</a><span class="expand-summary">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="expand-days">7 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+
+  <div class="subsection-divider"></div>
+  <div class="subsection-title">Pontos de Atenção (Stand-By)</div>
+  <details class="expand-card salmon" data-key="NDAV-67" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a><span class="expand-summary">[DASH] Projeto - Manutenção</span><span class="expand-days">140 dias neste status</span><span class="expand-resp">👤 Andre Yamada</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card salmon" data-key="NDAV-105" data-comments='[{"body":"Aguardando Priorização | Definições","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a><span class="expand-summary">Validaçao de Cadastro</span><span class="expand-days">61 dias neste status</span><span class="expand-resp">👤 JEYSSON LEONCIO ZERPA ARMAS</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card salmon" data-key="NDAV-176" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a><span class="expand-summary">Comunicação Interna — Pílulas de Conhecimento</span><span class="expand-days">61 dias neste status</span><span class="expand-resp">👤 TATIANA DE OLIVEIRA PRADO</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card salmon" data-key="NDAV-187" data-comments='[{"source":"manual","body":"Aguardando Priorização | Definições"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a><span class="expand-summary">Criação de domínio &quot;C-Level&quot;</span><span class="expand-days">61 dias neste status</span><span class="expand-resp">👤 Alexandro Feltrin</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+  <details class="expand-card salmon" data-key="NDAV-210" data-comments='[{"body":"Pendente: indicação do responsável pelas regras de negócio e definições da demanda.","source":"manual"}]' data-hidden="false">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a><span class="expand-summary">Programa de Descontos Necta (Atendimento/Marketing)</span><span class="expand-days">61 dias neste status</span></summary>
+    <div class="expand-body">
+      <div class="impediment-comments editable-comments"></div>
+    </div>
+  </details>
+</div>
+
+<!-- SEÇÃO 8: PROGRESSO POR TAREFA -->
+<div class="section section-progress">
+  <div class="section-title">Progresso Geral das Tarefas</div>
+<div class="progress-list">
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-29" target="_blank">NDAV-29</a>Pipeline de Medição e Volume - Medição</div><div class="progress-card-meta">5&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-30" target="_blank">NDAV-30</a>Projeto de Integração Fiscal</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-31" target="_blank">NDAV-31</a>Projeto RH – Desligamentos</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-53" target="_blank">NDAV-53</a>[DASH] Dashboard - Pessoas &amp; Cultura - Parte 01</div><div class="progress-card-meta">11&thinsp;/&thinsp;11 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-75" target="_blank">NDAV-75</a>[DASH] Dashboard - Pessoas &amp; Cultura - Parte 02</div><div class="progress-card-meta">8&thinsp;/&thinsp;8 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-112" target="_blank">NDAV-112</a>Task - Subida do job XConn IICS para PRD</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-132" target="_blank">NDAV-132</a>Datalake Arquitetura</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-138" target="_blank">NDAV-138</a>Refactor Jobs Informática Cloud</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-156" target="_blank">NDAV-156</a>App Mobile Databricks</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-170" target="_blank">NDAV-170</a>Medição : Mapeamento de Cenários de Inconsistência</div><div class="progress-card-meta">4&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-190" target="_blank">NDAV-190</a>Refactor Dashboard - Pessoas &amp; Cultura </div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-195" target="_blank">NDAV-195</a>Dados Medição - XCONN</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-214" target="_blank">NDAV-214</a>Ingestão de Planilha de Dados - PM RUN</div><div class="progress-card-meta">2&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-232" target="_blank">NDAV-232</a>[DASH] Medição</div><div class="progress-card-meta">3&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-245" target="_blank">NDAV-245</a>[DASH][Controles Internos (Riscos)] - Criação do Dashboard</div><div class="progress-card-meta">1&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 100%</div></div><div class="progress-track"><div class="progress-fill" style="width:100%"></div></div></div>
+  <div class="progress-card tier-high"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a>[DASH] Dashboard - Operações</div><div class="progress-card-meta">16&thinsp;/&thinsp;18 conclu&iacute;das &nbsp;&middot;&nbsp; 89%</div></div><div class="progress-track"><div class="progress-fill" style="width:89%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-160" target="_blank">NDAV-160</a>Federação com Base XCONN</div><div class="progress-card-meta">5&thinsp;/&thinsp;7 conclu&iacute;das &nbsp;&middot;&nbsp; 71%</div></div><div class="progress-track"><div class="progress-fill" style="width:71%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-181" target="_blank">NDAV-181</a>MVP - Dgitalização de Documentos Regulatórios - Busca Genie</div><div class="progress-card-meta">3&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 60%</div></div><div class="progress-track"><div class="progress-fill" style="width:60%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-85" target="_blank">NDAV-85</a>[DASH] Projeto - Atendimento (PBI)</div><div class="progress-card-meta">4&thinsp;/&thinsp;7 conclu&iacute;das &nbsp;&middot;&nbsp; 57%</div></div><div class="progress-track"><div class="progress-fill" style="width:57%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-71" target="_blank">NDAV-71</a>[DASH] Projeto - Painel ARSESP</div><div class="progress-card-meta">10&thinsp;/&thinsp;18 conclu&iacute;das &nbsp;&middot;&nbsp; 56%</div></div><div class="progress-track"><div class="progress-fill" style="width:56%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-108" target="_blank">NDAV-108</a>[Ingestão de tabelas] - SAP x Databricks</div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a>CONECTIVIDADE GIS </div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a>CONECTIVIDADE LAKE X XCONN</div><div class="progress-card-meta">2&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-204" target="_blank">NDAV-204</a>CONECTIVIDADE GLPI </div><div class="progress-card-meta">1&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 50%</div></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+  <div class="progress-card tier-mid"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-28" target="_blank">NDAV-28</a>Dados - Estratégia</div><div class="progress-card-meta">5&thinsp;/&thinsp;12 conclu&iacute;das &nbsp;&middot;&nbsp; 42%</div></div><div class="progress-track"><div class="progress-fill" style="width:42%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a>Integração Salesforce + Metric Views</div><div class="progress-card-meta">3&thinsp;/&thinsp;8 conclu&iacute;das &nbsp;&middot;&nbsp; 38%</div></div><div class="progress-track"><div class="progress-fill" style="width:38%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-67" target="_blank">NDAV-67</a>[DASH] Projeto - Manutenção</div><div class="progress-card-meta">1&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 33%</div></div><div class="progress-track"><div class="progress-fill" style="width:33%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-105" target="_blank">NDAV-105</a>Validaçao de Cadastro</div><div class="progress-card-meta">1&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 25%</div></div><div class="progress-track"><div class="progress-fill" style="width:25%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-54" target="_blank">NDAV-54</a>[DASH] Projeto - Gestão de Contratos | Frotas</div><div class="progress-card-meta">1&thinsp;/&thinsp;5 conclu&iacute;das &nbsp;&middot;&nbsp; 20%</div></div><div class="progress-track"><div class="progress-fill" style="width:20%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-115" target="_blank">NDAV-115</a>[DASH] Painel de SLAs de Atendimento e Encerramento</div><div class="progress-card-meta">2&thinsp;/&thinsp;12 conclu&iacute;das &nbsp;&middot;&nbsp; 17%</div></div><div class="progress-track"><div class="progress-fill" style="width:17%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-127" target="_blank">NDAV-127</a>Task - Atividades IICS</div><div class="progress-card-meta">0&thinsp;/&thinsp;1 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-129" target="_blank">NDAV-129</a>Vinculaçao de Fontes de Dados - Modelo BI</div><div class="progress-card-meta">0&thinsp;/&thinsp;3 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-176" target="_blank">NDAV-176</a>Comunicação Interna — Pílulas de Conhecimento</div><div class="progress-card-meta">0&thinsp;/&thinsp;4 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-187" target="_blank">NDAV-187</a>Criação de domínio &quot;C-Level&quot;</div><div class="progress-card-meta">0&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+  <div class="progress-card tier-low"><div class="progress-card-top"><div class="progress-card-name"><a class="jira-link pkey" href="https://digiage.atlassian.net/browse/NDAV-210" target="_blank">NDAV-210</a>Programa de Descontos Necta (Atendimento/Marketing)</div><div class="progress-card-meta">0&thinsp;/&thinsp;2 conclu&iacute;das &nbsp;&middot;&nbsp; 0%</div></div><div class="progress-track"><div class="progress-fill" style="width:0%"></div></div></div>
+</div>
+<div class="progress-total"><div class="progress-total-label">Total Geral</div><div class="progress-total-track"><div class="progress-total-fill" style="width:62%"></div></div><div class="progress-total-value">107 / 172 concluídas &nbsp;·&nbsp; 62%</div></div>
+</div>
+
+<!-- SEÇÃO 9: PRODUTIVIDADE MENSAL (gerada apenas na última semana do mês; vazia nas demais) -->
+
+
+<script>
+(function() {
+  var IS_OWNER = false;
+  var IS_RG_PAGE = false;
+  // Trocado na hora de servir/publicar (applyWeekNav_ em WeeklyArchive.gs);
+  // se continuar string (ex.: copia aberta pelo botao de imprimir), o
+  // seletor de semana simplesmente nao aparece.
+  var WEEK_NAV = {"mode":"static","rootRel":"../../","current":"2026-10-12"};
+  var RG_CHECKLIST_COPY_PLAIN = "";
+  var RG_CHECKLIST_COPY_HTML = "";
+  var cardComments = {};
+  var hiddenKeys = {};
+  var responsavelByKey = {};
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtDate(d) {
+    if (!d) return '';
+    try { return d.substring(0,10).split('-').reverse().join('/'); } catch(e) { return d; }
+  }
+
+  function buildCommentEl(key, c, idx) {
+    var div = document.createElement('div');
+    div.className = 'cr-comment';
+    var inner = '';
+    if (c.author) {
+      inner += '<div class="cr-comment-meta">' + escHtml(c.author);
+      if (c.date) inner += ' &nbsp;&middot;&nbsp; ' + fmtDate(c.date);
+      inner += '</div>';
+    }
+    inner += '<div class="cr-comment-body">' + escHtml(c.body) + '</div>';
+    div.innerHTML = inner;
+    if (IS_OWNER) {
+      var btn = document.createElement('button');
+      btn.className = 'btn-remove no-print';
+      btn.title = 'Remover este comentário';
+      btn.innerHTML = '&#10005;';
+      btn.onclick = (function(k, i) { return function() { removeComment(k, i); }; })(key, idx);
+      div.appendChild(btn);
+    }
+    return div;
+  }
+
+  /** Uma mesma chave (Jira ou manual) pode aparecer em mais de um lugar na
+   * mesma pagina (ex.: dentro do Painel de Impedimentos) - atualiza todas as
+   * ocorrencias, nao so a primeira. */
+  function forEachCardWithKey(key, fn) {
+    document.querySelectorAll('[data-key="' + key + '"]').forEach(fn);
+  }
+
+  /** Mesma ideia de forEachCardWithKey, mas para o "slot" do responsavel
+   * (.owner-pill-wrap, identificado por data-resp-key) - NUNCA usar
+   * forEachCardWithKey aqui: ele seleciona o CARD inteiro (data-key), e
+   * passar o card inteiro pra renderResponsavelPill apaga todo o conteudo do
+   * card (renderResponsavelPill faz wrap.innerHTML = ''), sobrando so o
+   * placeholder de responsavel. */
+  function forEachRespWrapWithKey(key, fn) {
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key="' + key + '"]').forEach(fn);
+  }
+
+  function renderCard(card) {
+    var key = card.dataset.key;
+    var comments = cardComments[key] || [];
+    var container = card.querySelector('.editable-comments');
+    if (!container) return;
+    container.innerHTML = '';
+    comments.forEach(function(c, idx) {
+      container.appendChild(buildCommentEl(key, c, idx));
+    });
+    if (IS_OWNER) {
+      var addBtn = document.createElement('button');
+      addBtn.className = 'btn-add-comment no-print';
+      addBtn.textContent = '+ Adicionar comentario';
+      addBtn.onclick = function() { showAddForm(key, container, addBtn); };
+      container.appendChild(addBtn);
+    }
+  }
+
+  function showAddForm(key, container, addBtn) {
+    addBtn.style.display = 'none';
+    var form = document.createElement('div');
+    form.className = 'add-comment-form no-print';
+    form.innerHTML =
+      '<textarea class="comment-input" rows="3" placeholder="Digite o comentario..."></textarea>' +
+      '<div class="form-actions">' +
+        '<button class="btn-confirm">Confirmar</button>' +
+        '<button class="btn-cancel">Cancelar</button>' +
+        '<span class="save-indicator" id="si-' + escHtml(key) + '">Salvo!</span>' +
+      '</div>';
+    form.querySelector('.btn-confirm').onclick = function() {
+      var body = form.querySelector('.comment-input').value.trim();
+      if (!body) return;
+      if (!cardComments[key]) cardComments[key] = [];
+      cardComments[key].push({body: body, source: 'manual'});
+      saveCard(key, form.querySelector('#si-' + escHtml(key)));
+      forEachCardWithKey(key, renderCard);
+    };
+    form.querySelector('.btn-cancel').onclick = function() {
+      form.remove();
+      addBtn.style.display = '';
+    };
+    container.insertBefore(form, addBtn);
+    form.querySelector('.comment-input').focus();
+  }
+
+  function removeComment(key, idx) {
+    if (!cardComments[key]) return;
+    cardComments[key].splice(idx, 1);
+    saveCard(key, null);
+    forEachCardWithKey(key, renderCard);
+  }
+
+  /** Monta o conteudo do "slot" de responsavel (pilula/placeholder + botao de
+   * editar, so para o dono) a partir de responsavelByKey - mesma logica de
+   * data-driven usada nos comentarios. Editar aqui NUNCA altera o Jira - so
+   * muda quem o relatorio mostra como responsavel pela pendencia. */
+  function renderResponsavelPill(wrap) {
+    var key = wrap.dataset.respKey;
+    var name = responsavelByKey[key] || '';
+    wrap.innerHTML = '';
+    if (name) {
+      var pill = document.createElement('span');
+      pill.className = 'owner-pill';
+      pill.textContent = '👤 ' + name;
+      wrap.appendChild(pill);
+    } else if (IS_OWNER) {
+      var placeholder = document.createElement('span');
+      placeholder.className = 'owner-pill owner-pill-empty no-print';
+      placeholder.textContent = '+ Responsável';
+      wrap.appendChild(placeholder);
+    }
+    if (IS_OWNER) {
+      var editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit-responsavel no-print';
+      editBtn.type = 'button';
+      editBtn.title = 'Editar responsável exibido no relatório (não altera o Jira)';
+      editBtn.innerHTML = '&#9998;';
+      editBtn.onclick = function() { showResponsavelForm(key, wrap); };
+      wrap.appendChild(editBtn);
+    }
+  }
+
+  function showResponsavelForm(key, wrap) {
+    var form = document.createElement('span');
+    form.className = 'resp-edit-form no-print';
+    form.innerHTML =
+      '<input type="text" class="resp-input" placeholder="Nome do responsável (ex.: Cliente)" />' +
+      '<button class="btn-resp-confirm" type="button">OK</button>' +
+      '<button class="btn-resp-cancel" type="button">Cancelar</button>';
+    var input = form.querySelector('.resp-input');
+    input.value = responsavelByKey[key] || '';
+    wrap.innerHTML = '';
+    wrap.appendChild(form);
+    input.focus();
+    input.select();
+
+    form.querySelector('.btn-resp-cancel').onclick = function() {
+      forEachRespWrapWithKey(key, renderResponsavelPill);
+    };
+    form.querySelector('.btn-resp-confirm').onclick = function() {
+      persistResponsavel(key, input.value.trim());
+    };
+    input.onkeydown = function(e) {
+      if (e.key === 'Enter') form.querySelector('.btn-resp-confirm').click();
+      if (e.key === 'Escape') form.querySelector('.btn-resp-cancel').click();
+    };
+  }
+
+  function persistResponsavel(key, value) {
+    var previous = responsavelByKey[key];
+    responsavelByKey[key] = value; // atualizacao otimista
+    forEachRespWrapWithKey(key, renderResponsavelPill);
+    google.script.run
+      .withSuccessHandler(function() { forEachRespWrapWithKey(key, renderResponsavelPill); })
+      .withFailureHandler(function(e) {
+        console.error('Erro ao salvar responsável:', e);
+        responsavelByKey[key] = previous;
+        forEachRespWrapWithKey(key, renderResponsavelPill);
+        alert('Erro ao salvar responsável: ' + e);
+      })
+      .saveResponsavel(key, value);
+  }
+
+  function applyHiddenState(card) {
+    if (card.dataset.hidden === undefined) return; // não é um card de impedimento
+    var key = card.dataset.key;
+    var isHidden = !!hiddenKeys[key];
+    // O CSS base esconde o card via [data-hidden="true"] (display:none).
+    // Sem atualizar este atributo aqui, "Restaurar" so tirava a classe
+    // .curation-hidden mas o atributo continuava "true" - o card ficava
+    // preso invisivel em vez de voltar ao normal.
+    card.dataset.hidden = isHidden ? 'true' : 'false';
+    var header = card.querySelector('.impediment-header');
+    if (!header) return;
+    var oldBtn = header.querySelector('.btn-hide, .btn-restore');
+    if (oldBtn) oldBtn.remove();
+    var oldTag = header.querySelector('.impediment-hidden-tag');
+    if (oldTag) oldTag.remove();
+
+    if (isHidden && IS_OWNER) {
+      // So a dona ve o card oculto (esmaecido, com borda tracejada) com a
+      // opcao de restaurar - pra qualquer outra pessoa ele fica totalmente
+      // invisivel (display:none via [data-hidden="true"] no CSS base).
+      card.classList.add('curation-hidden');
+      var tag = document.createElement('span');
+      tag.className = 'impediment-hidden-tag no-print';
+      tag.textContent = 'Oculto nesta semana';
+      header.appendChild(tag);
+      var restoreBtn = document.createElement('button');
+      restoreBtn.className = 'btn-restore no-print';
+      restoreBtn.textContent = 'Restaurar';
+      // header agora pode ser um <summary> (cards expansiveis clique-pra-abrir) -
+      // sem isto, clicar no botao tambem expandiria/recolheria o card, ja que
+      // qualquer clique dentro de <summary> alterna o <details> por padrao.
+      restoreBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); setHidden(key, false, card); };
+      header.appendChild(restoreBtn);
+    } else if (!isHidden && IS_OWNER) {
+      card.classList.remove('curation-hidden');
+      var hideBtn = document.createElement('button');
+      hideBtn.className = 'btn-hide no-print';
+      hideBtn.textContent = 'Ocultar esta semana';
+      hideBtn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); setHidden(key, true, card); };
+      header.appendChild(hideBtn);
+    } else {
+      card.classList.remove('curation-hidden');
+    }
+  }
+
+  function setHidden(key, hidden /*, card - nao usado mais, ver forEachCardWithKey */) {
+    hiddenKeys[key] = hidden;
+    forEachCardWithKey(key, applyHiddenState); // atualizacao otimista - nao espera o servidor pra mudar o botao
+    google.script.run
+      .withSuccessHandler(function() { forEachCardWithKey(key, applyHiddenState); })
+      .withFailureHandler(function(e) {
+        console.error('Erro ao ocultar/restaurar:', e);
+        hiddenKeys[key] = !hidden; // desfaz a atualizacao otimista
+        forEachCardWithKey(key, applyHiddenState);
+      })
+      .saveHidden(key, hidden);
+  }
+
+  function saveCard(key, indicator) {
+    google.script.run
+      .withSuccessHandler(function() {
+        if (indicator) {
+          indicator.style.opacity = '1';
+          setTimeout(function() { indicator.style.opacity = '0'; }, 2000);
+        }
+      })
+      .withFailureHandler(function(e) { console.error('Erro ao salvar comentario:', e); })
+      .saveComment(key, cardComments[key] || []);
+  }
+
+  function replaceWholePage(html) {
+    // Evita location.reload(): o sandbox do HtmlService usa um subdominio
+    // *.googleusercontent.com diferente a cada carga, e reload() quebra a
+    // comunicacao por postMessage no meio do caminho, deixando a pagina em
+    // branco. document.write() substitui o documento sem navegar de verdade.
+    document.open();
+    document.write(html);
+    document.close();
+  }
+
+  /** Recarrega a pagina ATUAL (Weekly Report OU Resumo Gerencial - cada uma
+   * tem seu proprio HTML renderizado e guardado no Drive) depois de uma
+   * mutacao bem sucedida, sem misturar o conteudo de uma na outra. */
+  function reloadCurrentPage() {
+    var fn = IS_RG_PAGE ? 'getCurrentResumoGerencialHtml' : 'getCurrentReportHtml';
+    google.script.run.withSuccessHandler(replaceWholePage)[fn]();
+  }
+
+  function initPrintButton() {
+    var btn = document.getElementById('btn-print');
+    if (!btn) return;
+    btn.onclick = function() {
+      // Abre o documento inteiro (outerHTML atual) numa aba nova via Blob,
+      // fora do iframe sandbox do Apps Script - sem isso, window.print()
+      // direto so imprime o que cabe na altura fixa desse iframe.
+      var htmlContent = '<!DOCTYPE html>' + document.documentElement.outerHTML;
+      var blob = new Blob([htmlContent], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var printWin = window.open(url, '_blank');
+      if (!printWin) {
+        alert('O navegador bloqueou a nova aba. Habilite pop-ups para este site e tente de novo.');
+        URL.revokeObjectURL(url);
+        return;
+      }
+      printWin.addEventListener('load', function() {
+        printWin.print();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+      });
+    };
+  }
+
+  function initRgExportButton() {
+    var btn = document.getElementById('btn-rg-export');
+    if (!btn) return;
+    btn.onclick = function() {
+      var sectionEl = document.getElementById('resumo-gerencial-section');
+      var styleEl = document.querySelector('style');
+      // Forca o conteudo (que tem a classe no-print) a aparecer nesta aba
+      // separada, e some com os botoes de acao (que so fazem sentido na
+      // tela original) - a mesma classe .no-print do resto do documento
+      // continua escondendo tudo o mais, entao so o Resumo Gerencial sai.
+      var overrideCss = '<style>.no-print{display:block !important;} .rg-only-screen{display:none !important;} body{padding:0;background:#fff;}</style>';
+      var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+        (styleEl ? styleEl.outerHTML : '') + overrideCss +
+        '</head><body>' + sectionEl.outerHTML + '</body></html>';
+      var blob = new Blob([htmlContent], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var printWin = window.open(url, '_blank');
+      if (!printWin) {
+        alert('O navegador bloqueou a nova aba. Habilite pop-ups para este site e tente de novo.');
+        URL.revokeObjectURL(url);
+        return;
+      }
+      printWin.addEventListener('load', function() {
+        printWin.print();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+      });
+    };
+  }
+
+  /** Botao "Atualizar apenas o Resumo Gerencial" - reprocessa os dados JA
+   * buscados do Jira (snapshot atual) sem chamar o Jira de novo, so pra
+   * reaplicar curadoria/itens manuais/historico mais recentes. Bem mais
+   * rapido que "Atualizar dados do Jira" (que busca tudo de novo). */
+  function initRgRefreshButton() {
+    var btn = document.getElementById('btn-rg-refresh');
+    if (!IS_OWNER || !btn) return;
+    btn.style.display = '';
+    var status = document.getElementById('rg-refresh-status');
+    btn.onclick = function() {
+      btn.disabled = true;
+      if (status) status.textContent = 'Atualizando Resumo Gerencial...';
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          if (resp && resp.ok) {
+            if (status) status.textContent = 'Atualizado! Recarregando...';
+            reloadCurrentPage();
+          } else {
+            if (status) status.textContent = 'Erro: ' + ((resp && resp.error) || 'falha desconhecida.');
+            btn.disabled = false;
+          }
+        })
+        .withFailureHandler(function(e) {
+          if (status) status.textContent = 'Erro ao atualizar: ' + e;
+          btn.disabled = false;
+        })
+        .refreshResumoGerencialOnly();
+    };
+  }
+
+  function initCopyChecklistButton() {
+    var btn = document.getElementById('btn-copy-checklist');
+    if (!btn) return;
+    var status = document.getElementById('rg-copy-status');
+    btn.onclick = function() {
+      var showOk = function() {
+        if (status) {
+          status.textContent = 'Copiado!';
+          setTimeout(function() { status.textContent = ''; }, 2500);
+        }
+      };
+      var showErr = function(e) {
+        if (status) status.textContent = 'Erro ao copiar: ' + e;
+      };
+      if (navigator.clipboard && window.ClipboardItem) {
+        var item = new ClipboardItem({
+          'text/html': new Blob([RG_CHECKLIST_COPY_HTML], { type: 'text/html' }),
+          'text/plain': new Blob([RG_CHECKLIST_COPY_PLAIN], { type: 'text/plain' })
+        });
+        navigator.clipboard.write([item]).then(showOk).catch(function() {
+          // Fallback: alguns navegadores nao aceitam multi-formato via write() -
+          // copia so o texto simples, que funciona em qualquer lugar.
+          navigator.clipboard.writeText(RG_CHECKLIST_COPY_PLAIN).then(showOk).catch(showErr);
+        });
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(RG_CHECKLIST_COPY_PLAIN).then(showOk).catch(showErr);
+      } else {
+        showErr('Clipboard API indisponível neste navegador.');
+      }
+    };
+  }
+
+  function initManualAddForms() {
+    if (!IS_OWNER) return; // adicionar item manual e edicao - so a dona ve os botoes/formularios
+    document.querySelectorAll('.btn-add-manual').forEach(function(addBtn) {
+      var section = addBtn.dataset.section;
+      var form = document.querySelector('.manual-add-form[data-section-form="' + section + '"]');
+      if (!form) return;
+      addBtn.onclick = function() {
+        addBtn.style.display = 'none';
+        form.style.display = 'block';
+      };
+      var cancelBtn = form.querySelector('.btn-manual-cancel');
+      cancelBtn.onclick = function() {
+        form.style.display = 'none';
+        addBtn.style.display = '';
+      };
+      var confirmBtn = form.querySelector('.btn-manual-confirm');
+      confirmBtn.onclick = function() {
+        var fields = {};
+        form.querySelectorAll('[data-field]').forEach(function(input) {
+          fields[input.dataset.field] = input.value;
+        });
+        if (!fields.titulo || !fields.titulo.trim()) {
+          alert('Preencha o título / resumo.');
+          return;
+        }
+        confirmBtn.disabled = true;
+        google.script.run
+          .withSuccessHandler(function() { reloadCurrentPage(); })
+          .withFailureHandler(function(e) {
+            alert('Erro ao adicionar item manual: ' + e);
+            confirmBtn.disabled = false;
+          })
+          .addManualItemAndRender(section, fields);
+      };
+    });
+  }
+
+  function initOwnerBar() {
+    var bar = document.getElementById('owner-bar');
+    if (!IS_OWNER || !bar) return;
+    bar.style.display = 'flex';
+    var btn = document.getElementById('btn-refresh-jira');
+    var status = document.getElementById('owner-bar-status');
+    btn.onclick = function() {
+      btn.disabled = true;
+      status.textContent = 'Atualizando dados do Jira...';
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          if (resp && resp.ok) {
+            status.textContent = 'Atualizado! Recarregando...';
+            reloadCurrentPage();
+          } else {
+            status.textContent = 'Erro: ' + ((resp && resp.error) || 'falha desconhecida.');
+            btn.disabled = false;
+          }
+        })
+        .withFailureHandler(function(e) {
+          status.textContent = 'Erro ao atualizar: ' + e;
+          btn.disabled = false;
+        })
+        .triggerRefreshJira();
+    };
+  }
+
+  function init() {
+    // Carrega estado inicial dos data-comments e data-hidden embutidos no HTML
+    document.querySelectorAll('[data-key]').forEach(function(card) {
+      var key = card.dataset.key;
+      try {
+        cardComments[key] = JSON.parse(card.dataset.comments || '[]');
+      } catch(e) { cardComments[key] = []; }
+      if (card.dataset.hidden === 'true') {
+        hiddenKeys[key] = true;
+      }
+    });
+
+    document.querySelectorAll('[data-key]').forEach(function(card) {
+      renderCard(card);
+      applyHiddenState(card);
+    });
+
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key]').forEach(function(wrap) {
+      var key = wrap.dataset.respKey;
+      if (!(key in responsavelByKey)) responsavelByKey[key] = wrap.dataset.respName || '';
+    });
+    document.querySelectorAll('.owner-pill-wrap[data-resp-key]').forEach(renderResponsavelPill);
+
+    initOwnerBar();
+    initPrintButton();
+    initRgExportButton();
+    initRgRefreshButton();
+    initCopyChecklistButton();
+    initManualAddForms();
+    initWeekNav();
+  }
+
+  /** URL de uma semana: no Web App, "?week=" (a atual fica sem parametro);
+   * no GitHub Pages, semanas/<semana>/ relativo a raiz do site. */
+  function weekUrl(week, latest) {
+    var isLatest = week === latest;
+    if (WEEK_NAV.mode === 'static') {
+      var path = WEEK_NAV.rootRel + (isLatest ? '' : 'semanas/' + week + '/') + (IS_RG_PAGE ? 'resumo-gerencial/' : '');
+      return path || './';
+    }
+    var params = [];
+    if (IS_RG_PAGE) params.push('view=resumo');
+    if (!isLatest) params.push('week=' + week);
+    return WEEK_NAV.baseUrl + (params.length ? '?' + params.join('&') : '');
+  }
+
+  function renderWeekNav(el, weeks, latest) {
+    if (!weeks || !weeks.length) return;
+    var current = WEEK_NAV.current;
+    var options = weeks.map(function(w) {
+      return '<option value="' + escHtml(w.week) + '"' + (w.week === current ? ' selected' : '') + '>' +
+        escHtml(w.label || w.week) + (w.week === latest ? ' (atual)' : '') + '</option>';
+    }).join('');
+    var html = '<label for="week-nav-select">📅 Semana:</label><select id="week-nav-select">' + options + '</select>';
+    if (current !== latest) {
+      html += '<span class="week-nav-archived">Semana anterior — somente leitura</span>' +
+        '<a class="week-nav-latest" href="' + escHtml(weekUrl(latest, latest)) + '" target="_top">Ir para a semana atual</a>';
+    }
+    el.innerHTML = html;
+    el.style.display = 'flex';
+    document.getElementById('week-nav-select').onchange = function() {
+      // _top: no Web App a pagina roda dentro do iframe do Apps Script.
+      window.open(weekUrl(this.value, latest), '_top');
+    };
+  }
+
+  function initWeekNav() {
+    var el = document.getElementById('week-nav');
+    if (!el || !WEEK_NAV || typeof WEEK_NAV !== 'object') return;
+    if (WEEK_NAV.mode === 'static') {
+      // Paginas estaticas leem o indice publicado, assim copias antigas
+      // tambem enxergam as semanas que vieram depois delas.
+      fetch(WEEK_NAV.rootRel + 'semanas/index.json', { cache: 'no-store' })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(idx) { if (idx) renderWeekNav(el, idx.weeks, idx.latest); })
+        .catch(function() {});
+    } else {
+      renderWeekNav(el, WEEK_NAV.weeks, WEEK_NAV.latest);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
