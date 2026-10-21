@@ -663,10 +663,28 @@ a.jira-link:hover { text-decoration: underline; }
 .analyst-stats { font-size: 12px; color: #5a6a7a; text-align: right; }
 .analyst-stats strong { color: #15192b; }
 
-.blocklist { display: flex; flex-direction: column; gap: 10px; }
-.blocklist-item { padding: 10px 12px; border-left: 3px solid #dc2626; border-radius: 0 8px 8px 0; background: #fef2f2; }
-.blocklist-item .blocklist-key { font-family: monospace; font-size: 11.5px; font-weight: 800; color: #dc2626; margin-right: 6px; }
-.blocklist-item .blocklist-reason { font-size: 12.5px; color: #15192b; }
+/* Demandas da Semana (planilha Controle de Demandas) - substitui o antigo
+   card "Motivos de Bloqueio"; a coluna Observacao/Bloqueio traz o motivo. */
+.dw-table-wrap { overflow-x: auto; margin-top: 10px; }
+.dw-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.dw-table th {
+  background: #122454; color: #fff; font-size: 10.5px; font-weight: 700; text-align: left;
+  padding: 8px 10px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.dw-table td { padding: 8px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; color: #15192b; }
+.dw-table tbody tr:nth-child(even) td { background: #f6f9ff; }
+.dw-table .dw-key { font-family: monospace; font-weight: 800; color: #F8006A; white-space: nowrap; }
+.dw-table .dw-date { white-space: nowrap; }
+.dw-table .dw-obs { color: #5a6a7a; }
+.dw-status {
+  display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 10px; font-weight: 700;
+  white-space: nowrap; background: #eef1f6; color: #5a6a7a;
+}
+.dw-status.dw-st-nao-iniciada { background: #eef1f6; color: #5a6a7a; }
+.dw-status.dw-st-andamento { background: #fff4e0; color: #b45309; }
+.dw-status.dw-st-concluida { background: #eefbf3; color: #16a34a; }
+.dw-status.dw-st-bloqueada { background: #fef2f2; color: #dc2626; }
+.dw-status.dw-st-recorrente { background: #eef2ff; color: #122454; }
 
 /* Pilula do responsavel (assignee), totalmente arredondada (999px) igual
    ao resto das pilulas/badges do relatorio. */
@@ -760,14 +778,10 @@ a.jira-link:hover { text-decoration: underline; }
 
 <div class="subsection-title">Controle de Demandas — Capacidade e Prazos</div><div class="kpi-grid"><div class="kpi-card critical"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens atrasados</div><ul><li>Dashboard Controles Internos - Mudanças · Fernanda</li></ul></div><div class="kpi-top"><div class="kpi-title">Itens Atrasados</div><div class="kpi-pill">Risco</div></div><div><span class="kpi-number">1</span><span class="kpi-unit">item</span></div><div class="kpi-stats"><div>Passaram da data prevista de entrega sem conclusão</div></div></div><div class="kpi-card salmon"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Horas por item</div><ul><li>Change Request - Indicadores Dashboard de Operações (procedente/improcedente) — 8h (Fernanda)</li><li>Dashboard Controles Internos - Mudanças — 18h (Fernanda)</li></ul></div><div class="kpi-top"><div class="kpi-title">Horas Estimadas em Aberto</div><div class="kpi-pill">Capacidade</div></div><div><span class="kpi-number">26</span><span class="kpi-unit">horas</span></div><div class="kpi-stats"><div>Em itens ainda não concluídos, com estimativa preenchida</div></div></div></div><div class="chart-row"><div class="chart-card"><div class="chart-card-title">Por Analista</div><div class="analyst-list"><div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">F</span>Fernanda</div><div class="analyst-stats">7 itens em aberto · 26h estimadas</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Fernanda</div><ul><li>Dashboard Time de Estratégia - (Demais indicadores) · sem estimativa</li><li>Change Request - Indicadores Dashboard de Operações (procedente/improcedente) · bloqueada</li><li>Dashboard de Medição · bloqueada</li><li>Dashboard ARSESP · bloqueada</li><li>Dashboard Atendimento · bloqueada</li><li>Dashboard Gestão de Contratos · bloqueada</li><li>Dashboard Controles Internos - Mudanças · atrasada</li></ul></div></div>
 <div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">S</span>Sem responsável</div><div class="analyst-stats">3 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Sem responsável</div><ul><li>Levantamento de tabelas para demanda do Jeysson · bloqueada</li><li>Criação de Views para demanda do Jeysson · bloqueada</li><li>Dashboard Estratégia Diretoria - Mudanças 2.0 · bloqueada</li></ul></div></div>
-<div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">J</span>Jeysson</div><div class="analyst-stats">2 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Jeysson</div><ul><li>Dashboard - Refact PBI · sem estimativa</li><li>Dashboard - P&amp;C · sem estimativa</li></ul></div></div></div></div><div class="chart-card"><div class="chart-card-title">Motivos de Bloqueio</div><div class="blocklist"><div class="blocklist-item"><span class="blocklist-key">NDAV-242</span><span class="blocklist-reason">Bloqueada por solicitação do Douglas</span></div>
-<div class="blocklist-item"><span class="blocklist-key">NDAV-232</span><span class="blocklist-reason">Aguardando retorno do Walter a partir de 15/10</span></div>
-<div class="blocklist-item"><span class="blocklist-key">NDAV-71</span><span class="blocklist-reason">Aguardando acesso GLPI</span></div>
-<div class="blocklist-item"><span class="blocklist-key">NDAV-115</span><span class="blocklist-reason">Aguardando retorno Renata/Marina</span></div>
-<div class="blocklist-item"><span class="blocklist-key">NDAV-54</span><span class="blocklist-reason">Aguardando retorno Leonardo Caffeu</span></div>
-<div class="blocklist-item"><span class="blocklist-key">✏️</span><span class="blocklist-reason">Aguardando retorno Lucas</span></div>
-<div class="blocklist-item"><span class="blocklist-key">✏️</span><span class="blocklist-reason">Bloqueada pela fase anterior</span></div>
-<div class="blocklist-item"><span class="blocklist-key">✏️</span><span class="blocklist-reason">Aguardando retorno do Igarashi</span></div></div></div></div>
+<div class="analyst-row"><div class="analyst-name"><span class="analyst-avatar">J</span>Jeysson</div><div class="analyst-stats">2 itens em aberto · sem estimativa</div><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens em aberto — Jeysson</div><ul><li>Dashboard - Refact PBI · sem estimativa</li><li>Dashboard - P&amp;C · sem estimativa</li></ul></div></div></div></div></div><div class="chart-row"><div class="chart-card"><div class="chart-card-title">Demandas da Semana</div><div class="dw-table-wrap"><table class="dw-table"><thead><tr><th>Id Task/Subtask</th><th>Demanda</th><th>Status</th><th>Data Início</th><th>Data Prevista para Entrega</th><th>Observação / Bloqueio</th></tr></thead><tbody><tr><td class="dw-key">NDAV-244</td><td>Desenvolvimento de um Dashboard somente para a Diretoria, com base nos indicadores do time de Estrategia</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">13/10/2026</td><td class="dw-date">14/10/2026</td><td class="dw-obs"></td></tr>
+<tr><td class="dw-key"></td><td>Ingestão SAP X DATABRICKS (tabela solicitada pelo Douglas)</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">15/10/2026</td><td class="dw-date"></td><td class="dw-obs"></td></tr>
+<tr><td class="dw-key"></td><td>Dashboard Controles Internos - Mudanças</td><td><span class="dw-status dw-st-nao-iniciada">Não iniciada</span></td><td class="dw-date">14/10/2026</td><td class="dw-date">16/10/2026</td><td class="dw-obs"></td></tr>
+<tr><td class="dw-key"></td><td>Dashboard Estratégia Diretoria - Mudanças</td><td><span class="dw-status dw-st-concluida">Concluída</span></td><td class="dw-date">13/10/2026</td><td class="dw-date">16/10/2026</td><td class="dw-obs">Iremos apresentar o que fizemos até o momento na reunião agendada para 14/10</td></tr></tbody></table></div></div></div>
 </div>
 
 <script>
