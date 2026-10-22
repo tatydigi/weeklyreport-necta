@@ -878,7 +878,7 @@ a.jira-link:hover { text-decoration: underline; }
         <span class="hdr-week-text">19/10/2026 a 23/10/2026</span>
         <span class="week-nav" id="week-nav"></span>
       </div>
-      <span class="hdr-chip"><span class="hdr-live-dot"></span><span class="k">Jira</span>atualizado em 22/10/2026 às 16:42</span>
+      <span class="hdr-chip"><span class="hdr-live-dot"></span><span class="k">Jira</span>atualizado em 22/10/2026 às 16:53</span>
     </div>
   </div>
   <div class="hdr-bar no-print">
@@ -903,13 +903,13 @@ a.jira-link:hover { text-decoration: underline; }
   <h1>REPORT SEMANAL</h1>
   <h2>[DGGNCT002] Squad Dados &nbsp;·&nbsp; NECTA</h2>
   <div class="date-badge">Semana de referência: 19/10/2026 a 23/10/2026</div>
-  <div class="last-updated">Dados do Jira atualizados em: 22/10/2026 às 16:42</div>
+  <div class="last-updated">Dados do Jira atualizados em: 22/10/2026 às 16:53</div>
 </div>
 
 <!-- COMO FOI A SEMANA: comparativo enxuto com a semana anterior (ver WeeklyArchive.gs) -->
 <div class="section section-week-compare">
   <div class="section-title">Como foi a semana</div>
-<div class="wc-ref">Comparado com: <strong>12/10/2026 a 16/10/2026</strong></div><div class="wc-grid"><div class="wc-tile"><div class="wc-value">66%</div><div class="wc-label">Progresso Geral</div><span class="wc-delta wc-neutral">= 0 p.p.</span><span class="wc-prev">antes: 66%</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Entregas na Semana</div><span class="wc-delta wc-bad">▼ -1</span><span class="wc-prev">antes: 1</span></div><div class="wc-tile"><div class="wc-value">7</div><div class="wc-label">Aguardando Cliente</div><span class="wc-delta wc-neutral">= 0</span><span class="wc-prev">antes: 7</span></div><div class="wc-tile"><div class="wc-value">2</div><div class="wc-label">Novas Demandas</div><span class="wc-delta wc-neutral">▼ -1</span><span class="wc-prev">antes: 3</span></div></div>
+<div class="wc-ref">Comparado com: <strong>12/10/2026 a 16/10/2026</strong></div><div class="wc-grid"><div class="wc-tile"><div class="wc-value">66%</div><div class="wc-label">Progresso Geral</div><span class="wc-delta wc-neutral">= 0 p.p.</span><span class="wc-prev">antes: 66%</span></div><div class="wc-tile"><div class="wc-value">0</div><div class="wc-label">Entregas na Semana</div><span class="wc-delta wc-bad">▼ -1</span><span class="wc-prev">antes: 1</span></div><div class="wc-tile"><div class="wc-value">6</div><div class="wc-label">Aguardando Cliente</div><span class="wc-delta wc-good">▼ -1</span><span class="wc-prev">antes: 7</span></div><div class="wc-tile"><div class="wc-value">2</div><div class="wc-label">Novas Demandas</div><span class="wc-delta wc-neutral">▼ -1</span><span class="wc-prev">antes: 3</span></div></div>
 </div>
 
 <!-- SEÇÃO 2: STATUS DAS TAREFAS -->
@@ -1029,7 +1029,31 @@ a.jira-link:hover { text-decoration: underline; }
   </p>
 
   <div class="subsection-title">Alteração de Escopo (Change Request)</div>
-  <p class="no-items">Nenhum item identificado neste período.</p>
+  <details class="expand-card salmon">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-26" target="_blank">NDAV-26</a><span class="expand-summary">[DASH] Dashboard - Operações</span><span class="expand-badge">1 novo item · História concluída</span></summary>
+    <div class="expand-body">
+      <div class="expand-subitem" data-key="NDAV-242" data-comments='[]'>
+        <div class="expand-subitem-title"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-242" target="_blank">NDAV-242</a> [Operações] Mudanças de escopo no campo de TAE  <span class="badge" style="background:#9e9e9e">EM BACKLOG</span></div>
+        <div class="cr-description">Conforme solicitado pela Nice, é necessário realizar um ajuste no escopo das regras de negócio aplicadas no Databricks. Atualmente, a regra filtra/considera apenas um subconjunto de notas, mas o comportamento correto deve abranger todas as notas (tanto procedentes quanto improcedentes).
+Objetivo:
+Corrigir o parâmetro/filtro no Databricks para garantir que a regra passe a considerar a totalidade das notas na ingestão/processamento.
+Critérios de Aceite:
+O parâmetro/filtro de regras no Databricks foi atualizado para incluir notas procedentes e improcedentes.
+O pipeline processa e grava corretamente ambos os status de notas sem perdas.
+Validação/Sanity check realizado comparando a volumetria total de notas antes e depois da alteração.</div>
+        <div class="editable-comments"></div>
+      </div>
+    </div>
+  </details>
+  <details class="expand-card salmon">
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-244" target="_blank">NDAV-244</a><span class="expand-summary">[DASH][Estratégia][Diretoria] - Criação do Dashboard de Estratégia para a Diretoria</span><span class="expand-badge">1 novo item · EM DESENVOLVIMENTO</span></summary>
+    <div class="expand-body">
+      <div class="expand-subitem" data-key="NDAV-250" data-comments='[]'>
+        <div class="expand-subitem-title"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-250" target="_blank">NDAV-250</a> Levantamento de requisitos para nova Aba solicitada pelo Igarashi <span class="badge" style="background:#9e9e9e">EM BACKLOG</span></div>
+        <div class="editable-comments"></div>
+      </div>
+    </div>
+  </details>
 
   <div class="subsection-title">Novas Demandas</div>
   <details class="expand-card navy">
@@ -1083,12 +1107,6 @@ a.jira-link:hover { text-decoration: underline; }
   </details>
   <details class="expand-card pink" data-key="NDAV-147" data-comments='[{"source":"manual","body":"Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas"}]' data-hidden="false">
     <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="expand-summary">Integração Salesforce + Metric Views</span><span class="expand-days">83 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
-    <div class="expand-body">
-      <div class="impediment-comments editable-comments"></div>
-    </div>
-  </details>
-  <details class="expand-card pink" data-key="NDAV-250" data-comments='[]' data-hidden="false">
-    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-250" target="_blank">NDAV-250</a><span class="expand-summary">Levantamento de requisitos para nova Aba solicitada pelo Igarashi</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
     <div class="expand-body">
       <div class="impediment-comments editable-comments"></div>
     </div>
@@ -1173,7 +1191,7 @@ a.jira-link:hover { text-decoration: underline; }
   </div>
 
   <div class="kpi-grid">
-<div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 127 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 83 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 83 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 83 dias</li><li>NDAV-105 — Validaçao de Cadastro · 0 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">7</span><span class="kpi-unit">itens</span></div><div class="wc-delta-row"><span class="wc-delta wc-neutral">= 0</span>igual à semana anterior</div><div class="kpi-stats"><div>Parado em média há <strong>75 dias</strong> (pico de <strong>127 dias</strong>)</div><div>Afeta <strong>7 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 127 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 83 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 83 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 83 dias</li><li>NDAV-105 — Validaçao de Cadastro · 0 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">6</span><span class="kpi-unit">itens</span></div><div class="wc-delta-row"><span class="wc-delta wc-good">▼ -1</span>vs. semana anterior (7)</div><div class="kpi-stats"><div>Parado em média há <strong>75 dias</strong> (pico de <strong>127 dias</strong>)</div><div>Afeta <strong>6 entregáveis</strong> do projeto</div></div></div>
 <div class="kpi-card navy"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 69 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 48 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">3</span><span class="kpi-unit">itens</span></div><div class="wc-delta-row"><span class="wc-delta wc-neutral">= 0</span>igual à semana anterior</div><div class="kpi-stats"><div>Parado em média há <strong>59 dias</strong> (pico de <strong>69 dias</strong>)</div><div>Afeta <strong>3 entregáveis</strong> do projeto</div></div></div>
 <div class="kpi-card green"><div class="kpi-top"><div class="kpi-title">Entregas da Semana</div><div class="kpi-pill">Concluído</div></div><div><span class="kpi-number">0</span><span class="kpi-unit">entregas</span></div><div class="wc-delta-row"><span class="wc-delta wc-bad">▼ -1</span>vs. semana anterior (1)</div><div class="kpi-stats"><div><strong>15</strong> entregas acumuladas no projeto</div></div></div>
   </div>
