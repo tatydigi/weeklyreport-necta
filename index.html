@@ -634,12 +634,8 @@ a.jira-link:hover { text-decoration: underline; }
 .kpi-unit { font-size: 13px; font-weight: 600; color: #5a6a7a; margin-left: 6px; }
 .kpi-stats { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5a6a7a; }
 .kpi-stats strong { color: #15192b; font-weight: 700; }
-.kpi-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
-.kpi-chip {
-  font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
-  background: #eefbf3; color: #16a34a; border: 1px solid #bdebd1;
-  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
+/* Espaco pro "i" (.kpi-info, absoluto no canto) nao cobrir a pill. */
+.kpi-card.has-info .kpi-top { padding-right: 26px; }
 .kpi-info {
   position: absolute; top: 16px; right: 18px; width: 18px; height: 18px;
   border-radius: 50%; border: 1px solid #dbe3f0; background: #F6F9FF;
@@ -661,6 +657,7 @@ a.jira-link:hover { text-decoration: underline; }
 .kpi-tooltip ul { margin: 0; padding-left: 16px; }
 .kpi-tooltip li { margin-bottom: 4px; }
 .kpi-tooltip li:last-child { margin-bottom: 0; }
+.kpi-tooltip ul + .kpi-tooltip-title { margin-top: 10px; }
 @media print { .kpi-tooltip, .kpi-info { display: none !important; } }
 
 .analyst-list { display: flex; flex-direction: column; gap: 10px; }
@@ -878,7 +875,7 @@ a.jira-link:hover { text-decoration: underline; }
         <span class="hdr-week-text">19/10/2026 a 23/10/2026</span>
         <span class="week-nav" id="week-nav"></span>
       </div>
-      <span class="hdr-chip"><span class="hdr-live-dot"></span><span class="k">Jira</span>atualizado em 22/10/2026 às 17:09</span>
+      <span class="hdr-chip"><span class="hdr-live-dot"></span><span class="k">Jira</span>atualizado em 23/10/2026 às 10:20</span>
     </div>
   </div>
   <div class="hdr-bar no-print">
@@ -903,7 +900,7 @@ a.jira-link:hover { text-decoration: underline; }
   <h1>REPORT SEMANAL</h1>
   <h2>[DGGNCT002] Squad Dados &nbsp;·&nbsp; NECTA</h2>
   <div class="date-badge">Semana de referência: 19/10/2026 a 23/10/2026</div>
-  <div class="last-updated">Dados do Jira atualizados em: 22/10/2026 às 17:09</div>
+  <div class="last-updated">Dados do Jira atualizados em: 23/10/2026 às 10:20</div>
 </div>
 
 <!-- COMO FOI A SEMANA: comparativo enxuto com a semana anterior (ver WeeklyArchive.gs) -->
@@ -1094,19 +1091,19 @@ Validação/Sanity check realizado comparando a volumetria total de notas antes 
     </div>
   </details>
   <details class="expand-card pink" data-key="NDAV-124" data-comments='[{"body":"Pendente retorno do Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve","source":"manual"}]' data-hidden="false">
-    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="expand-summary">CONECTIVIDADE GIS </span><span class="expand-days">83 dias neste status</span><span class="expand-resp">👤 Gilson</span></summary>
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-124" target="_blank">NDAV-124</a><span class="expand-summary">CONECTIVIDADE GIS </span><span class="expand-days">84 dias neste status</span><span class="expand-resp">👤 Gilson</span></summary>
     <div class="expand-body">
       <div class="impediment-comments editable-comments"></div>
     </div>
   </details>
   <details class="expand-card pink" data-key="NDAV-125" data-comments='[{"source":"manual","body":"Subtask NDAV-194 (Acessos ao Banco) pendente. Pendente Gilson para subida em PRD. Douglas alinhou com o Gilson/Diogo que e irá nos restornar em breve"}]' data-hidden="false">
-    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="expand-summary">CONECTIVIDADE LAKE X XCONN</span><span class="expand-days">83 dias neste status</span><span class="expand-resp">👤 Gilson</span></summary>
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-125" target="_blank">NDAV-125</a><span class="expand-summary">CONECTIVIDADE LAKE X XCONN</span><span class="expand-days">84 dias neste status</span><span class="expand-resp">👤 Gilson</span></summary>
     <div class="expand-body">
       <div class="impediment-comments editable-comments"></div>
     </div>
   </details>
   <details class="expand-card pink" data-key="NDAV-147" data-comments='[{"source":"manual","body":"Pendente Igarashi mapear tabelas/KPIs e retorno do Lucas"}]' data-hidden="false">
-    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="expand-summary">Integração Salesforce + Metric Views</span><span class="expand-days">83 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
+    <summary class="impediment-header"><a class="jira-link expand-key" href="https://digiage.atlassian.net/browse/NDAV-147" target="_blank">NDAV-147</a><span class="expand-summary">Integração Salesforce + Metric Views</span><span class="expand-days">84 dias neste status</span><span class="expand-resp">👤 Fernanda Carolina Ricci Milani</span></summary>
     <div class="expand-body">
       <div class="impediment-comments editable-comments"></div>
     </div>
@@ -1191,9 +1188,9 @@ Validação/Sanity check realizado comparando a volumetria total de notas antes 
   </div>
 
   <div class="kpi-grid">
-<div class="kpi-card pink"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 127 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 83 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 83 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 83 dias</li><li>NDAV-105 — Validaçao de Cadastro · 0 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">6</span><span class="kpi-unit">itens</span></div><div class="wc-delta-row"><span class="wc-delta wc-good">▼ -1</span>vs. semana anterior (7)</div><div class="kpi-stats"><div>Parado em média há <strong>75 dias</strong> (pico de <strong>127 dias</strong>)</div><div>Afeta <strong>6 entregáveis</strong> do projeto</div></div></div>
-<div class="kpi-card navy"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 69 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 48 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">3</span><span class="kpi-unit">itens</span></div><div class="wc-delta-row"><span class="wc-delta wc-neutral">= 0</span>igual à semana anterior</div><div class="kpi-stats"><div>Parado em média há <strong>59 dias</strong> (pico de <strong>69 dias</strong>)</div><div>Afeta <strong>3 entregáveis</strong> do projeto</div></div></div>
-<div class="kpi-card green"><div class="kpi-top"><div class="kpi-title">Entregas da Semana</div><div class="kpi-pill">Concluído</div></div><div><span class="kpi-number">9</span><span class="kpi-unit">entregas</span></div><div class="wc-delta-row"><span class="wc-delta wc-good">▲ +8</span>vs. semana anterior (1)</div><div class="kpi-stats"><div><strong>15</strong> entregas acumuladas no projeto</div></div><div class="kpi-chips"><span class="kpi-chip">[DASH][Controles Internos (Riscos)] - Mudanças </span><span class="kpi-chip">Homologação do Painel - Aba Emergência</span><span class="kpi-chip">[SAP -&gt; Databricks] Ingestão de tabelas necessárias. (Estratégia)</span><span class="kpi-chip">Criação de KPIs no Dashboard  - Estratégia</span><span class="kpi-chip">[DASH][Estratégia] - Adição de campos e regras </span><span class="kpi-chip">[Medição] - Ingestão da tabela ZSDT011</span><span class="kpi-chip">[Medição] - Ajustes de campos no Dashboard com regras levantadas</span><span class="kpi-chip">[Medição] - Ajustes de campos no Dashboard após reunião</span><span class="kpi-chip">Criação do Dashboard Diretoria e replicação dos dados</span></div></div>
+<div class="kpi-card pink has-info"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-85 — [DASH] Projeto - Atendimento (PBI) · 127 dias</li><li>NDAV-124 — CONECTIVIDADE GIS  · 84 dias</li><li>NDAV-125 — CONECTIVIDADE LAKE X XCONN · 84 dias</li><li>NDAV-147 — Integração Salesforce + Metric Views · 84 dias</li><li>NDAV-105 — Validaçao de Cadastro · 0 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Aguardando Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">6</span><span class="kpi-unit">itens</span></div><div class="wc-delta-row"><span class="wc-delta wc-good">▼ -1</span>vs. semana anterior (7)</div><div class="kpi-stats"><div>Parado em média há <strong>76 dias</strong> (pico de <strong>127 dias</strong>)</div><div>Afeta <strong>6 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card navy has-info"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Itens parados</div><ul><li>NDAV-181 — MVP - Dgitalização de Documentos Regulatórios - Busca Genie · 69 dias</li><li>NDAV-71 — [DASH] Projeto - Painel ARSESP · 48 dias</li></ul></div><div class="kpi-top"><div class="kpi-title">Em Validação pelo Cliente</div><div class="kpi-pill">Impedimento</div></div><div><span class="kpi-number">3</span><span class="kpi-unit">itens</span></div><div class="wc-delta-row"><span class="wc-delta wc-neutral">= 0</span>igual à semana anterior</div><div class="kpi-stats"><div>Parado em média há <strong>59 dias</strong> (pico de <strong>69 dias</strong>)</div><div>Afeta <strong>3 entregáveis</strong> do projeto</div></div></div>
+<div class="kpi-card green has-info"><div class="kpi-info" tabindex="0">i</div><div class="kpi-tooltip"><div class="kpi-tooltip-title">Tarefas (1)</div><ul><li>NDAV-246 — [DASH][Controles Internos (Riscos)] - Mudanças </li></ul><div class="kpi-tooltip-title">Subtarefas (8)</div><ul><li>NDAV-199 — Homologação do Painel - Aba Emergência</li><li>NDAV-229 — [SAP -&gt; Databricks] Ingestão de tabelas necessárias. (Estratégia)</li><li>NDAV-230 — Criação de KPIs no Dashboard  - Estratégia</li><li>NDAV-240 — [DASH][Estratégia] - Adição de campos e regras </li><li>NDAV-233 — [Medição] - Ingestão da tabela ZSDT011</li><li>NDAV-234 — [Medição] - Ajustes de campos no Dashboard com regras levantadas</li><li>NDAV-235 — [Medição] - Ajustes de campos no Dashboard após reunião</li><li>NDAV-249 — Criação do Dashboard Diretoria e replicação dos dados</li></ul></div><div class="kpi-top"><div class="kpi-title">Entregas da Semana</div><div class="kpi-pill">Concluído</div></div><div><span class="kpi-number">9</span><span class="kpi-unit">entregas</span></div><div class="wc-delta-row"><span class="wc-delta wc-good">▲ +8</span>vs. semana anterior (1)</div><div class="kpi-stats"><div><strong>15</strong> entregas acumuladas no projeto</div><div><strong>1</strong> tarefa e <strong>8</strong> subtarefas nesta semana</div></div></div>
   </div>
 
   <div class="chart-card">
