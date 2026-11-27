@@ -260,11 +260,14 @@ table.mx.show-done .mx-caret { transform: rotate(90deg); }
 .wk-item strong { color: #15192b; font-size: 16px; font-weight: 900; }
 .wk-sep { width: 1px; height: 22px; background: #dbe3f0; }
 .wk-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; background: var(--st); }
-.wk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 14px; align-items: start; }
-@media (max-width: 520px) { .wk-grid { grid-template-columns: 1fr; } }
-/* Grid nao pagina bem no Chrome (ver nota do antigo Kanban) - no PDF vira
-   uma coluna simples. */
-@media print { .wk-grid { display: block; } .wk-card { margin-bottom: 10px; } }
+/* Colunas (estilo "mural"): cada card encaixa logo abaixo do anterior da
+   mesma coluna - com grid, cada linha tinha a altura do card mais alto e
+   os cards curtos (sem destaques) deixavam grandes vaos em branco. */
+.wk-grid { column-width: 380px; column-gap: 14px; }
+.wk-grid > .wk-card { display: inline-block; width: 100%; margin: 0 0 14px; vertical-align: top; }
+@media (max-width: 520px) { .wk-grid { column-count: 1; } }
+/* No PDF vira uma coluna simples. */
+@media print { .wk-grid { column-count: 1; } .wk-grid > .wk-card { display: block; margin-bottom: 10px; } }
 .wk-card { background: #fff; border: 1px solid #dbe3f0; border-radius: 10px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
 .wk-head { display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; border-bottom: 1px solid #dbe3f0; background: #F6F9FF; }
 .wk-head-main { flex: 1; min-width: 0; }
