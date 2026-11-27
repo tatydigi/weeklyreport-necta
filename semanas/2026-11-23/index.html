@@ -693,29 +693,6 @@ a.jira-link:hover { text-decoration: underline; }
 .kpi-tooltip ul + .kpi-tooltip-title { margin-top: 10px; }
 @media print { .kpi-tooltip, .kpi-info { display: none !important; } }
 
-/* Demandas da Semana (planilha Controle de Demandas) - substitui o antigo
-   card "Motivos de Bloqueio"; a coluna Observacao/Bloqueio traz o motivo. */
-.dw-table-wrap { overflow-x: auto; margin-top: 10px; }
-.dw-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.dw-table th {
-  background: #122454; color: #fff; font-size: 10.5px; font-weight: 700; text-align: left;
-  padding: 8px 10px; text-transform: uppercase; letter-spacing: 0.3px;
-}
-.dw-table td { padding: 8px 10px; border-bottom: 1px solid #dbe3f0; vertical-align: top; color: #15192b; }
-.dw-table tbody tr:nth-child(even) td { background: #f6f9ff; }
-.dw-table .dw-key { font-family: monospace; font-weight: 800; color: #F8006A; white-space: nowrap; }
-.dw-table .dw-date { white-space: nowrap; }
-.dw-table .dw-obs { color: #5a6a7a; }
-.dw-status {
-  display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 10px; font-weight: 700;
-  white-space: nowrap; background: #eef1f6; color: #5a6a7a;
-}
-.dw-status.dw-st-nao-iniciada { background: #eef1f6; color: #5a6a7a; }
-.dw-status.dw-st-andamento { background: #fff4e0; color: #b45309; }
-.dw-status.dw-st-concluida { background: #eefbf3; color: #16a34a; }
-.dw-status.dw-st-bloqueada { background: #fef2f2; color: #dc2626; }
-.dw-status.dw-st-recorrente { background: #eef2ff; color: #122454; }
-
 /* Pilula do responsavel (assignee), totalmente arredondada (999px) igual
    ao resto das pilulas/badges do relatorio. */
 .owner-pill {
@@ -1197,8 +1174,6 @@ a.jira-link:hover { text-decoration: underline; }
     </div>
     <div class="status-stack-wrap"><div class="status-stack"><div class="status-seg" style="background:#22c55e;flex:117" title="CONCLUÍDO: 117"><span class="status-seg-label">77%</span></div><div class="status-seg" style="background:#f59e0b;flex:19" title="EM PROGRESSO: 19"><span class="status-seg-label">13%</span></div><div class="status-seg" style="background:#f97316;flex:1" title="EM REVISÃO: 1"></div><div class="status-seg" style="background:#9e9e9e;flex:14" title="EM BACKLOG: 14"><span class="status-seg-label">9%</span></div></div><div class="status-legend"><div class="status-legend-item"><span class="status-legend-dot" style="background:#22c55e"></span>CONCLUÍDO — 117</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f59e0b"></span>EM PROGRESSO — 19</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#f97316"></span>EM REVISÃO — 1</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#8b5cf6"></span>EM TESTES — 0</div><div class="status-legend-item"><span class="status-legend-dot" style="background:#9e9e9e"></span>EM BACKLOG — 14</div></div></div>
   </div>
-
-<div class="subsection-title">Demandas da Semana</div><div class="chart-row"><div class="chart-card"><p class="no-items">Nenhuma demanda iniciada ou com entrega prevista nesta semana.</p></div></div>
 </div>
 </div>
 
