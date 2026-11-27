@@ -384,6 +384,35 @@ table.mx.show-done .mx-caret { transform: rotate(90deg); }
 .disc-meta { font-size: 11px; color: #5a6a7a; margin: 2px 0 8px; }
 .disc-meta strong { color: #122454; }
 .disc-note { font-size: 10px; color: #5a6a7a; margin: -4px 0 10px; font-style: italic; }
+/* Destaques da Semana (arquivo do Drive - Destaques.gs) */
+.dq-nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 10px 0 8px; }
+.dq-num { background: #122454; border-radius: 12px; padding: 14px 16px; color: #fff; break-inside: avoid; }
+.dq-num .v { font-size: 26px; font-weight: 800; color: #ff2d7e; line-height: 1.1; }
+.dq-num .l { font-size: 11.5px; color: #dbe3f0; margin-top: 4px; }
+.dq-num .f { font-size: 9.5px; color: #9fb0d0; margin-top: 6px; }
+@media (max-width: 900px) { .dq-nums { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dq-topo { margin-bottom: 12px; }
+.dq-source { font-size: 10px; color: #9aa3b2; margin: 2px 0 12px; font-style: italic; }
+.dq-strip { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 4px 0 8px; font-size: 11px; color: #33415c; }
+.dq-strip b { font-size: 12.5px; }
+.dq-block { padding: 10px 14px 12px; border-top: 1px dashed #dbe3f0; background: #fcfdff; }
+.dq-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.dq-title { font-size: 10px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: #5a6a7a; }
+.dq-sub { font-size: 11px; color: #5a6a7a; }
+.dq-item { padding: 6px 0; border-top: 1px solid #eef2f7; font-size: 12px; line-height: 1.45; color: #15192b; }
+.dq-item:first-of-type { border-top: none; }
+.dq-item b { color: #122454; }
+.dq-item code { font-size: 10.5px; background: #eef2fb; border-radius: 4px; padding: 0 4px; }
+.dq-item ul { margin: 3px 0 0 16px; padding: 0; color: #33415c; }
+.dq-pill { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; padding: 2px 8px; border-radius: 9px; margin-bottom: 3px; }
+.dq-entrega { background: #122454; color: #fff; }
+.dq-analise { background: #eef2fb; color: #122454; }
+.dq-decisao { background: #fff1d6; color: #a15c00; }
+.dq-risco { background: #ffe3ec; color: #c0144d; }
+.dq-resolvido { background: #d9f3ee; color: #0f766e; }
+.dq-acao { background: #f1f4f9; color: #5a6a7a; }
+.wk-key.dq-key { margin-right: 4px; }
+.desc-cut-link { color: #F8006A; font-weight: 600; white-space: nowrap; }
 /* Selos das labels demanda_recorrente / PRODUÇÃO */
 .lbl-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 9px; font-size: 9px; font-weight: 600; font-style: normal; vertical-align: middle; white-space: nowrap; }
 .lbl-recorrente { background: #e6f6f4; color: #0f766e; border: 1px solid #b6e3dc; }
@@ -632,6 +661,9 @@ a.jira-link:hover { text-decoration: underline; }
 .kpi-card.green .kpi-pill { background: #eefbf3; color: #16a34a; border: 1px solid #bdebd1; }
 .kpi-card.critical .kpi-pill { background: #fef2f2; color: #dc2626; border: 1px solid #fac9c9; }
 .kpi-card.violet .kpi-pill { background: #f5f0ff; color: #7c3aed; border: 1px solid #ddd0fb; }
+.kpi-card.amber { border-left-color: #d97706; }
+.kpi-card.amber .kpi-title { color: #b45309; }
+.kpi-card.amber .kpi-pill { background: #fff6e5; color: #b45309; border: 1px solid #f5d9a8; }
 .kpi-number { font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -0.02em; color: #15192b; }
 .kpi-unit { font-size: 13px; font-weight: 600; color: #5a6a7a; margin-left: 6px; }
 .kpi-stats { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5a6a7a; }
@@ -856,7 +888,7 @@ a.jira-link:hover { text-decoration: underline; }
         <span class="hdr-week-text">23/11/2026 a 27/11/2026</span>
         <span class="week-nav" id="week-nav"></span>
       </div>
-      <span class="hdr-chip"><span class="hdr-live-dot"></span><span class="k">Jira</span>atualizado em 27/11/2026 às 13:41</span>
+      <span class="hdr-chip"><span class="hdr-live-dot"></span><span class="k">Jira</span>atualizado em 27/11/2026 às 14:14</span>
     </div>
   </div>
   <div class="hdr-bar no-print">
@@ -881,7 +913,7 @@ a.jira-link:hover { text-decoration: underline; }
   <h1>REPORT SEMANAL</h1>
   <h2>[DGGNCT002] Squad Dados &nbsp;·&nbsp; NECTA</h2>
   <div class="date-badge">Semana de referência: 23/11/2026 a 27/11/2026</div>
-  <div class="last-updated">Dados do Jira atualizados em: 27/11/2026 às 13:41</div>
+  <div class="last-updated">Dados do Jira atualizados em: 27/11/2026 às 14:14</div>
 </div>
 
 <!-- COMO FOI A SEMANA: comparativo enxuto com a semana anterior (ver WeeklyArchive.gs) -->
